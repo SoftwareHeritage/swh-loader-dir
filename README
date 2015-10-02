@@ -1,2 +1,58 @@
+SWH-loader-dir
+==============
+
 The Software Heritage Loader Dir is a tool and a library to walk a local
 Directory and inject into the SWH dataset all unknown contained files.
+
+
+
+Git sha1 computation
+--------------------
+
+### commit/revision
+
+sha1 git commit/revision computation:
+
+    commit `size`\0
+    tree `sha1-git-tree-and-subtree-in-plain-hex-string`
+    parent `commit-parent`
+    author `author-name` <`author-email`> `author-date-ts` `author-date-offset`
+    committer `committer-name` <`committer-email`> `committer-date-ts` `committer-date-offset`
+
+    `commit-message`
+
+Notes:
+- no newline
+- date offset for example: +0200
+
+### directory/tree
+
+sha1 git directory/tree computation:
+
+    tree `tree-size`\0
+    <file-perm> <file-name>\0<file-sha1-in-20-bytes-string>  <- 28 bytes
+    <dir-perm> <dir-name>\0<dir-sha1-in-20-bytes-string>     <- 28 bytes
+
+
+Notes:
+- permission is length 6 + space + \0 -> so 8 bytes
+- sha1 is 20 bytes so one row is 28 bytes.
+- tree-size = 28 * number of rows
+- no newline separator
+- What's the entry order? byte
+  -> `git mk-tree` does not need to presort the input -> git mktree creates a tree and store in a git file storage -> no go
+
+permissions:
+- 100644 - file
+- 040000 - directory
+- 100755 - executable file
+- 120000 - symbolink link
+
+### content/file
+
+sha1 git content computation:
+
+    blob `blob-size`\0
+    `blob-content`
+
+Compress with DEFLATE and compute sha1
