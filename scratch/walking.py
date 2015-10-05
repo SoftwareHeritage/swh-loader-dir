@@ -47,10 +47,7 @@ def compute_directory_hash(dirpath, hashes):
 
     """
     def sort_by_entry_name(hashes):
-        if not hashes:
-            return hashes
-        sorted_res = sorted(hashes, key=lambda entry: entry['name'])
-        return sorted_res
+        return sorted(hashes, key=lambda entry: entry['name'])
 
     def row_entry_tree_format(hashes):
         return map(lambda entry:
@@ -62,9 +59,7 @@ def compute_directory_hash(dirpath, hashes):
                    hashes)
 
     rows = row_entry_tree_format(sort_by_entry_name(hashes[dirpath]))
-    tree_content = b''.join(rows)
-    h = git.hashdata(tree_content, 'tree')
-    return h
+    return git.hashdata(b''.join(rows), 'tree')
 
 
 # 100644: regular file
