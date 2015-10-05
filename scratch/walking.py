@@ -62,8 +62,28 @@ def compute_directory_hash(dirpath, hashes):
     return git.hashdata(b''.join(rows), 'tree')
 
 
-def walk_and_compute_sha1_from_directory(dir):
-    """Compute git sha1 from directory dir.
+def walk_and_compute_sha1_from_directory(rootdir):
+    """Compute git sha1 from directory rootdir.
+
+    Empty directories are skipped.
+
+    Returns:
+        Dictionary of entries with keys <path-name> and as values a list of
+        directory entries.
+        Those are list of dictionary with keys:
+          - 'perms'
+          - 'type'
+          - 'name'
+          - 'sha1_git'
+          - and specifically content: 'sha1', 'sha256', ... (may be extended...)
+
+    Note:
+        One special key is '<root>' to indicate the upper root of the directory.
+        (This is typically the entry point of the revision).
+
+    Raises:
+        Nothing
+        If something is raised, this is a programmatic error.
 
     """
     ls_hashes = {}
