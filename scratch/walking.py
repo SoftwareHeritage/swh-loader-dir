@@ -5,6 +5,7 @@ import shutil
 import tempfile
 
 from swh.core import hashutil
+from swh.loader.dir import git
 
 
 def compute_hashes(dirpath, filename):
@@ -47,9 +48,6 @@ def compute_directory_hash(dirpath, hashes):
         if not hashes:
             return hashes
         sorted_res = sorted(hashes, key=lambda entry: entry['name'])
-        # print('byte ordered files(%s): ' % dirpath)
-        # for entry in sorted_res:
-        #     print(entry['name'])
         return sorted_res
 
     def row_entry_tree_format(hashes):
@@ -59,21 +57,11 @@ def compute_directory_hash(dirpath, hashes):
                              entry['name'],
                              b'\0',
                              entry['sha1_git']]),
-                   # entry['perms'] + b' ' +  entry['name'] +
-                   # b'\0' + entry['sha1_git'],
                    hashes)
 
     rows = row_entry_tree_format(sort_by_entry_name(hashes[dirpath]))
     tree_content = b''.join(rows)
-
-    print("tree content: %s\n size: %s" % (tree_content, len(tree_content)))
-    h = hashutil.hashdata(tree_content,
-                          algorithms=['sha1_tree_git'])
-
-    # FIXME: Upgrade swh-core instead to permit the same-key use
-    sha1 = h.pop('sha1_tree_git')
-    h.update({'sha1_git': sha1})
-    print('dirpath: %s -> %s\n' % (dirpath, hashutil.hash_to_hex(sha1)))
+    h = git.hashdata(tree_content, 'tree')
     return h
 
 
