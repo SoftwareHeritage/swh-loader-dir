@@ -35,23 +35,22 @@ Notes:
 sha1 git directory/tree computation:
 
     tree `tree-size`\0
-    <file-perm> <file-name>\0<file-sha1-in-20-bytes-string>  <- 28 bytes
-    <dir-perm> <dir-name>\0<dir-sha1-in-20-bytes-string>     <- 28 bytes
+    <file-perm> <file-name>\0<file-sha1-in-20-bytes-string>
+    <dir-perm> <dir-name>\0<dir-sha1-in-20-bytes-string>
 
 
 Notes:
-- permission is length 6 + space + \0 -> so 8 bytes
-- sha1 is 20 bytes so one row is 28 bytes.
-- tree-size = 28 * number of rows
-- no newline separator
-- What's the entry order? byte
+- no newline separator between tree entries
+- tree content size is the length of the content
+- What's the entry order? byte order on the filename
   -> `git mk-tree` does not need to presort the input -> git mktree creates a tree and store in a git file storage -> no go
 
 permissions:
 - 100644 - file
-- 040000 - directory
+- 40000  - directory
 - 100755 - executable file
 - 120000 - symbolink link
+- 160000 - git link
 
 ### content/file
 
