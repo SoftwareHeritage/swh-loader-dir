@@ -1,6 +1,11 @@
 SWH-loader-dir
 ==============
 
+# TL;DR
+
+WIP -> Main entry point is scratch/walking.py for the moment
+
+
 The Software Heritage Loader Dir is a tool and a library to walk a local
 Directory and inject into the SWH dataset all unknown contained files.
 
