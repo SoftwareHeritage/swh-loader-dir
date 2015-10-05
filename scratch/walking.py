@@ -6,6 +6,7 @@ import tempfile
 
 from swh.core import hashutil
 from swh.loader.dir import git
+from swh.loader.dir.git import GitPerm, GitType
 
 
 def compute_hashes(dirpath, filename):
@@ -52,7 +53,7 @@ def compute_directory_hash(dirpath, hashes):
 
     def row_entry_tree_format(hashes):
         return map(lambda entry:
-                   b''.join([entry['perms'],
+                   b''.join([entry['perms'].value,
                              b' ',
                              entry['name'],
                              b'\0',
@@ -86,8 +87,8 @@ def walk_and_compute_sha1_from_directory(dir):
             m_hashes = compute_hashes(dirpath, filename)
             m_hashes.update({
                 'name': bytes(filename, 'utf-8'),
-                'perms': b'100644',  # FIXME symlink, exec file, gitlink...
-                'type': b'blob',
+                'perms': GitPerm.file,  # FIXME symlink, exec file, gitlink...
+                'type': GitType.file,
             })
             hashes.append(m_hashes)
 
@@ -102,8 +103,8 @@ def walk_and_compute_sha1_from_directory(dir):
             tree_hash = compute_directory_hash(fullname, ls_hashes)
             tree_hash.update({
                 'name': bytes(dirname, 'utf-8'),
-                'perms': b'40000',
-                'type': b'tree'
+                'perms': GitPerm.dir,
+                'type': GitType.dir
             })
             dir_hashes.append(tree_hash)
 
@@ -116,8 +117,8 @@ def walk_and_compute_sha1_from_directory(dir):
     root_hash = compute_directory_hash(dir, ls_hashes)
     root_hash.update({
         'name': b'root',
-        'perms': b'40000',
-        'type': b'tree'
+        'perms': GitPerm.dir,
+        'type': GitType.dir
     })
     ls_hashes.update({
         'root': [root_hash]
@@ -161,8 +162,8 @@ def git_ls_tree_rec(hashes):
         print("entry name: %s" % entry)
         for file in entry_properties:
             sha1 = hashutil.hash_to_hex(file['sha1_git'])
-            print("%s %s %s\t%s" % (file['perms'].decode('utf-8'),
-                                    file['type'].decode('utf-8'),
+            print("%s %s %s\t%s" % (file['perms'].value.decode('utf-8'),
+                                    file['type'].value.decode('utf-8'),
                                     sha1,
                                     file['name'].decode('utf-8')))
         print()
