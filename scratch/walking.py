@@ -127,8 +127,7 @@ def write_file(file, content):
 
 # prepare some arborescence with dirs and files to walk it
 # scratch_folder_root = tempfile.mktemp(prefix='swh.loader.dir', suffix='.tmp', dir='/tmp')
-
-scratch_folder_root = '/home/tony/tmp'
+scratch_folder_root = os.path.join(os.environ['HOME'], 'tmp')
 
 # scratch_folder_foo = os.path.join(scratch_folder_root, 'foo')
 # os.makedirs(scratch_folder_foo, exist_ok=True)
