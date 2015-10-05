@@ -32,11 +32,12 @@ def compute_directory_hash(dirpath, hashes):
     """Compute a directory git sha1 for a dirpath.
 
     Args:
-        dirpath: the absolute path of the directory
-        hashes: list of dictionaries with keys:
-            - sha1_git:
-            - path: directory parent of the filename
-            - name: file's name
+        dirpath: the directory's absolute path
+        hashes: list of tree entries with keys:
+            - sha1_git: its sha1
+            - name: file or subdir's name
+            - perms: the tree entry's sha1 permissions
+            - type: not used
 
         Returns:
             sha1 git of the directory
