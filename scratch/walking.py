@@ -69,7 +69,7 @@ def walk_and_compute_sha1_from_directory(dir):
     ls_hashes = {}
     empty_dir = set()
 
-    for dirpath, dirnames, filenames in os.walk(dir, topdown=False):
+    for dirpath, dirnames, filenames in os.walk(rootdir, topdown=False):
         hashes = []
 
         if dirnames == [] and filenames == []:
@@ -108,14 +108,14 @@ def walk_and_compute_sha1_from_directory(dir):
         })
 
     # compute the current directory hashes
-    root_hash = compute_directory_hash(dir, ls_hashes)
+    root_hash = compute_directory_hash(rootdir, ls_hashes)
     root_hash.update({
-        'name': b'root',
+        'name': bytes(rootdir, 'utf-8'),
         'perms': GitPerm.dir,
         'type': GitType.dir
     })
     ls_hashes.update({
-        'root': [root_hash]
+        '<root>': [root_hash]
     })
 
     return ls_hashes
