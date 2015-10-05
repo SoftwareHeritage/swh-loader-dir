@@ -61,6 +61,7 @@ def compute_directory_hash(dirpath, hashes):
     rows = row_entry_tree_format(sort_by_entry_name(hashes[dirpath]))
     return git.hashdata(b''.join(rows), 'tree')
 
+
 def walk_and_compute_sha1_from_directory(dir):
     """Compute git sha1 from directory dir.
 
@@ -98,10 +99,10 @@ def walk_and_compute_sha1_from_directory(dir):
             })
             dir_hashes.append(tree_hash)
 
+
         ls_hashes.update({
             dirpath: ls_hashes.get(dirpath, []) + dir_hashes
         })
-
 
     # compute the current directory hashes
     root_hash = compute_directory_hash(dir, ls_hashes)
