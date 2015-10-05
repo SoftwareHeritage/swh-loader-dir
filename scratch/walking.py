@@ -25,8 +25,7 @@ def compute_hashes(dirpath, filename):
     return hashutil.hashfile(fullname)
 
 
-# echo <git ls-tree format input> | git mktree --missing
-
+# Note: echo <git ls-tree format input> | git mktree --missing
 def compute_directory_hash(dirpath, hashes):
     """Compute a directory git sha1 for a dirpath.
 
@@ -42,63 +41,147 @@ def compute_directory_hash(dirpath, hashes):
 
         Assumes:
             Every path exists.
+
     """
+    def sort_by_entry_name(hashes):
+        if not hashes:
+            return hashes
+        sorted_res = sorted(hashes, key=lambda entry: entry['name'])
+        # print('byte ordered files(%s): ' % dirpath)
+        # for entry in sorted_res:
+        #     print(entry['name'])
+        return sorted_res
+
     def row_entry_tree_format(hashes):
         return map(lambda entry:
-                   entry['perms'] + b' ' + entry['name'] + b'\0' +
-                   entry['sha1_git'],
+                   b''.join([entry['perms'],
+                             b' ',
+                             entry['name'],
+                             b'\0',
+                             entry['sha1_git']]),
+                   # entry['perms'] + b' ' +  entry['name'] +
+                   # b'\0' + entry['sha1_git'],
                    hashes)
 
-    rows = list(row_entry_tree_format(hashes))
-    return hashutil.hashdata(b''.join(rows),
-                             algorithms=['sha1_tree_git'])
+    rows = row_entry_tree_format(sort_by_entry_name(hashes[dirpath]))
+    tree_content = b''.join(rows)
+
+    print("tree content: %s\n size: %s" % (tree_content, len(tree_content)))
+    h = hashutil.hashdata(tree_content,
+                          algorithms=['sha1_tree_git'])
+
+    # FIXME: Upgrade swh-core instead to permit the same-key use
+    sha1 = h.pop('sha1_tree_git')
+    h.update({'sha1_git': sha1})
+    print('dirpath: %s -> %s\n' % (dirpath, hashutil.hash_to_hex(sha1)))
+    return h
 
 
-def walk_from(dir):
+# 100644: regular file
+# 100755: executable
+# 40000: tree
+# 120000: symlink
+# 160000: gitlink
+def walk_and_compute_sha1_from_directory(dir):
+    """Compute git sha1 from directory dir.
+
+    """
+    ls_hashes = {}
+
     for dirpath, dirnames, filenames in os.walk(dir, topdown=False):
-        print('dirpath: %s\ndirnames: %s' % (dirpath, dirnames))
-        dir_hashes = []
-        for filename in filenames:
-            fullname = os.path.join(dirpath, filename)
-            print('filename: %s' % filename)
-            hashes = compute_hashes(dirpath, fullname)
-            hashes.update({
-                'name': bytes(filename, 'utf-8'),
-                'parent': dirpath,
-                'perms': bytes('100644', 'utf-8'),
-            })
-            print('hashes: %s' % hashes)
-            dir_hashes.append(hashes)
+        hashes = []
+        # FIXME: deal with empty directories which must be skipped!
+        #  -> pb with bottom up approach
 
-        tree_hash = compute_directory_hash(dirpath, dir_hashes)
-        tree_hash.update({
-            'name': dirpath,
-            'type': 'tree'
+        # compute content hashes
+        for filename in filenames:
+            m_hashes = compute_hashes(dirpath, filename)
+            m_hashes.update({
+                'name': bytes(filename, 'utf-8'),
+                'perms': b'100644',  # FIXME symlink, exec file, gitlink...
+                'type': b'blob',
+            })
+            hashes.append(m_hashes)
+
+        ls_hashes.update({
+            dirpath: hashes
         })
-        print("directory sha1: %s" % tree_hash)
-        print()
+
+        dir_hashes = []
+        # compute directory hashes
+        for dirname in dirnames:
+            fullname = os.path.join(dirpath, dirname)
+            tree_hash = compute_directory_hash(fullname, ls_hashes)
+            tree_hash.update({
+                'name': bytes(dirname, 'utf-8'),
+                'perms': b'40000',
+                'type': b'tree'
+            })
+            dir_hashes.append(tree_hash)
+
+        ls_hashes.update({
+            dirpath: ls_hashes.get(dirpath, []) + dir_hashes
+        })
+
+
+    # compute the current directory hashes
+    root_hash = compute_directory_hash(dir, ls_hashes)
+    root_hash.update({
+        'name': b'root',
+        'perms': b'40000',
+        'type': b'tree'
+    })
+    ls_hashes.update({
+        'root': [root_hash]
+    })
+
+    return ls_hashes
 
 
 def write_file(file, content):
+    """Write some content in a file.
+
+    """
     with open(file, 'w') as f:
         f.write(content)
 
+
 # prepare some arborescence with dirs and files to walk it
-scratch_folder_root = tempfile.mktemp(prefix='swh.loader.dir', suffix='.tmp', dir='/tmp')
-scratch_folder_foo = os.path.join(scratch_folder_root, 'foo')
-os.makedirs(scratch_folder_foo, exist_ok=True)
-scratch_folder_bar = os.path.join(scratch_folder_root, 'bar/barfoo')
-os.makedirs(scratch_folder_bar, exist_ok=True)
+# scratch_folder_root = tempfile.mktemp(prefix='swh.loader.dir', suffix='.tmp', dir='/tmp')
 
-scratch_file = os.path.join(scratch_folder_foo, 'quotes.md')
-write_file(scratch_file,
-           'Shoot for the moon. Even if you miss, you\'ll land among the stars.')
+scratch_folder_root = '/home/tony/tmp'
 
-scratch_file2 = os.path.join(scratch_folder_bar, 'another-quote.org')
-write_file(scratch_file2,
-           'A Victory without danger is a triumph without glory.\n-- Pierre Corneille')
+# scratch_folder_foo = os.path.join(scratch_folder_root, 'foo')
+# os.makedirs(scratch_folder_foo, exist_ok=True)
+# scratch_folder_bar = os.path.join(scratch_folder_root, 'bar/barfoo')
+# os.makedirs(scratch_folder_bar, exist_ok=True)
 
-walk_from(scratch_folder_root)
+# scratch_file = os.path.join(scratch_folder_foo, 'quotes.md')
+# write_file(scratch_file,
+#            'Shoot for the moon. Even if you miss, you\'ll land among the stars.')
+
+# scratch_file2 = os.path.join(scratch_folder_bar, 'another-quote.org')
+# write_file(scratch_file2,
+#            'A Victory without danger is a triumph without glory.\n-- Pierre Corneille')
+
+def git_ls_tree_rec(hashes):
+    """Display the computed result for debug purposes.
+
+    """
+    for entry in hashes.keys():
+        entry_properties = hashes[entry]
+        print("entry name: %s" % entry)
+        for file in entry_properties:
+            sha1 = hashutil.hash_to_hex(file['sha1_git'])
+            print("%s %s %s\t%s" % (file['perms'].decode('utf-8'),
+                                    file['type'].decode('utf-8'),
+                                    sha1,
+                                    file['name'].decode('utf-8')))
+        print()
+
+
+hashes = walk_and_compute_sha1_from_directory(scratch_folder_root)
+git_ls_tree_rec(hashes)
 
 # clean up
-shutil.rmtree(scratch_folder_root, ignore_errors = True)
+# shutil.rmtree(scratch_folder_root, ignore_errors = True)
