@@ -67,11 +67,14 @@ def walk_and_compute_sha1_from_directory(dir):
 
     """
     ls_hashes = {}
+    empty_dir = set()
 
     for dirpath, dirnames, filenames in os.walk(dir, topdown=False):
         hashes = []
-        # FIXME: deal with empty directories which must be skipped!
-        #  -> pb with bottom up approach
+
+        if dirnames == [] and filenames == []:
+            empty_dir.add(dirpath)
+            continue
 
         # compute content hashes
         for filename in filenames:
@@ -88,8 +91,8 @@ def walk_and_compute_sha1_from_directory(dir):
         })
 
         dir_hashes = []
-        # compute directory hashes
-        for dirname in dirnames:
+        # compute directory hashes and skip empty ones
+        for dirname in [dir for dir in dirnames if os.path.join(dirpath, dir) not in empty_dir]:
             fullname = os.path.join(dirpath, dirname)
             tree_hash = compute_directory_hash(fullname, ls_hashes)
             tree_hash.update({
