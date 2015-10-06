@@ -30,6 +30,12 @@ class GitPerm(Enum):
 def compute_symlink_hash(linkpath):
     """Compute git sha1 for a link.
 
+    Args:
+        linkpath: the absolute path name to a symbolic link.
+
+    Returns:
+        dictionary with sha1_git as key and the actual binary sha1 as value.
+
     """
     dest_path = os.readlink(linkpath)
     return utils.hashdata(dest_path.encode('utf-8'), 'blob')
@@ -41,16 +47,15 @@ def compute_directory_hash(dirpath, hashes):
     Args:
         dirpath: the directory's absolute path
         hashes: list of tree entries with keys:
-            - sha1_git: its sha1
+            - sha1_git: the tree entry's sha1
             - name: file or subdir's name
             - perms: the tree entry's sha1 permissions
-            - type: not used
 
         Returns:
-            sha1 git of the directory
+            dictionary with sha1_git as key and the actual binary sha1 as value.
 
         Assumes:
-            Every path exists.
+            Every path exists in hashes.
 
     """
     def sort_by_entry_name(hashes):
@@ -67,6 +72,47 @@ def compute_directory_hash(dirpath, hashes):
 
     rows = row_entry_tree_format(sort_by_entry_name(hashes[dirpath]))
     return utils.hashdata(b''.join(rows), 'tree')
+
+
+def compute_revision_hash(hashes, info):
+    """Compute a revision's hash.
+
+    Use the <root> entry's sha1_git as tree representation.
+
+    Args:
+        hashes:
+        info: Additional dictionary information needed to compute a synthetic
+        revision. Following keys are expected:
+            - revision_author_name
+            - revision_author_email
+            - revision_author_date
+            - revision_author_offset
+            - revision_committer_name
+            - revision_committer_email
+            - revision_committer_date
+            - revision_committer_offset
+            - revision_message
+
+
+    """
+    tree_hash = utils.hash_to_hex(hashes['<root>'][0]['sha1_git'])
+
+    revision_content = ("""tree %s
+author %s <%s> %s %s
+committer %s <%s> %s %s
+
+%s
+""" % (tree_hash,
+         info['revision_author_name'],
+         info['revision_author_email'],
+         info['revision_author_date'],
+         info['revision_author_offset'],
+         info['revision_committer_name'],
+         info['revision_committer_email'],
+         info['revision_committer_date'],
+         info['revision_committer_offset'],
+         info['revision_message'])).encode('utf-8')
+    return utils.hashdata(revision_content, 'commit')
 
 
 def walk_and_compute_sha1_from_directory(rootdir):
@@ -186,29 +232,3 @@ def walk_and_compute_sha1_from_directory(rootdir):
     })
 
     return ls_hashes
-
-
-def compute_revision_hash(hashes, info):
-    """Compute a revision's hash.
-
-    Use the <root> entry's sha1_git as tree representation.
-
-    """
-    tree_hash = utils.hash_to_hex(hashes['<root>'][0]['sha1_git'])
-
-    revision_content = ("""tree %s
-author %s <%s> %s %s
-committer %s <%s> %s %s
-
-%s
-""" % (tree_hash,
-         info['revision_author_name'],
-         info['revision_author_email'],
-         info['revision_author_date'],
-         info['revision_author_offset'],
-         info['revision_committer_name'],
-         info['revision_committer_email'],
-         info['revision_committer_date'],
-         info['revision_committer_offset'],
-         info['revision_message'])).encode('utf-8')
-    return utils.hashdata(revision_content, 'commit')
