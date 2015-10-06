@@ -7,32 +7,25 @@ import tempfile
 from swh.loader.dir.git import git, utils
 
 
-def write_file(file, content):
+def write_file(root, file, content):
     """Write some content in a file.
 
     """
-    with open(file, 'w') as f:
+    filename = os.path.join(root, file)
+    with open(filename, 'w') as f:
         f.write(content)
 
 
-# prepare some arborescence with dirs and files to walk it
-# scratch_folder_root = tempfile.mktemp(prefix='swh.loader.dir', suffix='.tmp', dir='/tmp')
-scratch_folder_root = os.path.join(os.environ['HOME'], 'tmp')
+def mkdir(root, name):
+    """Create a directory path on disk.
 
-# scratch_folder_foo = os.path.join(scratch_folder_root, 'foo')
-# os.makedirs(scratch_folder_foo, exist_ok=True)
-# scratch_folder_bar = os.path.join(scratch_folder_root, 'bar/barfoo')
-# os.makedirs(scratch_folder_bar, exist_ok=True)
+    """
+    full_foldername = os.path.join(root, name)
+    os.makedirs(full_foldername, exist_ok=True)
+    return full_foldername
 
-# scratch_file = os.path.join(scratch_folder_foo, 'quotes.md')
-# write_file(scratch_file,
-#            'Shoot for the moon. Even if you miss, you\'ll land among the stars.')
 
-# scratch_file2 = os.path.join(scratch_folder_bar, 'another-quote.org')
-# write_file(scratch_file2,
-#            'A Victory without danger is a triumph without glory.\n-- Pierre Corneille')
-
-def git_ls_tree_rec(hashes):
+def git_ls_tree_rec(hashes, info):
     """Display the computed result for debug purposes.
 
     """
@@ -47,9 +40,33 @@ def git_ls_tree_rec(hashes):
                                     file['name'].decode('utf-8')))
         print()
 
+    revision = git.compute_revision_hash(hashes, info)
+    print('revision %s -> directory %s' % (
+        utils.hash_to_hex(revision['sha1_git']),
+        utils.hash_to_hex(hashes['<root>'][0]['sha1_git'])
+    ))
 
-hashes = git.walk_and_compute_sha1_from_directory(scratch_folder_root)
-git_ls_tree_rec(hashes)
+
+### setup - prepare some arborescence with dirs and files to walk it
+
+tempfilename = tempfile.mktemp(prefix='swh.loader.dir', suffix='.tmp',
+                               dir='/tmp')
+# want the same name for idempotency
+scratch_folder_root = mkdir(tempfilename, 'tmp')
+
+mkdir(scratch_folder_root, 'empty-folder')
+scratch_folder_foo = mkdir(scratch_folder_root, 'foo')
+scratch_folder_bar = mkdir(scratch_folder_root, 'bar/barfoo')
+
+write_file(scratch_folder_foo,
+           'quotes.md',
+           'Shoot for the moon. Even if you miss, you\'ll land among '
+           'the stars.')
+
+write_file(scratch_folder_bar,
+           'another-quote.org',
+           'A Victory without danger is a triumph without glory.\n'
+           '-- Pierre Corneille')
 
 ADDITIONAL_INFO = {
     'revision_author_name': 'swh author',
@@ -64,8 +81,12 @@ ADDITIONAL_INFO = {
     'revision_message': 'synthetic revision message'
 }
 
-revision_hash = git.compute_revision_hash(hashes, ADDITIONAL_INFO)
-print('revision directory: %s' % revision_hash)
+# when
+hashes = git.walk_and_compute_sha1_from_directory(scratch_folder_root)
 
-# clean up
-# shutil.rmtree(scratch_folder_root, ignore_errors = True)
+# then
+git_ls_tree_rec(hashes, ADDITIONAL_INFO)
+
+
+### teardown
+shutil.rmtree(tempfilename, ignore_errors = True)
