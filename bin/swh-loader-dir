@@ -22,14 +22,16 @@ ADDITIONAL_CONFIG = {
     'authority': ('int', 1),
     'validity': ('str', '2015-01-01 00:00:00+00'),
     # revision information
-    'revision_date': ('str', '2015-01-01 00:00:00+00'),
-    'revision_offset': ('str', '2'),
+    'revision_author_name': ('str', 'swh author'),
+    'revision_author_email': ('str', 'swh@inria.fr'),
+    'revision_author_date': ('str', '2015-01-01 00:00:00+00'),
+    'revision_author_offset': ('str', '2'),
+    'revision_committer_name': ('str', 'swh committer'),
+    'revision_committer_email': ('str', 'swh@inria.fr'),
     'revision_committer_date': ('str', '2015-01-01 00:00:00+00'),
     'revision_committer_offset': ('str', '2'),
     'revision_type': ('str', 'dir'),
     'revision_message': ('str', 'synthetic revision message'),
-    'revision_author': ('str', 'swh author'),
-    'revision_committer': ('str', 'swh committer')
 }
 
 
