@@ -24,19 +24,19 @@ ADDITIONAL_CONFIG = {
     # revision information
     'revision_author_name': ('str', 'swh author'),
     'revision_author_email': ('str', 'swh@inria.fr'),
-    'revision_author_date': ('str', '2015-01-01 00:00:00+00'),
-    'revision_author_offset': ('str', '2'),
+    'revision_author_date': ('str', '1444054085'),
+    'revision_author_offset': ('str', '+0200'),
     'revision_committer_name': ('str', 'swh committer'),
     'revision_committer_email': ('str', 'swh@inria.fr'),
-    'revision_committer_date': ('str', '2015-01-01 00:00:00+00'),
-    'revision_committer_offset': ('str', '2'),
+    'revision_committer_date': ('str', '1444054085'),
+    'revision_committer_offset': ('str', '+0200'),
     'revision_type': ('str', 'dir'),
     'revision_message': ('str', 'synthetic revision message'),
 }
 
 
-my_config = BulkLoader.parse_config_file(config_filename=sys.argv[1],
-                                         additional_configs=[ADDITIONAL_CONFIG])
+my_config = DirLoader.parse_config_file(config_filename=sys.argv[1],
+                                        additional_configs=[ADDITIONAL_CONFIG])
 
 
 logging.basicConfig(
@@ -50,7 +50,6 @@ logging.basicConfig(
 
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.CRITICAL)
-
 
 
 loader = DirLoader(my_config)
