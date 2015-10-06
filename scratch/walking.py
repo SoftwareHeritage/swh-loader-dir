@@ -87,6 +87,5 @@ hashes = git.walk_and_compute_sha1_from_directory(scratch_folder_root)
 # then
 git_ls_tree_rec(hashes, ADDITIONAL_INFO)
 
-
 ### teardown
 shutil.rmtree(tempfilename, ignore_errors = True)

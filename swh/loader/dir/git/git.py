@@ -180,7 +180,6 @@ def compute_tree_metadata(dirname, ls_hashes):
     return tree_hash
 
 
-
 def walk_and_compute_sha1_from_directory(rootdir):
     """Compute git sha1 from directory rootdir.
 
