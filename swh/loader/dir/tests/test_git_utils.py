@@ -7,7 +7,7 @@ import unittest
 
 from nose.tools import istest
 
-from swh.loader.dir import git
+from swh.loader.dir.git import utils
 
 
 class GitHashlib(unittest.TestCase):
@@ -41,14 +41,14 @@ initial
     @istest
     def unknown_header_type(self):
         with self.assertRaises(ValueError) as cm:
-            git.hashdata(b'any-data', 'some-unknown-type')
+            utils.hashdata(b'any-data', 'some-unknown-type')
 
         self.assertIn('Only supported types', cm.exception.args[0])
 
     @istest
     def hashdata_content(self):
         # when
-        checksums = git.hashdata(self.blob_data, 'blob')
+        checksums = utils.hashdata(self.blob_data, 'blob')
 
         # then
         self.assertEqual(checksums['sha1_git'], self.checksums['blob_sha1_git'])
@@ -56,7 +56,7 @@ initial
     @istest
     def hashdata_tree(self):
         # when
-        checksums = git.hashdata(self.tree_data, 'tree')
+        checksums = utils.hashdata(self.tree_data, 'tree')
 
         # then
         self.assertEqual(checksums['sha1_git'], self.checksums['tree_sha1_git'])
@@ -64,7 +64,7 @@ initial
     @istest
     def hashdata_revision(self):
         # when
-        checksums = git.hashdata(self.commit_data, 'commit')
+        checksums = utils.hashdata(self.commit_data, 'commit')
 
         # then
         self.assertEqual(checksums['sha1_git'], self.checksums['commit_sha1_git'])

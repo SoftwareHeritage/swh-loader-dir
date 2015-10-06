@@ -7,25 +7,13 @@
 import hashlib
 
 from io import BytesIO
-from enum import Enum
 
 from swh.core import hashutil
 
 
-class GitType(Enum):
-    file = b'blob'
-    dir = b'tree'
-    exec = b'exec'
-    link = b'link'
-    gitlink = b'gitlink'
-
-
-class GitPerm(Enum):
-    file = b'100644'
-    dir = b'40000'
-    exec = b'100755'
-    link = b'120000'
-    gitlink = b'160000'
+hashfile = hashutil.hashfile
+hash_to_hex = hashutil.hash_to_hex
+hex_to_hash = hashutil.hex_to_hash
 
 
 def _new_hash(header_type, length):
