@@ -10,19 +10,13 @@ import os
 import psycopg2
 
 from retrying import retry
-from enum import Enum
 
 from swh.core import config
 
-from . import converters
-from .utils import get_objects_per_object_type
+from swh.loader.dir import converters
+from swh.loader.dir.git import git
+from swh.loader.dir.git.git import GitType
 
-
-class DirType(Enum):
-    DIR='directory'
-    CON='content'
-    REV='revision'
-    REL='release'
 
 def send_in_packets(source_list, formatter, sender, packet_size,
                     packet_size_bytes=None, *args, **kwargs):
@@ -251,6 +245,8 @@ class DirLoader(config.SWHConfig):
         """Create a revision.
 
         """
+        log_id = str(uuid.uuid4())
+
         self.log.debug('Creating origin for %s' % origin_url,
                        extra={
                            'swh_type': 'storage_send_start',
@@ -317,11 +313,11 @@ class DirLoader(config.SWHConfig):
                         self.send_occurrences, packet_size)
 
     def compute_dir_ref(self, root_dir,
-                       branch,
-                       revision_hash,
-                       origin_id,
-                       authority_id,
-                       validity):
+                        branch,
+                        revision_hash,
+                        origin_id,
+                        authority_id,
+                        validity):
         """List all the refs from the given root directory root_dir.
 
         Args:
@@ -362,7 +358,7 @@ class DirLoader(config.SWHConfig):
             'authority': authority_id,
         }
 
-    def list_repo_objs(self, root_dir):
+    def list_repo_objs(self, root_dir, info):
         """List all objects from root_dir.
 
         Args:
@@ -373,80 +369,82 @@ class DirLoader(config.SWHConfig):
             - CONTENT
             - DIRECTORY
         """
-        # log_id = str(uuid.uuid4())
+        def get_objects_per_object_type(objects_per_path):
+            m = {
+                GitType.file: [],
+                GitType.tree: [],
+                GitType.commit: []
+            }
+            for path in objects_per_path:
+                for obj in path:
+                    m[obj['type']].append(obj)
 
-        # self.log.info("Started listing %s" % root_dir.path, extra={
-        #     'swh_type': 'git_list_objs_start',
-        #     'swh_repo': root_dir.path,
-        #     'swh_id': log_id,
-        # })
-        # objects = get_objects_per_object_type(root_dir)
-        # self.log.info("Done listing the objects in %s: %d contents, "
-        #               "%d directories, %d revisions, %d releases" % (
-        #                  root_dir.path,
-        #                  len(objects[GIT_OBJ_BLOB]),
-        #                  len(objects[GIT_OBJ_TREE]),
-        #                  len(objects[GIT_OBJ_COMMIT]),
-        #                  len(objects[GIT_OBJ_TAG]),
-        #               ), extra={
-        #                   'swh_type': 'git_list_objs_end',
-        #                   'swh_repo': root_dir.path,
-        #                   'swh_num_blobs': len(objects[GIT_OBJ_BLOB]),
-        #                   'swh_num_trees': len(objects[GIT_OBJ_TREE]),
-        #                   'swh_num_commits': len(objects[GIT_OBJ_COMMIT]),
-        #                   'swh_num_tags': len(objects[GIT_OBJ_TAG]),
-        #                   'swh_id': log_id,
-        #               })
-        # return objects
+            return m
 
-        return []
+        log_id = str(uuid.uuid4())
+
+        self.log.info("Started listing %s" % root_dir, extra={
+            'swh_type': 'git_list_objs_start',
+            'swh_repo': root_dir.path,
+            'swh_id': log_id,
+        })
+
+        objects_per_path = git.walk_and_compute_sha1_from_directory(root_dir)
+
+        objects = get_objects_per_object_type(objects_per_path)
+
+        revision = git.compute_revision_git_sha1(objects, info)
+        objects.update({
+            GitType.commit: [revision]
+        })
+
+        self.log.info("Done listing the objects in %s: %d contents, "
+                      "%d directories, %d revisions, %d releases" % (
+                          root_dir.path,
+                          len(objects[GitType.file]),
+                          len(objects[GitType.tree]),
+                          len(objects[GitType.commit])
+                      ), extra={
+                          'swh_type': 'git_list_objs_end',
+                          'swh_repo': root_dir.path,
+                          'swh_num_blobs': len(objects[GitType.file]),
+                          'swh_num_trees': len(objects[GitType.tree]),
+                          'swh_num_commits': len(objects[GitType.commit]),
+                          'swh_id': log_id,
+                      })
+
+        return objects
 
     def open_dir(self, root_dir):
         return root_dir
 
     def load_dir(self, root_dir, objects, refs, origin_id):
         if self.config['send_contents']:
-            self.bulk_send_blobs(root_dir, objects[DirType.CON], origin_id)
+            self.bulk_send_blobs(root_dir, objects[GitType.blob], origin_id)
         else:
             self.log.info('Not sending contents')
 
         if self.config['send_directories']:
-            self.bulk_send_trees(root_dir, objects[DirType.DIR])
+            self.bulk_send_trees(root_dir, objects[GitType.tree])
         else:
             self.log.info('Not sending directories')
 
         if self.config['send_revisions']:
-            self.bulk_send_commits(root_dir, objects[DirType.REV])
+            self.bulk_send_commits(root_dir, objects[GitType.commit])
         else:
             self.log.info('Not sending revisions')
 
-        if self.config['send_releases']:
-            self.bulk_send_annotated_tags(root_dir, objects[DirType.REL])
-        else:
-            self.log.info('Not sending releases')
+        # if self.config['send_releases']:
+        #     self.bulk_send_annotated_tags(root_dir, objects[DirType.REL])
+        # else:
+        #     self.log.info('Not sending releases')
 
-        if self.config['send_occurrences']:
-            self.bulk_send_refs(root_dir, refs)
-        else:
-            self.log.info('Not sending occurrences')
+        # if self.config['send_occurrences']:
+        #     self.bulk_send_refs(root_dir, refs)
+        # else:
+        #     self.log.info('Not sending occurrences')
 
-    def compute_revision_hash_from(self,
-                                   root_dir,
-                                   revision_date,
-                                   revision_offset,
-                                   revision_committer_date,
-                                   revision_committer_offset,
-                                   revision_type,
-                                   revision_message,
-                                   revision_author,
-                                   revision_committer):
-        """Compute the revision git sha1 from the root_dir.
-
-        """
-        # FIXME: actually do it
-        return {'git_sha1': ''}
-
-    def process(self, root_dir, extra_config):
+    def process(self, root_dir):
         # Checks the input
         try:
             files = os.listdir(root_dir)
@@ -471,28 +469,20 @@ class DirLoader(config.SWHConfig):
         # Add origin to storage if needed, use the one from config if not
         origin = self.dir_origin(root_dir, self.config['origin_url'])
 
+        # We want to load the repository, walk all the objects
+        objects = self.list_repo_objs(root_dir, self.config)
+
         # Compute revision information (mixed from outside input + dir content)
-        revision = self.compute_revision_hash_from(
-            root_dir,
-            self.config['revision_date'],
-            self.config['revision_offset'],
-            self.config['revision_committer_date'],
-            self.config['revision_committer_offset'],
-            self.config['revision_type'],
-            self.config['revision_message'],
-            self.config['revision_author'],
-            self.config['revision_committer'])
+        revision = objects[GitType.commit][0]['sha1_git']
 
         # Parse all the refs from our root_dir
         ref = self.compute_dir_ref(root_dir,
                                    origin['id'],
                                    self.config['branch'],
-                                   revision['git_sha1'],
+                                   revision['sha1_git'],
                                    self.config['authority_id'],
                                    self.config['validity'])
 
-        # We want to load the repository, walk all the objects
-        objects = self.list_repo_objs(root_dir)
 
         # Finally, load the repository
         self.load_dir(root_dir, objects, [ref], origin['id'])
