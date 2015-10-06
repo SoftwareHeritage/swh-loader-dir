@@ -27,7 +27,7 @@ class GitPerm(Enum):
     gitlink = b'160000'
 
 
-def compute_symlink_hash(linkpath):
+def compute_symlink_git_sha1(linkpath):
     """Compute git sha1 for a link.
 
     Args:
@@ -41,7 +41,7 @@ def compute_symlink_hash(linkpath):
     return utils.hashdata(dest_path.encode('utf-8'), 'blob')
 
 
-def compute_directory_hash(dirpath, hashes):
+def compute_directory_git_sha1(dirpath, hashes):
     """Compute a directory git sha1 for a dirpath.
 
     Args:
@@ -74,7 +74,7 @@ def compute_directory_hash(dirpath, hashes):
     return utils.hashdata(b''.join(rows), 'tree')
 
 
-def compute_revision_hash(hashes, info):
+def compute_revision_git_sha1(hashes, info):
     """Compute a revision's hash.
 
     Use the <root> entry's sha1_git as tree representation.
@@ -115,6 +115,72 @@ committer %s <%s> %s %s
     return utils.hashdata(revision_content, 'commit')
 
 
+def compute_link_metadata(linkpath):
+    """Given a linkpath, compute the git metadata.
+
+    Args:
+        linkpath: absolute pathname of the link
+
+    Returns:
+        Dictionary of values:
+            - name: basename of the link
+            - perms: git permission for link
+            - type: git type for link
+    """
+    m_hashes = compute_symlink_git_sha1(linkpath)
+    m_hashes.update({
+        'name': bytes(os.path.basename(linkpath), 'utf-8'),
+        'perms': GitPerm.link,
+        'type': GitType.file,
+    })
+    return m_hashes
+
+
+def compute_blob_metadata(filepath):
+    """Given a filepath, compute the git metadata.
+
+    Args:
+        filepath: absolute pathname of the file.
+
+    Returns:
+        Dictionary of values:
+            - name: basename of the file
+            - perms: git permission for file
+            - type: git type for file
+
+    """
+    m_hashes = utils.hashfile(filepath)
+    m_hashes.update({
+        'name': bytes(os.path.basename(filepath), 'utf-8'),
+        'perms': GitPerm.exec if os.access(filepath, os.X_OK) else GitPerm.file,
+        'type': GitType.file,
+    })
+    return m_hashes
+
+
+def compute_tree_metadata(dirname, ls_hashes):
+    """Given a dirname, compute the git metadata.
+
+    Args:
+        dirname: absolute pathname of the directory.
+
+    Returns:
+        Dictionary of values:
+            - name: basename of the directory
+            - perms: git permission for directory
+            - type: git type for directory
+
+    """
+    tree_hash = compute_directory_git_sha1(dirname, ls_hashes)
+    tree_hash.update({
+        'name': bytes(os.path.basename(dirname), 'utf-8'),
+        'perms': GitPerm.dir,
+        'type': GitType.dir
+    })
+    return tree_hash
+
+
+
 def walk_and_compute_sha1_from_directory(rootdir):
     """Compute git sha1 from directory rootdir.
 
@@ -139,23 +205,6 @@ def walk_and_compute_sha1_from_directory(rootdir):
         If something is raised, this is a programmatic error.
 
     """
-    def compute_git_perms(fpath):
-        """Given a filepath fpath, returns the git permissions associated.
-
-        Args:
-            fpath: absolute file (not directory) path
-
-        Returns:
-            Git equivalent permissions as in git.GitPerm enum.
-
-        """
-        if os.access(fpath, os.X_OK):
-            perms = GitPerm.exec
-        else:
-            perms = GitPerm.file
-
-        return perms
-
     ls_hashes = {}
     empty_dirs = set()
     link_dirs = set()
@@ -167,7 +216,6 @@ def walk_and_compute_sha1_from_directory(rootdir):
             empty_dirs.add(dirpath)
             continue
 
-        # Particular treatments for links
         links = [ file for file in filenames
                     if os.path.islink(os.path.join(dirpath, file)) ] + \
                 [ dir for dir in dirnames
@@ -176,24 +224,13 @@ def walk_and_compute_sha1_from_directory(rootdir):
         for link in links:
             linkpath = os.path.join(dirpath, link)
             link_dirs.add(linkpath)
-            m_hashes = compute_symlink_hash(linkpath)
-            m_hashes.update({
-                'name': bytes(linkpath, 'utf-8'),
-                'perms': GitPerm.link,
-                'type': GitType.file,
-            })
+            m_hashes = compute_link_metadata(linkpath)
             hashes.append(m_hashes)
 
-        # compute content hashes
         for filename in [ file for file in filenames
                             if os.path.join(dirpath, file) not in link_dirs ]:
             filepath = os.path.join(dirpath, filename)
-            m_hashes = utils.hashfile(filepath)
-            m_hashes.update({
-                'name': bytes(filename, 'utf-8'),
-                'perms': compute_git_perms(filepath),  # exec or standard
-                'type': GitType.file,
-            })
+            m_hashes = compute_blob_metadata(filepath)
             hashes.append(m_hashes)
 
         ls_hashes.update({
@@ -204,24 +241,17 @@ def walk_and_compute_sha1_from_directory(rootdir):
         subdirs = [ dir for dir in dirnames
                        if os.path.join(dirpath, dir)
                          not in (empty_dirs | link_dirs) ]
-        # compute directory hashes and skip empty ones
         for dirname in subdirs:
-            fullname = os.path.join(dirpath, dirname)
-            tree_hash = compute_directory_hash(fullname, ls_hashes)
-            tree_hash.update({
-                'name': bytes(dirname, 'utf-8'),
-                'perms': GitPerm.dir,
-                'type': GitType.dir
-            })
+            fulldirname = os.path.join(dirpath, dirname)
+            tree_hash = compute_tree_metadata(fulldirname, ls_hashes)
             dir_hashes.append(tree_hash)
-
 
         ls_hashes.update({
             dirpath: ls_hashes.get(dirpath, []) + dir_hashes
         })
 
     # compute the current directory hashes
-    root_hash = compute_directory_hash(rootdir, ls_hashes)
+    root_hash = compute_directory_git_sha1(rootdir, ls_hashes)
     root_hash.update({
         'name': bytes(rootdir, 'utf-8'),
         'perms': GitPerm.dir,

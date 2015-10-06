@@ -40,7 +40,7 @@ def git_ls_tree_rec(hashes, info):
                                     file['name'].decode('utf-8')))
         print()
 
-    revision = git.compute_revision_hash(hashes, info)
+    revision = git.compute_revision_git_sha1(hashes, info)
     print('revision %s -> directory %s' % (
         utils.hash_to_hex(revision['sha1_git']),
         utils.hash_to_hex(hashes['<root>'][0]['sha1_git'])
