@@ -9,18 +9,19 @@ from swh.loader.dir import git
 from swh.loader.dir.git import GitPerm, GitType
 
 
-def compute_hashes(dirpath, filename):
-    """Given a fullname, compute its hashes.
+def compute_content_hashes(dirpath, filename):
+    """Given a dirpath and a filename, compute the hashes for that particular
+    file.
 
     Args:
         dirpath: the absolute path of the filename
         filename: the file's name
 
     Returns:
-        The computed hash for that filename.
+        The computed hashes for that dirpath/filename.
 
     Assumes:
-        The full computed path exists.
+        The full computed path of the file exists.
 
     """
     fullname = os.path.join(dirpath, filename)
@@ -98,7 +99,7 @@ def walk_and_compute_sha1_from_directory(rootdir):
 
         # compute content hashes
         for filename in filenames:
-            m_hashes = compute_hashes(dirpath, filename)
+            m_hashes = compute_content_hashes(dirpath, filename)
             m_hashes.update({
                 'name': bytes(filename, 'utf-8'),
                 'perms': GitPerm.file,  # FIXME symlink, exec file, gitlink...
