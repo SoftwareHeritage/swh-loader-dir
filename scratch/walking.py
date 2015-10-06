@@ -214,11 +214,11 @@ git_ls_tree_rec(hashes)
 ADDITIONAL_INFO = {
     'revision_author_name': 'swh author',
     'revision_author_email': 'swh@inria.fr',
-    'revision_author_date': '2015-01-01 00:00:00+00',
+    'revision_author_date': '1444054085',
     'revision_author_offset': '+0200',
     'revision_committer_name': 'swh committer',
     'revision_committer_email': 'swh@inria.fr',
-    'revision_committer_date': '2015-01-01 00:00:00+00',
+    'revision_committer_date': '1444054085',
     'revision_committer_offset': '+0200',
     'revision_type': 'dir',
     'revision_message': 'synthetic revision message'
