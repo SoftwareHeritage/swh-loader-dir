@@ -8,7 +8,7 @@ import os
 
 from enum import Enum
 
-from . import utils
+from swh.loader.dir.git import utils
 
 
 class GitType(Enum):
