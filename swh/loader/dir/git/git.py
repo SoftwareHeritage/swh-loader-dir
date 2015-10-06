@@ -27,25 +27,6 @@ class GitPerm(Enum):
     gitlink = b'160000'
 
 
-def compute_content_hashes(dirpath, filename):
-    """Given a dirpath and a filename, compute the hashes for that particular
-    file.
-
-    Args:
-        dirpath: the absolute path of the filename
-        filename: the file's name
-
-    Returns:
-        The computed hashes for that dirpath/filename.
-
-    Assumes:
-        The full computed path of the file exists.
-
-    """
-    fullname = os.path.join(dirpath, filename)
-    return utils.hashfile(fullname)
-
-
 def compute_directory_hash(dirpath, hashes):
     """Compute a directory git sha1 for a dirpath.
 
@@ -104,6 +85,25 @@ def walk_and_compute_sha1_from_directory(rootdir):
         If something is raised, this is a programmatic error.
 
     """
+    def compute_git_perms(fpath):
+        """Given a filepath fpath, returns the git permissions associated.
+
+        Args:
+            fpath: absolute file (not directory) path
+
+        Returns:
+            Git equivalent permissions as in git.GitPerm enum.
+
+        """
+        if os.path.islink(fpath):
+            perms = GitPerm.link
+        elif os.access(fpath, os.X_OK):
+            perms = GitPerm.exec
+        else:
+            perms = GitPerm.file
+
+        return perms
+
     ls_hashes = {}
     empty_dir = set()
 
@@ -116,10 +116,11 @@ def walk_and_compute_sha1_from_directory(rootdir):
 
         # compute content hashes
         for filename in filenames:
-            m_hashes = compute_content_hashes(dirpath, filename)
+            filepath = os.path.join(dirpath, filename)
+            m_hashes = utils.hashfile(filepath)
             m_hashes.update({
                 'name': bytes(filename, 'utf-8'),
-                'perms': GitPerm.file,  # FIXME symlink, exec file, gitlink...
+                'perms': compute_git_perms(filepath),
                 'type': GitType.file,
             })
             hashes.append(m_hashes)
