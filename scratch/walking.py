@@ -195,7 +195,8 @@ def compute_revision_hash(hashes, info):
 author %s <%s> %s %s
 committer %s <%s> %s %s
 
-%s""" % (tree_hash,
+%s
+""" % (tree_hash,
          info['revision_author_name'],
          info['revision_author_email'],
          info['revision_author_date'],
