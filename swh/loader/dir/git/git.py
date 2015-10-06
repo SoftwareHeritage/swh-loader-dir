@@ -27,6 +27,14 @@ class GitPerm(Enum):
     gitlink = b'160000'
 
 
+def compute_symlink_hash(linkpath):
+    """Compute git sha1 for a link.
+
+    """
+    dest_path = os.readlink(linkpath)
+    return utils.hashdata(dest_path.encode('utf-8'), 'blob')
+
+
 def compute_directory_hash(dirpath, hashes):
     """Compute a directory git sha1 for a dirpath.
 
@@ -95,9 +103,7 @@ def walk_and_compute_sha1_from_directory(rootdir):
             Git equivalent permissions as in git.GitPerm enum.
 
         """
-        if os.path.islink(fpath):
-            perms = GitPerm.link
-        elif os.access(fpath, os.X_OK):
+        if os.access(fpath, os.X_OK):
             perms = GitPerm.exec
         else:
             perms = GitPerm.file
@@ -106,23 +112,40 @@ def walk_and_compute_sha1_from_directory(rootdir):
 
     ls_hashes = {}
     empty_dirs = set()
+    link_dirs = set()
 
     for dirpath, dirnames, filenames in os.walk(rootdir, topdown=False):
         hashes = []
 
-        if dirnames == [] and filenames == []:
-            empty_dir.add(dirpath)
         if not(dirnames) and not(filenames):
             empty_dirs.add(dirpath)
             continue
 
+        # Particular treatments for links
+        links = [ file for file in filenames
+                    if os.path.islink(os.path.join(dirpath, file)) ] + \
+                [ dir for dir in dirnames
+                    if os.path.islink(os.path.join(dirpath, dir))]
+
+        for link in links:
+            linkpath = os.path.join(dirpath, link)
+            link_dirs.add(linkpath)
+            m_hashes = compute_symlink_hash(linkpath)
+            m_hashes.update({
+                'name': bytes(linkpath, 'utf-8'),
+                'perms': GitPerm.link,
+                'type': GitType.file,
+            })
+            hashes.append(m_hashes)
+
         # compute content hashes
-        for filename in filenames:
+        for filename in [ file for file in filenames
+                            if os.path.join(dirpath, file) not in link_dirs ]:
             filepath = os.path.join(dirpath, filename)
             m_hashes = utils.hashfile(filepath)
             m_hashes.update({
                 'name': bytes(filename, 'utf-8'),
-                'perms': compute_git_perms(filepath),
+                'perms': compute_git_perms(filepath),  # exec or standard
                 'type': GitType.file,
             })
             hashes.append(m_hashes)
@@ -134,7 +157,7 @@ def walk_and_compute_sha1_from_directory(rootdir):
         dir_hashes = []
         subdirs = [ dir for dir in dirnames
                        if os.path.join(dirpath, dir)
-                         not in empty_dirs ]
+                         not in (empty_dirs | link_dirs) ]
         # compute directory hashes and skip empty ones
         for dirname in subdirs:
             fullname = os.path.join(dirpath, dirname)
