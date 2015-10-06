@@ -182,8 +182,47 @@ def git_ls_tree_rec(hashes):
         print()
 
 
+def compute_revision_hash(hashes, info):
+    """Compute a revision's hash.
+
+    Use the <root> entry's sha1_git as tree representation.
+
+    """
+    tree_hash = hashutil.hash_to_hex(hashes['<root>'][0]['sha1_git'])
+
+    revision_content = ("""tree %s
+author %s <%s> %s %s
+committer %s <%s> %s %s
+
+%s""" % (tree_hash,
+         info['revision_author_name'],
+         info['revision_author_email'],
+         info['revision_author_date'],
+         info['revision_author_offset'],
+         info['revision_committer_name'],
+         info['revision_committer_email'],
+         info['revision_committer_date'],
+         info['revision_committer_offset'],
+         info['revision_message'])).encode('utf-8')
+    return git.hashdata(revision_content, 'commit')
+
 hashes = walk_and_compute_sha1_from_directory(scratch_folder_root)
 git_ls_tree_rec(hashes)
+
+ADDITIONAL_INFO = {
+    'revision_author_name': 'swh author',
+    'revision_author_email': 'swh@inria.fr',
+    'revision_author_date': '2015-01-01 00:00:00+00',
+    'revision_author_offset': '+0200',
+    'revision_committer_name': 'swh committer',
+    'revision_committer_email': 'swh@inria.fr',
+    'revision_committer_date': '2015-01-01 00:00:00+00',
+    'revision_committer_offset': '+0200',
+    'revision_type': 'dir',
+    'revision_message': 'synthetic revision message'
+}
+
+print('revision directory: %s' % compute_revision_hash(hashes, ADDITIONAL_INFO))
 
 # clean up
 # shutil.rmtree(scratch_folder_root, ignore_errors = True)
