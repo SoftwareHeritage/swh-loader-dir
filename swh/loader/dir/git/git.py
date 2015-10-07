@@ -12,21 +12,15 @@ from swh.loader.dir.git import utils
 
 
 class GitType(Enum):
-    file = b'blob'
-    dir = b'tree'
-    exec = b'exec'
-    link = b'link'
-    gitlink = b'gitlink'
+    BLOB = b'blob'
+    TREE = b'tree'
+    EXEC = b'exec'
+    LINK = b'link'
+    COMM = b'commit'
+    RELE = b'release'
 
 
 class GitPerm(Enum):
-    file = b'100644'
-    dir = b'40000'
-    exec = b'100755'
-    link = b'120000'
-    gitlink = b'160000'
-
-
 def compute_symlink_git_sha1(linkpath):
     """Compute git sha1 for a link.
 
@@ -39,6 +33,10 @@ def compute_symlink_git_sha1(linkpath):
     """
     dest_path = os.readlink(linkpath)
     return utils.hashdata(dest_path.encode('utf-8'), 'blob')
+    BLOB = b'100644'
+    TREE = b'40000'
+    EXEC = b'100755'
+    LINK = b'120000'
 
 
 def compute_directory_git_sha1(dirpath, hashes):
@@ -130,8 +128,9 @@ def compute_link_metadata(linkpath):
     m_hashes = compute_symlink_git_sha1(linkpath)
     m_hashes.update({
         'name': bytes(os.path.basename(linkpath), 'utf-8'),
-        'perms': GitPerm.link,
-        'type': GitType.file,
+        'perms': GitPerm.LINK,
+        'type': GitType.BLOB,
+        'path': linkpath
     })
     return m_hashes
 
@@ -152,8 +151,9 @@ def compute_blob_metadata(filepath):
     m_hashes = utils.hashfile(filepath)
     m_hashes.update({
         'name': bytes(os.path.basename(filepath), 'utf-8'),
-        'perms': GitPerm.exec if os.access(filepath, os.X_OK) else GitPerm.file,
-        'type': GitType.file,
+        'perms': GitPerm.EXEC if os.access(filepath, os.X_OK) else GitPerm.BLOB,
+        'type': GitType.BLOB,
+        'path': filepath
     })
     return m_hashes
 
@@ -174,8 +174,9 @@ def compute_tree_metadata(dirname, ls_hashes):
     tree_hash = compute_directory_git_sha1(dirname, ls_hashes)
     tree_hash.update({
         'name': bytes(os.path.basename(dirname), 'utf-8'),
-        'perms': GitPerm.dir,
-        'type': GitType.dir
+        'perms': GitPerm.TREE,
+        'type': GitType.TREE,
+        'path': dirname
     })
     return tree_hash
 
@@ -253,8 +254,8 @@ def walk_and_compute_sha1_from_directory(rootdir):
     root_hash = compute_directory_git_sha1(rootdir, ls_hashes)
     root_hash.update({
         'name': bytes(rootdir, 'utf-8'),
-        'perms': GitPerm.dir,
-        'type': GitType.dir
+        'perms': GitPerm.TREE,
+        'type': GitType.TREE
     })
     ls_hashes.update({
         '<root>': [root_hash]

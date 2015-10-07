@@ -371,9 +371,10 @@ class DirLoader(config.SWHConfig):
         """
         def get_objects_per_object_type(objects_per_path):
             m = {
-                GitType.file: [],
-                GitType.tree: [],
-                GitType.commit: []
+                GitType.BLOB: [],
+                GitType.TREE: [],
+                GitType.COMM: [],
+                GitType.RELE: []
             }
             for path in objects_per_path:
                 for obj in path:
@@ -395,21 +396,23 @@ class DirLoader(config.SWHConfig):
 
         revision = git.compute_revision_git_sha1(objects, info)
         objects.update({
-            GitType.commit: [revision]
+            GitType.COMM: [revision]
         })
 
         self.log.info("Done listing the objects in %s: %d contents, "
                       "%d directories, %d revisions, %d releases" % (
-                          root_dir.path,
-                          len(objects[GitType.file]),
-                          len(objects[GitType.tree]),
-                          len(objects[GitType.commit])
+                          root_dir,
+                          len(objects[GitType.BLOB]),
+                          len(objects[GitType.TREE]),
+                          len(objects[GitType.COMM]),
+                          len(objects[GitType.RELE])
                       ), extra={
                           'swh_type': 'git_list_objs_end',
-                          'swh_repo': root_dir.path,
-                          'swh_num_blobs': len(objects[GitType.file]),
-                          'swh_num_trees': len(objects[GitType.tree]),
-                          'swh_num_commits': len(objects[GitType.commit]),
+                          'swh_repo': root_dir,
+                          'swh_num_blobs': len(objects[GitType.BLOB]),
+                          'swh_num_trees': len(objects[GitType.TREE]),
+                          'swh_num_commits': len(objects[GitType.COMM]),
+                          'swh_num_releases': len(objects[GitType.RELE]),
                           'swh_id': log_id,
                       })
 
@@ -420,22 +423,22 @@ class DirLoader(config.SWHConfig):
 
     def load_dir(self, root_dir, objects, refs, origin_id):
         if self.config['send_contents']:
-            self.bulk_send_blobs(root_dir, objects[GitType.blob], origin_id)
+            self.bulk_send_blobs(root_dir, objects[GitType.BLOB], origin_id)
         else:
             self.log.info('Not sending contents')
 
-        if self.config['send_directories']:
-            self.bulk_send_trees(root_dir, objects[GitType.tree])
-        else:
-            self.log.info('Not sending directories')
+        # if self.config['send_directories']:
+        #     self.bulk_send_trees(root_dir, objects[GitType.TREE])
+        # else:
+        #     self.log.info('Not sending directories')
 
-        if self.config['send_revisions']:
-            self.bulk_send_commits(root_dir, objects[GitType.commit])
-        else:
-            self.log.info('Not sending revisions')
+        # if self.config['send_revisions']:
+        #     self.bulk_send_commits(root_dir, objects[GitType.COMM])
+        # else:
+        #     self.log.info('Not sending revisions')
 
         # if self.config['send_releases']:
-        #     self.bulk_send_annotated_tags(root_dir, objects[DirType.REL])
+        #     self.bulk_send_annotated_tags(root_dir, objects[GitType.RELE])
         # else:
         #     self.log.info('Not sending releases')
 
@@ -473,7 +476,7 @@ class DirLoader(config.SWHConfig):
         objects = self.list_repo_objs(root_dir, self.config)
 
         # Compute revision information (mixed from outside input + dir content)
-        revision = objects[GitType.commit][0]['sha1_git']
+        revision = objects[GitType.COMM][0]
 
         # Parse all the refs from our root_dir
         ref = self.compute_dir_ref(root_dir,
