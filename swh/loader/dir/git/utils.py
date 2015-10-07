@@ -5,13 +5,13 @@
 
 
 import hashlib
+import os
 
 from io import BytesIO
 
 from swh.core import hashutil
 
 
-hashfile = hashutil.hashfile
 hash_to_hex = hashutil.hash_to_hex
 hex_to_hash = hashutil.hex_to_hash
 
@@ -76,3 +76,60 @@ def hashdata(data, header_type):
     """
     buf = BytesIO(data)
     return _hash_file_obj(buf, header_type, len(data))
+
+
+def _read_raw(filepath):
+    """Read filepath's raw content and returns it.
+
+    """
+    content_raw = b''
+    length = 0
+    with open(filepath, 'rb') as f:
+        while True:
+            chunk = f.read(hashutil.HASH_BLOCK_SIZE)
+            if not chunk:
+                break
+            content_raw += chunk
+            length += len(chunk)
+
+    return content_raw, length
+
+
+def hashfile(filepath):
+    """Compute the hashes of filepath (sha1, sha1_git, sha256).
+
+    Args:
+        filepath: the absolute path name to the file to hash.
+
+    Returns:
+        A dictionary of values:
+        - sha1
+        - sha256
+        - sha1_git
+        - content: the raw content of the filepath
+
+    """
+    hashes = hashutil.hashfile(filepath)
+    content_raw, length = _read_raw(filepath)
+    hashes.update({'data': content_raw,
+                   'length': length})
+    return hashes
+
+
+def hashlink(linkpath):
+    """Compute hashes for a link.
+
+    Args:
+        linkpath: the absolute path name to a symbolic link.
+
+    Returns:
+        dictionary with sha1_git as key and the actual binary sha1 as value.
+
+    """
+    raw_data = os.readlink(linkpath).encode('utf-8')
+    hashes = hashutil.hashdata(raw_data)
+    hashes.update({
+        'data': raw_data,
+        'length': len(raw_data)
+    })
+    return hashes

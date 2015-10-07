@@ -21,18 +21,6 @@ class GitType(Enum):
 
 
 class GitPerm(Enum):
-def compute_symlink_git_sha1(linkpath):
-    """Compute git sha1 for a link.
-
-    Args:
-        linkpath: the absolute path name to a symbolic link.
-
-    Returns:
-        dictionary with sha1_git as key and the actual binary sha1 as value.
-
-    """
-    dest_path = os.readlink(linkpath)
-    return utils.hashdata(dest_path.encode('utf-8'), 'blob')
     BLOB = b'100644'
     TREE = b'40000'
     EXEC = b'100755'
@@ -125,7 +113,7 @@ def compute_link_metadata(linkpath):
             - perms: git permission for link
             - type: git type for link
     """
-    m_hashes = compute_symlink_git_sha1(linkpath)
+    m_hashes = utils.hashlink(linkpath)
     m_hashes.update({
         'name': bytes(os.path.basename(linkpath), 'utf-8'),
         'perms': GitPerm.LINK,
