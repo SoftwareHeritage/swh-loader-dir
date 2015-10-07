@@ -38,7 +38,8 @@ def compute_directory_git_sha1(dirpath, hashes):
             - perms: the tree entry's sha1 permissions
 
         Returns:
-            dictionary with sha1_git as key and the actual binary sha1 as value.
+            dictionary with sha1_git as key and the actual binary sha1 as
+            value.
 
         Assumes:
             Every path exists in hashes.
@@ -214,9 +215,10 @@ def compute_blob_metadata(filepath):
 
     """
     m_hashes = utils.hashfile(filepath)
+    perms = GitPerm.EXEC if os.access(filepath, os.X_OK) else GitPerm.BLOB
     m_hashes.update({
         'name': bytes(os.path.basename(filepath), 'utf-8'),
-        'perms': GitPerm.EXEC if os.access(filepath, os.X_OK) else GitPerm.BLOB,
+        'perms': perms,
         'type': GitType.BLOB,
         'path': filepath
     })
@@ -259,11 +261,11 @@ def walk_and_compute_sha1_from_directory(rootdir):
           - 'type'
           - 'name'
           - 'sha1_git'
-          - and specifically content: 'sha1', 'sha256', ... (may be extended...)
+          - and specifically content: 'sha1', 'sha256', ...
 
     Note:
-        One special key is '<root>' to indicate the upper root of the directory.
-        (This is typically the entry point of the revision).
+        One special key is '<root>' to indicate the upper root of the
+        directory (this is the entry point of the revision).
 
     Raises:
         Nothing
@@ -281,20 +283,19 @@ def walk_and_compute_sha1_from_directory(rootdir):
             empty_dirs.add(dirpath)
             continue
 
-        links = [ file for file in filenames
-                    if os.path.islink(os.path.join(dirpath, file)) ] + \
-                [ dir for dir in dirnames
-                    if os.path.islink(os.path.join(dirpath, dir))]
+        links = [os.path.join(dirpath, file)
+                 for file in (filenames+dirnames)
+                 if os.path.islink(os.path.join(dirpath, file))]
 
-        for link in links:
-            linkpath = os.path.join(dirpath, link)
+        for linkpath in links:
             link_dirs.add(linkpath)
             m_hashes = compute_link_metadata(linkpath)
             hashes.append(m_hashes)
 
-        for filename in [ file for file in filenames
-                            if os.path.join(dirpath, file) not in link_dirs ]:
-            filepath = os.path.join(dirpath, filename)
+        only_files = [os.path.join(dirpath, file)
+                      for file in filenames
+                      if os.path.join(dirpath, file) not in link_dirs]
+        for filepath in only_files:
             m_hashes = compute_blob_metadata(filepath)
             hashes.append(m_hashes)
 
@@ -303,11 +304,11 @@ def walk_and_compute_sha1_from_directory(rootdir):
         })
 
         dir_hashes = []
-        subdirs = [ dir for dir in dirnames
-                       if os.path.join(dirpath, dir)
-                         not in (empty_dirs | link_dirs) ]
-        for dirname in subdirs:
-            fulldirname = os.path.join(dirpath, dirname)
+        subdirs = [os.path.join(dirpath, dir)
+                   for dir in dirnames
+                   if os.path.join(dirpath, dir)
+                   not in (empty_dirs | link_dirs)]
+        for fulldirname in subdirs:
             tree_hash = compute_tree_metadata(fulldirname, ls_hashes)
             dir_hashes.append(tree_hash)
 
