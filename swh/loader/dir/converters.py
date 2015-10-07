@@ -10,10 +10,20 @@ from datetime import datetime
 from swh.loader.dir.git.git import GitType
 
 
-def format_date(signature):
-    """Convert the date from a signature to a datetime"""
-    return datetime.datetime.fromtimestamp(signature.time,
-                                           datetime.timezone.utc)
+def format_to_minutes(offset_str):
+    """Convert a git string timezone format string (e.g  +0200, -0310) to minutes.
+
+    Args:
+        offset_str: a string representing an offset.
+
+    Returns:
+        A positive or negative number of minutes of such input
+
+    """
+    sign = offset_str[0]
+    hours = int(offset_str[1:3])
+    minutes = int(offset_str[3:]) + (hours * 60)
+    return minutes if sign == '+' else -1 * minutes
 
 
 def blob_to_content(obj, objects, log=None, max_content_size=None, origin_id=None):
@@ -79,26 +89,29 @@ def tree_to_directory(tree, objects, log=None):
     }
 
 
-def commit_to_revision(id, repo, log=None):
-    """Format a commit as a revision"""
-    commit = repo[id]
+def commit_to_revision(commit, objects, log=None):
+    """Format a commit as a revision.
 
-    author = commit.author
-    committer = commit.committer
+    """
+    upper_directory = objects['<root>'][0]
     return {
-        'id': id.raw,
-        'date': format_date(author),
-        'date_offset': author.offset,
-        'committer_date': format_date(committer),
-        'committer_date_offset': committer.offset,
-        'type': 'git',
-        'directory': commit.tree_id.raw,
-        'message': commit.raw_message,
-        'author_name': author.name,
-        'author_email': author.email,
-        'committer_name': committer.name,
-        'committer_email': committer.email,
-        'parents': [p.raw for p in commit.parent_ids],
+        'id': commit['sha1_git'],
+        'date':
+          datetime.fromtimestamp(commit['revision_author_date']),
+        'date_offset':
+          format_to_minutes(commit['revision_author_offset']),
+        'committer_date':
+          datetime.fromtimestamp(commit['revision_committer_date']),
+        'committer_date_offset':
+          format_to_minutes(commit['revision_committer_offset']),
+        'type': commit['revision_type'],
+        'directory': upper_directory['sha1_git'],
+        'message': commit['revision_message'],
+        'author_name': commit['revision_author_name'],
+        'author_email': commit['revision_author_email'],
+        'committer_name': commit['revision_committer_name'],
+        'committer_email': commit['revision_committer_email'],
+        'parents': [],
     }
 
 

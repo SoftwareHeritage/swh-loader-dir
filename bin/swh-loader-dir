@@ -12,29 +12,7 @@ from swh.core.logger import PostgresHandler
 from swh.loader.dir.loader import DirLoader
 
 
-ADDITIONAL_CONFIG = {
-    # origin information
-    'origin_url': ('str', 'file:///dev/null'),
-    # occurrence information
-    'branch': ('str', 'master'),
-    'authority_id': ('int', 1),
-    'validity': ('str', '2015-01-01 00:00:00+00'),
-    # revision information
-    'revision_author_name': ('str', 'swh author'),
-    'revision_author_email': ('str', 'swh@inria.fr'),
-    'revision_author_date': ('str', '1444054085'),
-    'revision_author_offset': ('str', '+0200'),
-    'revision_committer_name': ('str', 'swh committer'),
-    'revision_committer_email': ('str', 'swh@inria.fr'),
-    'revision_committer_date': ('str', '1444054085'),
-    'revision_committer_offset': ('str', '+0200'),
-    'revision_type': ('str', 'dir'),
-    'revision_message': ('str', 'synthetic revision message'),
-}
-
-
-my_config = DirLoader.parse_config_file(config_filename=sys.argv[1],
-                                        additional_configs=[ADDITIONAL_CONFIG])
+dir_loader_config = DirLoader.parse_config_file(config_filename=sys.argv[1])
 
 
 logging.basicConfig(
@@ -42,12 +20,12 @@ logging.basicConfig(
     format='%(asctime)s %(name)s %(levelname)s %(message)s',
     handlers=[
         logging.StreamHandler(),
-        PostgresHandler(my_config['log_db']),
+        PostgresHandler(dir_loader_config['log_db']),
     ],
 )
 
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.CRITICAL)
 
-loader = DirLoader(my_config)
-loader.process(my_config['dir_path'])
+loader = DirLoader(dir_loader_config)
+loader.process(dir_loader_config['dir_path'])

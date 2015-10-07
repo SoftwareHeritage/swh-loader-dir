@@ -78,6 +78,7 @@ def compute_revision_git_sha1(hashes, info):
             - revision_committer_date
             - revision_committer_offset
             - revision_message
+            - revision_type
 
 
     """
@@ -98,7 +99,20 @@ committer %s <%s> %s %s
          info['revision_committer_date'],
          info['revision_committer_offset'],
          info['revision_message'])).encode('utf-8')
-    return utils.hashdata(revision_content, 'commit')
+    hashes = utils.hashdata(revision_content, 'commit')
+    hashes.update({
+        'revision_author_name': info['revision_author_name'],
+        'revision_author_email': info['revision_author_email'],
+        'revision_author_date': info['revision_author_date'],
+        'revision_author_offset': info['revision_author_offset'],
+        'revision_committer_name': info['revision_committer_name'],
+        'revision_committer_email': info['revision_committer_email'],
+        'revision_committer_date': info['revision_committer_date'],
+        'revision_committer_offset': info['revision_committer_offset'],
+        'revision_message': info['revision_message'],
+        'revision_type': info['revision_type']
+    })
+    return hashes
 
 
 def compute_link_metadata(linkpath):

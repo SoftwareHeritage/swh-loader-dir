@@ -86,6 +86,26 @@ class DirLoader(config.SWHConfig):
         'revision_packet_size': ('int', 100000),
         'release_packet_size': ('int', 100000),
         'occurrence_packet_size': ('int', 100000),
+
+        # origin information
+        'origin_url': ('str', 'file:///dev/null'),
+
+        # occurrence information
+        'branch': ('str', 'master'),
+        'authority_id': ('int', 1),
+        'validity': ('str', '2015-01-01 00:00:00+00'),
+
+        # revision information
+        'revision_author_name': ('str', 'swh author'),
+        'revision_author_email': ('str', 'swh@inria.fr'),
+        'revision_author_date': ('int', '1444054085'),
+        'revision_author_offset': ('str', '+0200'),
+        'revision_committer_name': ('str', 'swh committer'),
+        'revision_committer_email': ('str', 'swh@inria.fr'),
+        'revision_committer_date': ('int', '1444054085'),
+        'revision_committer_offset': ('str', '+0200'),
+        'revision_type': ('str', 'tar'),
+        'revision_message': ('str', 'synthetic revision message'),
     }
 
     def __init__(self, config):
@@ -293,6 +313,7 @@ class DirLoader(config.SWHConfig):
 
         send_in_packets(commits, converters.commit_to_revision,
                         self.send_revisions, packet_size,
+                        objects=objects,
                         log=self.log)
 
     def bulk_send_annotated_tags(self, objects, tags):
@@ -303,6 +324,7 @@ class DirLoader(config.SWHConfig):
 
         send_in_packets(tags, converters.annotated_tag_to_release,
                         self.send_releases, packet_size,
+                        objects=objects,
                         log=self.log)
 
     def bulk_send_refs(self, objects, refs):
@@ -437,10 +459,10 @@ class DirLoader(config.SWHConfig):
         else:
             self.log.info('Not sending directories')
 
-        # if self.config['send_revisions']:
-        #     self.bulk_send_commits(objects_per_path, objects[GitType.COMM])
-        # else:
-        #     self.log.info('Not sending revisions')
+        if self.config['send_revisions']:
+            self.bulk_send_commits(objects_per_path, objects[GitType.COMM])
+        else:
+            self.log.info('Not sending revisions')
 
         # if self.config['send_releases']:
         #     self.bulk_send_annotated_tags(objects_per_path, objects[GitType.RELE])
