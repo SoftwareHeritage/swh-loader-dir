@@ -10,7 +10,7 @@ from nose.tools import istest
 from swh.loader.dir.git import utils
 
 
-class GitHashlib(unittest.TestCase):
+class GitUtilsHashlib(unittest.TestCase):
 
     def setUp(self):
         self.blob_data = b'42\n'
