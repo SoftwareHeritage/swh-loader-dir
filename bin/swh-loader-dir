@@ -9,17 +9,15 @@ import logging
 import sys
 
 from swh.core.logger import PostgresHandler
-from swh.loader.dir import DirLoader
+from swh.loader.dir.loader import DirLoader
 
 
 ADDITIONAL_CONFIG = {
-    'dir_path': ('str', None),
-
     # origin information
     'origin_url': ('str', 'file:///dev/null'),
     # occurrence information
     'branch': ('str', 'master'),
-    'authority': ('int', 1),
+    'authority_id': ('int', 1),
     'validity': ('str', '2015-01-01 00:00:00+00'),
     # revision information
     'revision_author_name': ('str', 'swh author'),
@@ -50,7 +48,6 @@ logging.basicConfig(
 
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.CRITICAL)
-
 
 loader = DirLoader(my_config)
 loader.process(my_config['dir_path'])
