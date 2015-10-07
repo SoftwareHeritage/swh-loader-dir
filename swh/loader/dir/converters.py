@@ -73,18 +73,13 @@ def tree_to_directory(tree, objects, log=None):
     for entry in objects[tree['path']]:
         entries.append({
             'type': _entry_type_map[entry['type']],
-            'perms': entry['perms'].value,
+            'perms': int(entry['perms'].value),
             'name': entry['name'],
-            'target': entry['sha1_git'],
-            'atime': None,
-            'mtime': None,
-            'ctime': None,
+            'target': entry['sha1_git']
         })
 
     return {
         'id': tree['sha1_git'],
-        'perms': tree['perms'].value,
-        'type': tree['type'].value,
         'entries': entries
     }
 
