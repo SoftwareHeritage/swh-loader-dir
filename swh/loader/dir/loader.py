@@ -105,7 +105,16 @@ class DirLoader(config.SWHConfig):
         'revision_committer_date': ('int', '1444054085'),
         'revision_committer_offset': ('str', '+0200'),
         'revision_type': ('str', 'tar'),
-        'revision_message': ('str', 'synthetic revision message'),
+        'revision_message': ('str', 'synthetic revision'),
+
+        # release information
+        'release_name': ('str', 'v0.0.1'),
+        'release_date': ('int', '1444054085'),
+        'release_offset': ('str', '+0200'),
+        'release_author_name': ('str', 'swh author'),
+        'release_author_email': ('str', 'swh@inria.fr'),
+        'release_comment': ('str', 'synthetic release'),
+
     }
 
     def __init__(self, config):
@@ -420,10 +429,17 @@ class DirLoader(config.SWHConfig):
 
         objects = get_objects_per_object_type(objects_per_path)
 
-        revision = git.compute_revision_git_sha1(objects_per_path, info)
+        tree_hash = objects_per_path['<root>'][0]['sha1_git']
 
+        revision = git.compute_revision_git_sha1(tree_hash, info)
         objects.update({
             GitType.COMM: [revision]
+        })
+
+        revision_hash = revision['sha1_git']
+        release = git.compute_release(revision_hash, info)
+        objects.update({
+            GitType.RELE: [release]
         })
 
         self.log.info("Done listing the objects in %s: %d contents, "
@@ -464,10 +480,11 @@ class DirLoader(config.SWHConfig):
         else:
             self.log.info('Not sending revisions')
 
-        # if self.config['send_releases']:
-        #     self.bulk_send_annotated_tags(objects_per_path, objects[GitType.RELE])
-        # else:
-        #     self.log.info('Not sending releases')
+        if self.config['send_releases']:
+            self.bulk_send_annotated_tags(objects_per_path,
+                                          objects[GitType.RELE])
+        else:
+            self.log.info('Not sending releases')
 
         # if self.config['send_occurrences']:
         #     self.bulk_send_refs(objects_per_path, refs)

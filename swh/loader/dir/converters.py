@@ -109,6 +109,22 @@ def commit_to_revision(commit, objects, log=None):
         'parents': [],
     }
 
+def annotated_tag_to_release(release, objects, log=None):
+    """Format a swh release.
+
+    """
+    return {
+        'id': release['sha1_git'],
+        'revision': release['revision_sha1_git'],
+        'name': release['release_name'],
+        'comment': release['release_comment'],
+        'date': datetime.fromtimestamp(release['release_date']),
+        'date_offset': format_to_minutes(release['release_offset']),
+        'author_name': release['release_author_name'],
+        'author_email': release['release_author_email'],
+    }
+
+
 
 def ref_to_occurrence(ref):
     """Format a reference as an occurrence"""

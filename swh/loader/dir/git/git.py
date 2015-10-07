@@ -60,13 +60,12 @@ def compute_directory_git_sha1(dirpath, hashes):
     return utils.hashdata(b''.join(rows), 'tree')
 
 
-def compute_revision_git_sha1(hashes, info):
-    """Compute a revision's hash.
+def compute_revision_git_sha1(tree_hash, info):
+    """Compute a revision representation targeting the tree_hash.
 
-    Use the <root> entry's sha1_git as tree representation.
 
     Args:
-        hashes:
+        tree_hash: binary form of the tree hash
         info: Additional dictionary information needed to compute a synthetic
         revision. Following keys are expected:
             - revision_author_name
@@ -80,37 +79,101 @@ def compute_revision_git_sha1(hashes, info):
             - revision_message
             - revision_type
 
-
     """
-    tree_hash = utils.hash_to_hex(hashes['<root>'][0]['sha1_git'])
+    revision_author_name = info['revision_author_name']
+    revision_author_email = info['revision_author_email']
+    revision_author_date = info['revision_author_date']
+    revision_author_offset = info['revision_author_offset']
+    revision_committer_name = info['revision_committer_name']
+    revision_committer_email = info['revision_committer_email']
+    revision_committer_date = info['revision_committer_date']
+    revision_committer_offset = info['revision_committer_offset']
+    revision_message = info['revision_message']
 
     revision_content = ("""tree %s
 author %s <%s> %s %s
 committer %s <%s> %s %s
 
 %s
-""" % (tree_hash,
-         info['revision_author_name'],
-         info['revision_author_email'],
-         info['revision_author_date'],
-         info['revision_author_offset'],
-         info['revision_committer_name'],
-         info['revision_committer_email'],
-         info['revision_committer_date'],
-         info['revision_committer_offset'],
-         info['revision_message'])).encode('utf-8')
+""" % (utils.hash_to_hex(tree_hash),
+       revision_author_name,
+       revision_author_email,
+       revision_author_date,
+       revision_author_offset,
+       revision_committer_name,
+       revision_committer_email,
+       revision_committer_date,
+       revision_committer_offset,
+       revision_message)).encode('utf-8')
     hashes = utils.hashdata(revision_content, 'commit')
+
+    # and update other information
     hashes.update({
-        'revision_author_name': info['revision_author_name'],
-        'revision_author_email': info['revision_author_email'],
-        'revision_author_date': info['revision_author_date'],
-        'revision_author_offset': info['revision_author_offset'],
-        'revision_committer_name': info['revision_committer_name'],
-        'revision_committer_email': info['revision_committer_email'],
-        'revision_committer_date': info['revision_committer_date'],
-        'revision_committer_offset': info['revision_committer_offset'],
-        'revision_message': info['revision_message'],
+        'revision_author_name': revision_author_name,
+        'revision_author_email': revision_author_email,
+        'revision_author_date': revision_author_date,
+        'revision_author_offset': revision_author_offset,
+        'revision_committer_name': revision_committer_name,
+        'revision_committer_email': revision_committer_email,
+        'revision_committer_date': revision_committer_date,
+        'revision_committer_offset': revision_committer_offset,
+        'revision_message': revision_message,
         'revision_type': info['revision_type']
+    })
+    return hashes
+
+
+def compute_release(revision_hash, info):
+    """Compute a release representation.
+    This release representation will contain the computed sha1_git for such
+    release.
+
+    This release will point to the revision_hash.
+    The additional informations are present in the dictionary info.
+
+    Args:
+        revision_hash: binary form of the sha1_git revision targeted by this
+        release
+        info: Additional dictionary information needed to compute a synthetic
+        release. Following keys are expected:
+            - release_name
+            - release_comment
+            - release_date
+            - release_offset
+            - release_author_name
+            - release_author_email
+
+    """
+    release_name = info['release_name']
+    release_author_name = info['release_author_name']
+    release_author_email = info['release_author_email']
+    release_date = info['release_date']
+    release_offset = info['release_offset']
+    release_comment = info['release_comment']
+
+    release_content_to_hash = ("""object %s
+type commit
+tag %s
+tagger %s <%s> %s %s
+
+%s
+""" % (utils.hash_to_hex(revision_hash),
+       release_name,
+       release_author_name,
+       release_author_email,
+       release_date,
+       release_offset,
+       release_comment)).encode('utf-8')
+
+    hashes = utils.hashdata(release_content_to_hash, 'tag')
+    hashes.update({
+        'revision_sha1_git': revision_hash,
+        'release_name': release_name,
+        'release_comment': release_comment,
+        'release_date': release_date,
+        'release_offset': release_offset,
+        'release_author_name': release_author_name,
+        'release_author_email': release_author_email,
     })
     return hashes
 
