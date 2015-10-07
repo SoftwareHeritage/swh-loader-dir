@@ -1,5 +1,7 @@
-swh-loader-dir (0.0.1-1) unstable; urgency=low
+swh-loader-dir (0.0.1-1~swh1) unstable-swh; urgency=medium
 
-  * Bootstrap version
+  * Initial release
+  * 0.0.1
+  * Bootstrap swh-loader-dir
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 07 Oct 2015 17:17:41 +0200
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 07 Oct 2015 17:19:36 +0200
