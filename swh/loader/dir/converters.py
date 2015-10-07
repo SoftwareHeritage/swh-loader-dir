@@ -128,11 +128,6 @@ def annotated_tag_to_release(release, objects, log=None):
     }
 
 
-def ref_to_occurrence(ref):
-    """Format a reference as an occurrence"""
-    return ref
-
-
 def origin_url_to_origin(origin_url):
     """Format a pygit2.Repository as an origin suitable for swh.storage"""
     return {

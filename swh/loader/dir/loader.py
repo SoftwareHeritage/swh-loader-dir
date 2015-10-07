@@ -341,8 +341,7 @@ class DirLoader(config.SWHConfig):
         database
         """
         packet_size = self.config['occurrence_packet_size']
-
-        send_in_packets(refs, converters.ref_to_occurrence,
+        send_in_packets(refs, lambda ref: ref,
                         self.send_occurrences, packet_size)
 
     def compute_dir_ref(self, root_dir,
@@ -484,10 +483,10 @@ class DirLoader(config.SWHConfig):
         else:
             self.log.info('Not sending releases')
 
-        # if self.config['send_occurrences']:
-        #     self.bulk_send_refs(objects_per_path, refs)
-        # else:
-        #     self.log.info('Not sending occurrences')
+        if self.config['send_occurrences']:
+            self.bulk_send_refs(objects_per_path, refs)
+        else:
+            self.log.info('Not sending occurrences')
 
     def process(self, root_dir):
         if not os.path.exists(root_dir):
@@ -520,9 +519,9 @@ class DirLoader(config.SWHConfig):
 
         # Parse all the refs from our root_dir
         ref = self.compute_dir_ref(root_dir,
-                                   origin['id'],
                                    self.config['branch'],
                                    revision['sha1_git'],
+                                   origin['id'],
                                    self.config['authority_id'],
                                    self.config['validity'])
 
