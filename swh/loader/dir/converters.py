@@ -3,43 +3,43 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-"""Convert pygit2 objects to dictionaries suitable for swh.storage"""
+"""Convert dir objects to dictionaries suitable for swh.storage"""
 
-from pygit2 import GIT_OBJ_COMMIT
+from datetime import datetime
 
-from swh.core import hashutil
-
-from .utils import format_date
-
-HASH_ALGORITHMS = ['sha1', 'sha256']
+from swh.loader.dir.git.git import GitType
 
 
-def blob_to_content(id, repo, log=None, max_content_size=None, origin_id=None):
-    """Format a blob as a content"""
-    blob = repo[id]
-    size = blob.size
-    ret = {
-        'sha1_git': id.raw,
-        'length': blob.size,
-        'status': 'absent'
-    }
+def format_date(signature):
+    """Convert the date from a signature to a datetime"""
+    return datetime.datetime.fromtimestamp(signature.time,
+                                           datetime.timezone.utc)
 
-    if max_content_size:
-        if size > max_content_size:
-            if log:
-                log.info('Skipping content %s, too large (%s > %s)' %
-                         (id.hex, size, max_content_size))
-            ret['reason'] = 'Content too large'
-            ret['origin'] = origin_id
-            return ret
 
-    data = blob.data
-    hashes = hashutil.hashdata(data, HASH_ALGORITHMS)
-    ret.update(hashes)
-    ret['data'] = data
-    ret['status'] = 'visible'
+def blob_to_content(obj, log=None, max_content_size=None, origin_id=None):
+    """Convert to a compliant swh content.
 
-    return ret
+    """
+    size = obj['length']
+    obj.update({
+        'perms': obj['perms'].value,
+        'type': obj['type'].value
+    })
+
+    if max_content_size and size > max_content_size:
+        if log:
+            log.info('Skipping content %s, too large (%s > %s)' %
+                     (obj['sha1_git'], size, max_content_size))
+            obj.update({'status': 'absent',
+                        'reason': 'Content too large',
+                        'origin': origin_id})
+        return obj
+
+    obj.update({
+        'status': 'visible'
+    })
+
+    return obj
 
 
 def tree_to_directory(id, repo, log=None):
@@ -51,9 +51,9 @@ def tree_to_directory(id, repo, log=None):
     ret['entries'] = entries
 
     entry_type_map = {
-        'tree': 'dir',
-        'blob': 'file',
-        'commit': 'rev',
+        GitType.TREE: 'dir',
+        GitType.BLOB: 'file',
+        GitType.COMM: 'rev',
     }
 
     for entry in repo[id]:
@@ -93,45 +93,6 @@ def commit_to_revision(id, repo, log=None):
     }
 
 
-def annotated_tag_to_release(id, repo, log=None):
-    """Format an annotated tag as a release"""
-    tag = repo[id]
-
-    tag_pointer = repo[tag.target]
-    if tag_pointer.type != GIT_OBJ_COMMIT:
-        if log:
-            log.warn("Ignoring tag %s pointing at %s %s" % (
-                tag.id.hex, tag_pointer.__class__.__name__,
-                tag_pointer.id.hex))
-        return
-
-    author = tag.tagger
-
-    if not author:
-        if log:
-            log.warn("Tag %s has no author, using default values"
-                     % id.hex)
-        author_name = ''
-        author_email = ''
-        date = None
-        date_offset = 0
-    else:
-        author_name = author.name
-        author_email = author.email
-        date = format_date(author)
-        date_offset = author.offset
-
-    return {
-        'id': id.raw,
-        'date': date,
-        'date_offset': date_offset,
-        'revision': tag.target.raw,
-        'comment': tag.message.encode('utf-8'),
-        'author_name': author_name,
-        'author_email': author_email,
-    }
-
-
 def ref_to_occurrence(ref):
     """Format a reference as an occurrence"""
     return ref
@@ -140,6 +101,6 @@ def ref_to_occurrence(ref):
 def origin_url_to_origin(origin_url):
     """Format a pygit2.Repository as an origin suitable for swh.storage"""
     return {
-        'type': 'git',
+        'type': 'dir',
         'url': origin_url,
     }

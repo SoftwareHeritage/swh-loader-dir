@@ -234,6 +234,7 @@ class DirLoader(config.SWHConfig):
 
     def dir_revision(self,
                      root_dir,
+                     origin_url,
                      revision_date,
                      revision_offset,
                      revision_committer_date,
@@ -254,7 +255,7 @@ class DirLoader(config.SWHConfig):
                            'swh_num': 1,
                            'swh_id': log_id
                        })
-        origin = self.get_or_create_origin(origin_url)
+        self.get_or_create_origin(origin_url)
         self.log.debug('Done creating origin for %s' % origin_url,
                        extra={
                            'swh_type': 'storage_send_end',
@@ -263,8 +264,6 @@ class DirLoader(config.SWHConfig):
                            'swh_id': log_id
                        })
 
-
-
     def bulk_send_blobs(self, root_dir, blobs, origin_id):
         """Format blobs as swh contents and send them to the database"""
         packet_size = self.config['content_packet_size']
@@ -272,7 +271,7 @@ class DirLoader(config.SWHConfig):
         max_content_size = self.config['content_size_limit']
 
         send_in_packets(blobs, converters.blob_to_content,
-                        self.send_contents, packet_size, root_dir=root_dir,
+                        self.send_contents, packet_size,
                         packet_size_bytes=packet_size_bytes,
                         log=self.log, max_content_size=max_content_size,
                         origin_id=origin_id)
@@ -282,7 +281,7 @@ class DirLoader(config.SWHConfig):
         packet_size = self.config['directory_packet_size']
 
         send_in_packets(trees, converters.tree_to_directory,
-                        self.send_directories, packet_size, root_dir=root_dir,
+                        self.send_directories, packet_size,
                         log=self.log)
 
     def bulk_send_commits(self, root_dir, commits):
@@ -290,7 +289,7 @@ class DirLoader(config.SWHConfig):
         packet_size = self.config['revision_packet_size']
 
         send_in_packets(commits, converters.commit_to_revision,
-                        self.send_revisions, packet_size, root_dir=root_dir,
+                        self.send_revisions, packet_size,
                         log=self.log)
 
     def bulk_send_annotated_tags(self, root_dir, tags):
@@ -377,7 +376,7 @@ class DirLoader(config.SWHConfig):
                 GitType.RELE: []
             }
             for path in objects_per_path:
-                for obj in path:
+                for obj in objects_per_path[path]:
                     m[obj['type']].append(obj)
 
             return m
@@ -386,7 +385,7 @@ class DirLoader(config.SWHConfig):
 
         self.log.info("Started listing %s" % root_dir, extra={
             'swh_type': 'git_list_objs_start',
-            'swh_repo': root_dir.path,
+            'swh_repo': root_dir,
             'swh_id': log_id,
         })
 
@@ -394,7 +393,8 @@ class DirLoader(config.SWHConfig):
 
         objects = get_objects_per_object_type(objects_per_path)
 
-        revision = git.compute_revision_git_sha1(objects, info)
+        revision = git.compute_revision_git_sha1(objects_per_path, info)
+
         objects.update({
             GitType.COMM: [revision]
         })
@@ -485,7 +485,6 @@ class DirLoader(config.SWHConfig):
                                    revision['sha1_git'],
                                    self.config['authority_id'],
                                    self.config['validity'])
-
 
         # Finally, load the repository
         self.load_dir(root_dir, objects, [ref], origin['id'])
