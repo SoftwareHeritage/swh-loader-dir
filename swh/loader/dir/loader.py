@@ -461,12 +461,10 @@ class DirLoader(config.SWHConfig):
 
         return objects, objects_per_path
 
-    def open_dir(self, root_dir):
-        return root_dir
-
     def load_dir(self, root_dir, objects, objects_per_path, refs, origin_id):
         if self.config['send_contents']:
-            self.bulk_send_blobs(objects_per_path, objects[GitType.BLOB], origin_id)
+            self.bulk_send_blobs(objects_per_path, objects[GitType.BLOB],
+                                 origin_id)
         else:
             self.log.info('Not sending contents')
 
@@ -492,26 +490,24 @@ class DirLoader(config.SWHConfig):
         #     self.log.info('Not sending occurrences')
 
     def process(self, root_dir):
-        # Checks the input
-        try:
-            files = os.listdir(root_dir)
-            if files == []:
-                self.log.info('Skipping empty directory %s' % root_dir, extra={
-                    'swh_type': 'dir_repo_list_refs',
-                    'swh_repo': root_dir,
-                    'swh_num_refs': 0,
-                })
-                return
-        except FileNotFoundError:
-            self.log.info('Skipping inexistant directory %s' % root_dir, extra={
-                'swh_type': 'dir_repo_list_refs',
-                'swh_repo': root_dir,
-                'swh_num_refs': 0,
-            })
+        if not os.path.exists(root_dir):
+            self.log.info('Skipping inexistant directory %s' % root_dir,
+                          extra={
+                              'swh_type': 'dir_repo_list_refs',
+                              'swh_repo': root_dir,
+                              'swh_num_refs': 0,
+                          })
             return
 
-        # Open repository
-        root_dir = self.open_dir(root_dir)
+        files = os.listdir(root_dir)
+        if not(files):
+            self.log.info('Skipping empty directory %s' % root_dir,
+                          extra={
+                              'swh_type': 'dir_repo_list_refs',
+                              'swh_repo': root_dir,
+                              'swh_num_refs': 0,
+                          })
+            return
 
         # Add origin to storage if needed, use the one from config if not
         origin = self.dir_origin(root_dir, self.config['origin_url'])
