@@ -16,4 +16,4 @@ Homepage: https://forge.softwareheritage.org/diffusion/DLDDIR/
 Package: python3-swh.loader.dir
 Architecture: all
 Depends: ${misc:Depends}, ${python3:Depends}
-Description: Software Heritage <module-description>
+Description: Software Heritage Loader Directory
