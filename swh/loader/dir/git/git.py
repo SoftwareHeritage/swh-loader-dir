@@ -241,7 +241,8 @@ def walk_and_compute_sha1_from_directory(rootdir):
     # compute the current directory hashes
     root_hash = compute_directory_git_sha1(rootdir, ls_hashes)
     root_hash.update({
-        'name': bytes(rootdir, 'utf-8'),
+        'path': rootdir,
+        'name': bytes(os.path.basename(rootdir), 'utf-8'),
         'perms': GitPerm.TREE,
         'type': GitType.TREE
     })

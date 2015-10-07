@@ -264,7 +264,7 @@ class DirLoader(config.SWHConfig):
                            'swh_id': log_id
                        })
 
-    def bulk_send_blobs(self, root_dir, blobs, origin_id):
+    def bulk_send_blobs(self, objects, blobs, origin_id):
         """Format blobs as swh contents and send them to the database"""
         packet_size = self.config['content_packet_size']
         packet_size_bytes = self.config['content_packet_size_bytes']
@@ -273,18 +273,21 @@ class DirLoader(config.SWHConfig):
         send_in_packets(blobs, converters.blob_to_content,
                         self.send_contents, packet_size,
                         packet_size_bytes=packet_size_bytes,
-                        log=self.log, max_content_size=max_content_size,
+                        objects=objects,
+                        log=self.log,
+                        max_content_size=max_content_size,
                         origin_id=origin_id)
 
-    def bulk_send_trees(self, root_dir, trees):
+    def bulk_send_trees(self, objects, trees):
         """Format trees as swh directories and send them to the database"""
         packet_size = self.config['directory_packet_size']
 
         send_in_packets(trees, converters.tree_to_directory,
                         self.send_directories, packet_size,
+                        objects=objects,
                         log=self.log)
 
-    def bulk_send_commits(self, root_dir, commits):
+    def bulk_send_commits(self, objects, commits):
         """Format commits as swh revisions and send them to the database"""
         packet_size = self.config['revision_packet_size']
 
@@ -292,17 +295,17 @@ class DirLoader(config.SWHConfig):
                         self.send_revisions, packet_size,
                         log=self.log)
 
-    def bulk_send_annotated_tags(self, root_dir, tags):
+    def bulk_send_annotated_tags(self, objects, tags):
         """Format annotated tags (pygit2.Tag objects) as swh releases and send
         them to the database
         """
         packet_size = self.config['release_packet_size']
 
         send_in_packets(tags, converters.annotated_tag_to_release,
-                        self.send_releases, packet_size, root_dir=root_dir,
+                        self.send_releases, packet_size,
                         log=self.log)
 
-    def bulk_send_refs(self, root_dir, refs):
+    def bulk_send_refs(self, objects, refs):
         """Format git references as swh occurrences and send them to the
         database
         """
@@ -375,8 +378,10 @@ class DirLoader(config.SWHConfig):
                 GitType.COMM: [],
                 GitType.RELE: []
             }
-            for path in objects_per_path:
-                for obj in objects_per_path[path]:
+            for tree_path in objects_per_path:
+                objs = objects_per_path[tree_path]
+                # print('tree_path: %s, objs: %s' % (tree_path, objs))
+                for obj in objs:
                     m[obj['type']].append(obj)
 
             return m
@@ -416,34 +421,34 @@ class DirLoader(config.SWHConfig):
                           'swh_id': log_id,
                       })
 
-        return objects
+        return objects, objects_per_path
 
     def open_dir(self, root_dir):
         return root_dir
 
-    def load_dir(self, root_dir, objects, refs, origin_id):
+    def load_dir(self, root_dir, objects, objects_per_path, refs, origin_id):
         if self.config['send_contents']:
-            self.bulk_send_blobs(root_dir, objects[GitType.BLOB], origin_id)
+            self.bulk_send_blobs(objects_per_path, objects[GitType.BLOB], origin_id)
         else:
             self.log.info('Not sending contents')
 
-        # if self.config['send_directories']:
-        #     self.bulk_send_trees(root_dir, objects[GitType.TREE])
-        # else:
-        #     self.log.info('Not sending directories')
+        if self.config['send_directories']:
+            self.bulk_send_trees(objects_per_path, objects[GitType.TREE])
+        else:
+            self.log.info('Not sending directories')
 
         # if self.config['send_revisions']:
-        #     self.bulk_send_commits(root_dir, objects[GitType.COMM])
+        #     self.bulk_send_commits(objects_per_path, objects[GitType.COMM])
         # else:
         #     self.log.info('Not sending revisions')
 
         # if self.config['send_releases']:
-        #     self.bulk_send_annotated_tags(root_dir, objects[GitType.RELE])
+        #     self.bulk_send_annotated_tags(objects_per_path, objects[GitType.RELE])
         # else:
         #     self.log.info('Not sending releases')
 
         # if self.config['send_occurrences']:
-        #     self.bulk_send_refs(root_dir, refs)
+        #     self.bulk_send_refs(objects_per_path, refs)
         # else:
         #     self.log.info('Not sending occurrences')
 
@@ -473,7 +478,7 @@ class DirLoader(config.SWHConfig):
         origin = self.dir_origin(root_dir, self.config['origin_url'])
 
         # We want to load the repository, walk all the objects
-        objects = self.list_repo_objs(root_dir, self.config)
+        objects, objects_per_path = self.list_repo_objs(root_dir, self.config)
 
         # Compute revision information (mixed from outside input + dir content)
         revision = objects[GitType.COMM][0]
@@ -487,4 +492,4 @@ class DirLoader(config.SWHConfig):
                                    self.config['validity'])
 
         # Finally, load the repository
-        self.load_dir(root_dir, objects, [ref], origin['id'])
+        self.load_dir(root_dir, objects, objects_per_path, [ref], origin['id'])

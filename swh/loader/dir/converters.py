@@ -16,58 +16,67 @@ def format_date(signature):
                                            datetime.timezone.utc)
 
 
-def blob_to_content(obj, log=None, max_content_size=None, origin_id=None):
+def blob_to_content(obj, objects, log=None, max_content_size=None, origin_id=None):
     """Convert to a compliant swh content.
 
     """
     size = obj['length']
-    obj.update({
+    ret = {
+        'sha1': obj['sha1'],
+        'sha256': obj['sha256'],
+        'sha1_git': obj['sha1_git'],
+        'data': obj['data'],
+        'length': size,
         'perms': obj['perms'].value,
         'type': obj['type'].value
-    })
+    }
 
     if max_content_size and size > max_content_size:
         if log:
             log.info('Skipping content %s, too large (%s > %s)' %
                      (obj['sha1_git'], size, max_content_size))
-            obj.update({'status': 'absent',
+            ret.update({'status': 'absent',
                         'reason': 'Content too large',
                         'origin': origin_id})
-        return obj
+        return ret
 
-    obj.update({
+    ret.update({
         'status': 'visible'
     })
 
-    return obj
+    return ret
 
 
-def tree_to_directory(id, repo, log=None):
-    """Format a tree as a directory"""
-    ret = {
-        'id': id.raw,
-    }
+# Map of type to swh types
+_entry_type_map = {
+    GitType.TREE: 'dir',
+    GitType.BLOB: 'file',
+    GitType.COMM: 'rev',
+}
+
+
+def tree_to_directory(tree, objects, log=None):
+    """Format a tree as a directory
+
+    """
     entries = []
-    ret['entries'] = entries
-
-    entry_type_map = {
-        GitType.TREE: 'dir',
-        GitType.BLOB: 'file',
-        GitType.COMM: 'rev',
-    }
-
-    for entry in repo[id]:
+    for entry in objects[tree['path']]:
         entries.append({
-            'type': entry_type_map[entry.type],
-            'perms': entry.filemode,
-            'name': entry.name,
-            'target': entry.id.raw,
+            'type': _entry_type_map[entry['type']],
+            'perms': entry['perms'].value,
+            'name': entry['name'],
+            'target': entry['sha1_git'],
             'atime': None,
             'mtime': None,
             'ctime': None,
         })
 
-    return ret
+    return {
+        'id': tree['sha1_git'],
+        'perms': tree['perms'].value,
+        'type': tree['type'].value,
+        'entries': entries
+    }
 
 
 def commit_to_revision(id, repo, log=None):
