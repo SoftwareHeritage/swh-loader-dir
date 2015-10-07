@@ -26,7 +26,9 @@ def format_to_minutes(offset_str):
     return minutes if sign == '+' else -1 * minutes
 
 
-def blob_to_content(obj, objects, log=None, max_content_size=None, origin_id=None):
+def blob_to_content(obj, objects, log=None,
+                    max_content_size=None,
+                    origin_id=None):
     """Convert to a compliant swh content.
 
     """
@@ -92,13 +94,13 @@ def commit_to_revision(commit, objects, log=None):
     return {
         'id': commit['sha1_git'],
         'date':
-          datetime.fromtimestamp(commit['revision_author_date']),
+        datetime.fromtimestamp(commit['revision_author_date']),
         'date_offset':
-          format_to_minutes(commit['revision_author_offset']),
+        format_to_minutes(commit['revision_author_offset']),
         'committer_date':
-          datetime.fromtimestamp(commit['revision_committer_date']),
+        datetime.fromtimestamp(commit['revision_committer_date']),
         'committer_date_offset':
-          format_to_minutes(commit['revision_committer_offset']),
+        format_to_minutes(commit['revision_committer_offset']),
         'type': commit['revision_type'],
         'directory': upper_directory['sha1_git'],
         'message': commit['revision_message'],
@@ -108,6 +110,7 @@ def commit_to_revision(commit, objects, log=None):
         'committer_email': commit['revision_committer_email'],
         'parents': [],
     }
+
 
 def annotated_tag_to_release(release, objects, log=None):
     """Format a swh release.
@@ -123,7 +126,6 @@ def annotated_tag_to_release(release, objects, log=None):
         'author_name': release['release_author_name'],
         'author_email': release['release_author_email'],
     }
-
 
 
 def ref_to_occurrence(ref):
