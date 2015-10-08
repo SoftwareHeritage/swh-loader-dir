@@ -26,7 +26,7 @@ def format_to_minutes(offset_str):
     return minutes if sign == '+' else -1 * minutes
 
 
-def blob_to_content(obj, objects, log=None,
+def blob_to_content(obj, log=None,
                     max_content_size=None,
                     origin_id=None):
     """Convert to a compliant swh content.
@@ -47,9 +47,9 @@ def blob_to_content(obj, objects, log=None,
         if log:
             log.info('Skipping content %s, too large (%s > %s)' %
                      (obj['sha1_git'], size, max_content_size))
-            ret.update({'status': 'absent',
-                        'reason': 'Content too large',
-                        'origin': origin_id})
+        ret.update({'status': 'absent',
+                    'reason': 'Content too large',
+                    'origin': origin_id})
         return ret
 
     ret.update({
@@ -112,7 +112,7 @@ def commit_to_revision(commit, objects, log=None):
     }
 
 
-def annotated_tag_to_release(release, objects, log=None):
+def annotated_tag_to_release(release, log=None):
     """Format a swh release.
 
     """

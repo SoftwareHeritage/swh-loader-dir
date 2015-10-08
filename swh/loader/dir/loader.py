@@ -302,7 +302,6 @@ class DirLoader(config.SWHConfig):
         send_in_packets(blobs, converters.blob_to_content,
                         self.send_contents, packet_size,
                         packet_size_bytes=packet_size_bytes,
-                        objects=objects,
                         log=self.log,
                         max_content_size=max_content_size,
                         origin_id=origin_id)
@@ -333,7 +332,6 @@ class DirLoader(config.SWHConfig):
 
         send_in_packets(tags, converters.annotated_tag_to_release,
                         self.send_releases, packet_size,
-                        objects=objects,
                         log=self.log)
 
     def bulk_send_refs(self, objects, refs):
@@ -371,7 +369,6 @@ class DirLoader(config.SWHConfig):
                 - authority (int)
             Compatible with occurrence_add.
         """
-
         log_id = str(uuid.uuid4())
 
         self.log.debug("Computing occurrence %s representation at %s" % (
