@@ -8,6 +8,7 @@
 from datetime import datetime
 
 from swh.loader.dir.git.git import GitType
+from swh.loader.dir.git import utils
 
 
 def format_to_minutes(offset_str):
@@ -26,7 +27,17 @@ def format_to_minutes(offset_str):
     return minutes if sign == '+' else -1 * minutes
 
 
-def blob_to_content(obj, log=None,
+def blob_to_content(obj, log=None, max_content_size=None,
+                             origin_id=None):
+    if 'data' not in obj:
+        filepath = obj['path']
+        content_raw, length = utils._read_raw(filepath)
+        obj.update({'data': content_raw,
+                    'length': length})
+    return _blob_to_content(obj, log, max_content_size, origin_id)
+
+
+def _blob_to_content(obj, log=None,
                     max_content_size=None,
                     origin_id=None):
     """Convert to a compliant swh content.
