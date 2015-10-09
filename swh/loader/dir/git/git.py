@@ -251,8 +251,6 @@ def compute_tree_metadata(dirname, ls_hashes):
 def walk_and_compute_sha1_from_directory(rootdir):
     """Compute git sha1 from directory rootdir.
 
-    Empty directories are skipped.
-
     Returns:
         Dictionary of entries with keys <path-name> and as values a list of
         directory entries.
@@ -265,7 +263,7 @@ def walk_and_compute_sha1_from_directory(rootdir):
 
     Note:
         One special key is '<root>' to indicate the upper root of the
-        directory (this is the entry point of the revision).
+        directory (this is the revision's directory).
 
     Raises:
         Nothing
@@ -273,28 +271,23 @@ def walk_and_compute_sha1_from_directory(rootdir):
 
     """
     ls_hashes = {}
-    empty_dirs = set()
-    link_dirs = set()
+    all_links = set()
 
     for dirpath, dirnames, filenames in os.walk(rootdir, topdown=False):
         hashes = []
-
-        if not(dirnames) and not(filenames):
-            empty_dirs.add(dirpath)
-            continue
 
         links = [os.path.join(dirpath, file)
                  for file in (filenames+dirnames)
                  if os.path.islink(os.path.join(dirpath, file))]
 
         for linkpath in links:
-            link_dirs.add(linkpath)
+            all_links.add(linkpath)
             m_hashes = compute_link_metadata(linkpath)
             hashes.append(m_hashes)
 
         only_files = [os.path.join(dirpath, file)
                       for file in filenames
-                      if os.path.join(dirpath, file) not in link_dirs]
+                      if os.path.join(dirpath, file) not in all_links]
         for filepath in only_files:
             m_hashes = compute_blob_metadata(filepath)
             hashes.append(m_hashes)
@@ -307,7 +300,7 @@ def walk_and_compute_sha1_from_directory(rootdir):
         subdirs = [os.path.join(dirpath, dir)
                    for dir in dirnames
                    if os.path.join(dirpath, dir)
-                   not in (empty_dirs | link_dirs)]
+                   not in all_links]
         for fulldirname in subdirs:
             tree_hash = compute_tree_metadata(fulldirname, ls_hashes)
             dir_hashes.append(tree_hash)

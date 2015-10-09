@@ -84,15 +84,22 @@ class TestLoader(unittest.TestCase):
     @istest
     def load_without_storage(self):
         # when
-        objects, objects_per_path = self.dirloader.list_repo_objs(self.root_path, self.info)
+        objects, objects_per_path = self.dirloader.list_repo_objs(
+            self.root_path,
+            self.info)
 
         # then
-        self.assertEquals(len(objects), 4, "4 objects types, blob, tree, revision, release")
-        self.assertEquals(len(objects[GitType.BLOB]), 8, "8 contents: 3 files + 5 links")
-        self.assertEquals(len(objects[GitType.TREE]), 4, "4 directories: 3 subdir + 1 main dir")
+        self.assertEquals(len(objects), 4,
+                          "4 objects types, blob, tree, revision, release")
+        self.assertEquals(len(objects[GitType.BLOB]), 8,
+                          "8 contents: 3 files + 5 links")
+        self.assertEquals(len(objects[GitType.TREE]), 5,
+                          "5 directories: 4 subdirs + 1 empty one + 1 main dir")
         self.assertEquals(len(objects[GitType.COMM]), 1, "1 synthetic revision")
         self.assertEquals(len(objects[GitType.RELE]), 1, "1 synthetic release")
 
-        self.assertEquals(len(objects_per_path), 5, "4 folders + <root>")
+        self.assertEquals(len(objects_per_path), 6, "5 folders + <root>")
 
-#        print('objects: %s\n objects-per-path: %s\n' % (objects.keys(), objects_per_path.keys()))
+        # print('objects: %s\n objects-per-path: %s\n' %
+        #       (objects.keys(),
+        #        objects_per_path.keys()))

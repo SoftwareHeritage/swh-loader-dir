@@ -66,7 +66,7 @@ class TestConverters(unittest.TestCase):
             actual_release)
 
     @istest
-    def blob_to_content_visible(self):
+    def _blob_to_content_visible(self):
         obj = {
             'length': 9,
             'data': b'some-data',
@@ -89,13 +89,13 @@ class TestConverters(unittest.TestCase):
         }
 
         # when
-        actual_content = converters.blob_to_content(obj)
+        actual_content = converters._blob_to_content(obj)
 
         # then
         self.assertEqual(expected_content, actual_content)
 
     @istest
-    def blob_to_content_absent(self):
+    def _blob_to_content_absent(self):
         obj = {
             'length': 9,
             'data': b'some-data',
@@ -119,9 +119,9 @@ class TestConverters(unittest.TestCase):
             'origin': 3}
 
         # when
-        actual_content = converters.blob_to_content(obj,
-                                                    max_content_size=5,
-                                                    origin_id=3)
+        actual_content = converters._blob_to_content(obj,
+                                                     max_content_size=5,
+                                                     origin_id=3)
 
         # then
         self.assertEqual(expected_content, actual_content)
