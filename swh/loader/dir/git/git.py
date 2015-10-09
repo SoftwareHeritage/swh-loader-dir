@@ -45,8 +45,15 @@ def compute_directory_git_sha1(dirpath, hashes):
             Every path exists in hashes.
 
     """
+    def sorted_key_fn(entry):
+        """Beware the sorted algorithm in git add a / for tree entries.
+
+        """
+        name = entry['name']
+        return name + b'/' if entry['type'] is GitType.TREE else name
+
     def sort_by_entry_name(hashes):
-        return sorted(hashes, key=lambda entry: entry['name'])
+        return sorted(hashes, key=sorted_key_fn)
 
     def row_entry_tree_format(hashes):
         return map(lambda entry:
