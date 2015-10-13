@@ -4,9 +4,9 @@
 # See top-level LICENSE file for more information
 
 import unittest
+import datetime
 
 from nose.tools import istest
-from datetime import datetime
 
 from swh.loader.dir import converters
 from swh.loader.dir.git import git
@@ -52,7 +52,9 @@ class TestConverters(unittest.TestCase):
             'revision': '456',
             'name': 'some-release',
             'comment': 'some-comment-on-release',
-            'date': datetime.fromtimestamp(1444054085),
+            'date': datetime.datetime.fromtimestamp(
+                1444054085,
+                tz=datetime.timezone.utc),
             'date_offset': -180,
             'author_name': 'someone',
             'author_email': 'someone@whatelse.eu',
@@ -186,9 +188,13 @@ class TestConverters(unittest.TestCase):
 
         expected_revision = {
             'id': 'commit-git-sha1',
-            'date': datetime.fromtimestamp(1444054085),
+            'date': datetime.datetime.fromtimestamp(
+                1444054085,
+                tz=datetime.timezone.utc),
             'date_offset': 0,
-            'committer_date': datetime.fromtimestamp(1444054085),
+            'committer_date': datetime.datetime.fromtimestamp(
+                1444054085,
+                tz=datetime.timezone.utc),
             'committer_date_offset': 0,
             'type': 'tar',
             'directory': 'targeted-tree-sha1',
