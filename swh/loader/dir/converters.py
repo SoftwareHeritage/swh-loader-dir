@@ -8,7 +8,7 @@
 from datetime import datetime
 
 from swh.loader.dir.git.git import GitType
-from swh.loader.dir.git import utils
+from swh.loader.dir.git import git, utils
 
 
 def format_to_minutes(offset_str):
@@ -101,7 +101,7 @@ def commit_to_revision(commit, objects, log=None):
     """Format a commit as a revision.
 
     """
-    upper_directory = objects['<root>'][0]
+    upper_directory = objects[git.ROOT_TREE_KEY][0]
     return {
         'id': commit['sha1_git'],
         'date':

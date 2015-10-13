@@ -425,7 +425,7 @@ class DirLoader(config.SWHConfig):
 
         objects = get_objects_per_object_type(objects_per_path)
 
-        tree_hash = objects_per_path['<root>'][0]['sha1_git']
+        tree_hash = objects_per_path[git.ROOT_TREE_KEY][0]['sha1_git']
 
         revision = git.compute_revision_git_sha1(tree_hash, info)
         objects.update({

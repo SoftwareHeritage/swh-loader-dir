@@ -9,6 +9,7 @@ from nose.tools import istest
 from datetime import datetime
 
 from swh.loader.dir import converters
+from swh.loader.dir.git import git
 from swh.loader.dir.git.git import GitType, GitPerm
 
 
@@ -180,7 +181,7 @@ class TestConverters(unittest.TestCase):
         }
 
         objects = {
-            '<root>': [{'sha1_git': 'targeted-tree-sha1'}]
+            git.ROOT_TREE_KEY: [{'sha1_git': 'targeted-tree-sha1'}]
         }
 
         expected_revision = {

@@ -11,6 +11,8 @@ from enum import Enum
 from swh.loader.dir.git import utils
 
 
+ROOT_TREE_KEY = ''
+
 class GitType(Enum):
     BLOB = b'blob'
     TREE = b'tree'
@@ -269,7 +271,7 @@ def walk_and_compute_sha1_from_directory(rootdir):
           - and specifically content: 'sha1', 'sha256', ...
 
     Note:
-        One special key is '<root>' to indicate the upper root of the
+        One special key is ROOT_TREE_KEY to indicate the upper root of the
         directory (this is the revision's directory).
 
     Raises:
@@ -325,7 +327,7 @@ def walk_and_compute_sha1_from_directory(rootdir):
         'type': GitType.TREE
     })
     ls_hashes.update({
-        '<root>': [root_hash]
+        ROOT_TREE_KEY: [root_hash]
     })
 
     return ls_hashes
