@@ -8,7 +8,7 @@
 import logging
 import sys
 
-from swh.core.logger import PostgresHandler
+
 from swh.loader.dir.loader import DirLoader
 
 
@@ -19,8 +19,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s %(name)s %(levelname)s %(message)s',
     handlers=[
-        logging.StreamHandler(),
-        PostgresHandler(dir_loader_config['log_db']),
+        logging.StreamHandler()
     ],
 )
 
