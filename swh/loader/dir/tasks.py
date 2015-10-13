@@ -25,4 +25,4 @@ class LoadDirRepository(Task):
         loader = DirLoader(self.config)
         loader.log = self.log
 
-        loader.process(repo_path, origin_url, authority_id, validity)
+        loader.process(repo_path)
