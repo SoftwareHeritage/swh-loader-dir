@@ -5,6 +5,7 @@
 
 import subprocess
 import shutil
+import tempfile
 
 from swh.core.scheduling import Task
 from swh.core import config
@@ -132,17 +133,18 @@ class LoadTarRepository(LoadDirRepository):
                     'release_comment']:
             info.update({key: self.config[key]})
 
-        print(info)
+        init_dir_path = self.config['dir_path']
+        dir_path = tempfile.mkdtemp(prefix='swh.loader.tar', dir=init_dir_path)
 
         # unarchive in dir_path
-        config.prepare_folders(self.config, 'dir_path')
-        dir_path = info['dir_path']
         untar(tar_path, dir_path)
 
         # Update the origin's url
+        # and the dir_path to load
         origin_url = 'file://' + tar_path
         info.update({
-            'origin_url': origin_url
+            'origin_url': origin_url,
+            'dir_path': dir_path
         })
 
         # Load the directory result
