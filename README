@@ -9,3 +9,47 @@ It can also deal with:
 - ...
 
 
+Configuration sample
+====================
+
+### tar
+
+Sample tar.ini:
+
+    [main]    
+    dir_path = /tmp/swh/loader/tar/
+
+    storage_class = remote_storage
+    storage_args = http://localhost:5000/
+    send_contents = True
+    send_directories = True
+    send_revisions = True
+    send_releases = True
+    send_occurrences = True
+    content_packet_size = 10000
+    content_packet_size_bytes = 1073741824
+    directory_packet_size = 25000
+    revision_packet_size = 100000
+    release_packet_size = 100000
+    occurrence_packet_size = 100000
+
+Present in possible locations:
+- ~/.config/swh/loader/tar.ini
+- ~/.swh/loader/tar.ini
+- /etc/softwareheritage/loader/tar.ini
+
+### Load tarball
+
+#### toplevel
+
+    from swh.loader.dir.tasks import LoadTarRepository
+    LoadTarRepository().run('/path/to/tarball.tgz')
+
+#### celery
+
+Providing you have a celery up and running
+(cf. https://forge.softwareheritage.org/diffusion/DCORE/browse/master/README.md)
+
+    from swh.loader.dir.tasks import LoadTarRepository
+    LoadTarRepository().delay('/path/to/tarball.tgz')
+
