@@ -13,6 +13,7 @@ from swh.loader.dir.git import utils
 
 ROOT_TREE_KEY = ''
 
+
 class GitType(Enum):
     BLOB = b'blob'
     TREE = b'tree'

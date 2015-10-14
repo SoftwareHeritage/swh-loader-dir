@@ -36,7 +36,7 @@ def format_to_minutes(offset_str):
 
 
 def blob_to_content(obj, log=None, max_content_size=None,
-                             origin_id=None):
+                    origin_id=None):
     if 'data' not in obj:
         filepath = obj['path']
         content_raw, length = utils._read_raw(filepath)
@@ -46,8 +46,8 @@ def blob_to_content(obj, log=None, max_content_size=None,
 
 
 def _blob_to_content(obj, log=None,
-                    max_content_size=None,
-                    origin_id=None):
+                     max_content_size=None,
+                     origin_id=None):
     """Convert to a compliant swh content.
 
     """
@@ -66,9 +66,9 @@ def _blob_to_content(obj, log=None,
         if log:
             log.info('Skipping content %s, too large (%s > %s)' %
                      (obj['sha1_git'], size, max_content_size))
-        ret.update({'status': 'absent',
-                    'reason': 'Content too large',
-                    'origin': origin_id})
+            ret.update({'status': 'absent',
+                        'reason': 'Content too large',
+                        'origin': origin_id})
         return ret
 
     ret.update({

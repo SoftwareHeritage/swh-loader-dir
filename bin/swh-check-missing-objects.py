@@ -6,7 +6,7 @@ import subprocess
 from swh.loader.dir.git import utils
 
 
-BATCH_SIZE=10000
+BATCH_SIZE = 10000
 
 
 config = {
@@ -75,7 +75,7 @@ def check_missing_contents(rootpath):
         contents_map.update({content_hashes['sha1']: filepath})
         contents_batch.append(content_hashes)
         count_batch_contents += 1
-        if count_batch_contents < BATCH_SIZE:  # accumulate content to check on storage
+        if count_batch_contents < BATCH_SIZE:  # accumulate content to check
             continue
 
         print('Checks %s contents' % len(contents_batch))

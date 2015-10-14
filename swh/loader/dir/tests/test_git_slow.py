@@ -27,7 +27,10 @@ _perms_to_git_perm = {
 
 
 def to_hash_data_entry(ls_tree_format_input_line):
-    prepared_str = ls_tree_format_input_line.strip().replace('\t', ' ').replace('    ', ' ')
+    def prepare_str(s):
+        return s.strip().replace('\t', ' ').replace('    ', ' ')
+
+    prepared_str = prepare_str(ls_tree_format_input_line)
     perms, type, sha1_git, name = prepared_str.split(' ')
     return {'perms': _perms_to_git_perm[perms],
             'name': name.encode('utf-8'),
@@ -37,13 +40,14 @@ def to_hash_data_entry(ls_tree_format_input_line):
 
 def to_hash_data(path, ls_tree_format_input):
     entry_lines = ls_tree_format_input.strip().split('\n')
-    return {path: list(map(to_hash_data_entry, entry_lines)) }
+    return {path: list(map(to_hash_data_entry, entry_lines))}
 
 
 def compute_tree_hash(dirpath, ls_tree_format_input, hex_output):
     hashes = to_hash_data(dirpath, ls_tree_format_input)
     bin_hash = git.compute_directory_git_sha1(dirpath, hashes)
     return utils.hash_to_hex(bin_hash['sha1_git'])
+
 
 @attr('slow')
 class GitHashTreelib(unittest.TestCase):
@@ -56,7 +60,6 @@ class GitHashTreelib(unittest.TestCase):
 040000 tree 30d8382c42e9fd66f332d2bebfa44d044afe9d95    removed
 040000 tree f3b14ca3821d7d2839713925642261e892270c88    stable
     """,
-
     '30d8382c42e9fd66f332d2bebfa44d044afe9d95': """
 100644 blob a173aecc2f18aedddf1c9882808654febffe0d20    net_dma
 100644 blob 0020c49933c45ab0b61cd7e57fa9b4baa672d3c0    devfs
@@ -68,37 +71,37 @@ class GitHashTreelib(unittest.TestCase):
     """,
 
     'f3b14ca3821d7d2839713925642261e892270c88': """
-    100644 blob 16d030827368b2c49cbbe396588635dfa69d6c08    firewire-cdev
-    100644 blob 5eb1545e0b8d2aea38138d8ff43f4045a6b6f729    o2cb
-    100644 blob c3ae3e7d6a0ccdddedcc61db54910fef59dd54d3    syscalls
-    100644 blob 964c7a8afb268ae004364b0d71117efa51261dc3    sysfs-acpi-pmprofile
-    100644 blob 41e5a0cd1e3ed334234c4f3e9e3db1e2fa021dfc    sysfs-bus-firewire
-    100644 blob 831f15d9672f29e90cca5650356d2f69599e14b8    sysfs-bus-usb
-    100644 blob 140d85b4ae92faff6d3646735b04974c530c604b    sysfs-bus-w1
-    100644 blob 3d5951c8bf5fe8b27f47b016289c910f90af97e6    sysfs-bus-xen-backend
-    100644 blob 70302f370e7ec1c1d46e4d278f41319e1ce536c1    sysfs-class-backlight
-    100644 blob 097f522c33bb7b5c3632a9ca200e099fea32b2cf    sysfs-class-rfkill
-    100644 blob 26579ee868c9374ba92d3c1121c94310aacc38b4    sysfs-driver-w1_ds28e04
-    100644 blob 9f790eebb5d2b0f4d35c317073c72791b41a20b3    sysfs-class-tpm
-    100644 blob 18d471d9faea9bdec594a5bada594b4062ab66fb    sysfs-class-ubi
-    100644 blob 85d3dac2e204cfb649969ec6f7570522fb59ed4a    sysfs-class-udc
-    100644 blob 43f78b88da28beaa556b3bba509f1ac97fa44c16    sysfs-devices
-    100644 blob 5b2d0f08867cd899df072f89a059995944fb8eec    sysfs-devices-node
-    100644 blob 33c133e2a631a0d390353f76e4ad0697a568c60f    sysfs-devices-system-cpu
-    100644 blob caa311d59ac1d24c92643f37b396407a1ab654f0    sysfs-devices-system-xen_memory
-    100644 blob 7049a2b5035950f3d08dc9e8595a7d40e73036e6    sysfs-driver-ib_srp
-    100644 blob 9a59d84497edb7c7600e546542b3f4dfbccbe1d2    sysfs-driver-qla2xxx
-    100644 blob e960cd027e1e9685a83f3275ca859da7a793e116    sysfs-driver-usb-usbtmc
-    100644 blob e928def14f28c7487e7a319f94a9c1527aaecd8d    sysfs-driver-w1_ds28ea00
-    100644 blob 5def20b9019e93299ed111d53c338e705b1e2639    sysfs-firmware-efi-vars
-    100644 blob 32fe7f5c488069c64b8c37951b6dfcfa90f4eb57    sysfs-firmware-opal-dump
-    100644 blob e1f3058f5954d062796d12feb153d5d025c38495    sysfs-firmware-opal-elog
-    100644 blob 6272ae5fb36699b9f47276c85ec313185e43a9cf    sysfs-module
-    100644 blob 636e938d5e33a4e9331a328a05a6b93a0b538e60    sysfs-bus-vmbus
-    100644 blob ec7af69fea0afd9fe57f6600adc6b9be8fceb90d    sysfs-transport-srp
-    100644 blob 9723e8b7aeb3125b352b75bc54a0ad0ea7aa2474    thermal-notification
-    100644 blob 7cdfc28cc2c6d93b861d6ec3acb05bc5aca8bc70    vdso
-    """,
+100644 blob 16d030827368b2c49cbbe396588635dfa69d6c08    firewire-cdev
+100644 blob 5eb1545e0b8d2aea38138d8ff43f4045a6b6f729    o2cb
+100644 blob c3ae3e7d6a0ccdddedcc61db54910fef59dd54d3    syscalls
+100644 blob 964c7a8afb268ae004364b0d71117efa51261dc3    sysfs-acpi-pmprofile
+100644 blob 41e5a0cd1e3ed334234c4f3e9e3db1e2fa021dfc    sysfs-bus-firewire
+100644 blob 831f15d9672f29e90cca5650356d2f69599e14b8    sysfs-bus-usb
+100644 blob 140d85b4ae92faff6d3646735b04974c530c604b    sysfs-bus-w1
+100644 blob 3d5951c8bf5fe8b27f47b016289c910f90af97e6    sysfs-bus-xen-backend
+100644 blob 70302f370e7ec1c1d46e4d278f41319e1ce536c1    sysfs-class-backlight
+100644 blob 097f522c33bb7b5c3632a9ca200e099fea32b2cf    sysfs-class-rfkill
+100644 blob 26579ee868c9374ba92d3c1121c94310aacc38b4    sysfs-driver-w1_ds28e04
+100644 blob 9f790eebb5d2b0f4d35c317073c72791b41a20b3    sysfs-class-tpm
+100644 blob 18d471d9faea9bdec594a5bada594b4062ab66fb    sysfs-class-ubi
+100644 blob 85d3dac2e204cfb649969ec6f7570522fb59ed4a    sysfs-class-udc
+100644 blob 43f78b88da28beaa556b3bba509f1ac97fa44c16    sysfs-devices
+100644 blob 5b2d0f08867cd899df072f89a059995944fb8eec    sysfs-devices-node
+100644 blob 33c133e2a631a0d390353f76e4ad0697a568c60f    sysfs-devices-system-cpu
+100644 blob caa311d59ac1d24c92643f37b396407a1ab654f0    sysfs-devices-system-xen_memory
+100644 blob 7049a2b5035950f3d08dc9e8595a7d40e73036e6    sysfs-driver-ib_srp
+100644 blob 9a59d84497edb7c7600e546542b3f4dfbccbe1d2    sysfs-driver-qla2xxx
+100644 blob e960cd027e1e9685a83f3275ca859da7a793e116    sysfs-driver-usb-usbtmc
+100644 blob e928def14f28c7487e7a319f94a9c1527aaecd8d    sysfs-driver-w1_ds28ea00
+100644 blob 5def20b9019e93299ed111d53c338e705b1e2639    sysfs-firmware-efi-vars
+100644 blob 32fe7f5c488069c64b8c37951b6dfcfa90f4eb57    sysfs-firmware-opal-dump
+100644 blob e1f3058f5954d062796d12feb153d5d025c38495    sysfs-firmware-opal-elog
+100644 blob 6272ae5fb36699b9f47276c85ec313185e43a9cf    sysfs-module
+100644 blob 636e938d5e33a4e9331a328a05a6b93a0b538e60    sysfs-bus-vmbus
+100644 blob ec7af69fea0afd9fe57f6600adc6b9be8fceb90d    sysfs-transport-srp
+100644 blob 9723e8b7aeb3125b352b75bc54a0ad0ea7aa2474    thermal-notification
+100644 blob 7cdfc28cc2c6d93b861d6ec3acb05bc5aca8bc70    vdso
+    """,  # NOQA
 
     '367b37ab86e8066a46ed8ed81b37e78138aeb7d5': """
     100644 blob 8b7c72f07c92fe87cc7170ecc4fd1edf80fe7791    .gitignore
@@ -366,11 +369,12 @@ class GitHashTreelib(unittest.TestCase):
 100644 blob 2cf3e2608de324b5622673943807b8e8b353e2da	xz.txt
 040000 tree d9c00fe0c456581fc233ad805191be86b387b605	zh_CN
 100644 blob 90a64d52bea2f33464f86e4dc93954b2bc105f50	zorro.txt
-"""
-    }
+"""  # NOQA
+    }  # NOQA
 
     @istest
     def compute_complex_directories_git_sha1(self):
         for sha1 in self.to_checks.keys():
             sha1_input = self.to_checks[sha1]
-            self.assertEquals(sha1, compute_tree_hash('some-path', sha1_input, sha1))
+            self.assertEquals(sha1, compute_tree_hash('some-path', sha1_input,
+                                                      sha1))

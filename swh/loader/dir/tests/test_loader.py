@@ -11,7 +11,6 @@ import unittest
 
 from nose.tools import istest
 
-from swh.core.hashutil import hex_to_hash
 from swh.loader.dir.loader import DirLoader
 from swh.loader.dir.git.git import GitType
 
@@ -44,7 +43,6 @@ class TestLoader(unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-
 
         self.info = {
             'storage_class': 'remote_storage',
@@ -94,9 +92,9 @@ class TestLoader(unittest.TestCase):
         self.assertEquals(len(objects[GitType.BLOB]), 8,
                           "8 contents: 3 files + 5 links")
         self.assertEquals(len(objects[GitType.TREE]), 5,
-                          "5 directories: 4 subdirs + 1 empty one + 1 main dir")
-        self.assertEquals(len(objects[GitType.COMM]), 1, "1 synthetic revision")
-        self.assertEquals(len(objects[GitType.RELE]), 1, "1 synthetic release")
+                          "5 directories: 4 subdirs + 1 empty + 1 main dir")
+        self.assertEquals(len(objects[GitType.COMM]), 1, "synthetic revision")
+        self.assertEquals(len(objects[GitType.RELE]), 1, "synthetic release")
 
         self.assertEquals(len(objects_per_path), 6, "5 folders + <root>")
 
