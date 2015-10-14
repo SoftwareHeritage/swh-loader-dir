@@ -86,35 +86,6 @@ class DirLoader(config.SWHConfig):
         'revision_packet_size': ('int', 100000),
         'release_packet_size': ('int', 100000),
         'occurrence_packet_size': ('int', 100000),
-
-        # origin information
-        'origin_url': ('str', 'file:///dev/null'),
-
-        # occurrence information
-        'branch': ('str', 'master'),
-        'authority_id': ('int', 1),
-        'validity': ('str', '2015-01-01 00:00:00+00'),
-
-        # revision information
-        'revision_author_name': ('str', 'swh author'),
-        'revision_author_email': ('str', 'swh@inria.fr'),
-        'revision_author_date': ('int', '1444054085'),
-        'revision_author_offset': ('str', '+0200'),
-        'revision_committer_name': ('str', 'swh committer'),
-        'revision_committer_email': ('str', 'swh@inria.fr'),
-        'revision_committer_date': ('int', '1444054085'),
-        'revision_committer_offset': ('str', '+0200'),
-        'revision_type': ('str', 'tar'),
-        'revision_message': ('str', 'synthetic revision'),
-
-        # release information
-        'release_name': ('str', 'v0.0.1'),
-        'release_date': ('int', '1444054085'),
-        'release_offset': ('str', '+0200'),
-        'release_author_name': ('str', 'swh author'),
-        'release_author_email': ('str', 'swh@inria.fr'),
-        'release_comment': ('str', 'synthetic release'),
-
     }
 
     def __init__(self, config):

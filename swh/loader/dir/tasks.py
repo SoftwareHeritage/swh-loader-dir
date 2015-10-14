@@ -80,56 +80,73 @@ class LoadTarRepository(LoadDirRepository):
     """Import a tarball to Software Heritage
 
     """
-    mandatory_keys = ['tar_path', 'dir_path',
-                      'authority_id', 'validity',
-                      'revision_author_name', 'revision_author_email',
-                      'revision_author_date', 'revision_author_offset',
-                      'revision_committer_name', 'revision_committer_email',
-                      'revision_committer_date', 'revision_committer_offset',
-                      'revision_type', 'revision_message',
-                      'release_name', 'release_date', 'release_offset',
-                      'release_author_name', 'release_author_email',
-                      'release_comment']
-
     task_queue = 'swh_loader_tar'
 
     CONFIG_BASE_FILENAME = 'loader/tar.ini'
     ADDITIONAL_CONFIG = {
         'dir_path': ('str', '/tmp/swh.loader.tar/'),
-        'tar_path': ('str', '/some/path/to/tarball.tar')
+
+        # occurrence information
+        'branch': ('str', 'master'),
+        'authority_id': ('int', 1),
+        'validity': ('str', '2015-01-01 00:00:00+00'),
+
+        # revision information
+        'revision_author_name': ('str', 'swh author'),
+        'revision_author_email': ('str', 'swh@inria.fr'),
+        'revision_author_date': ('int', 1444054085),
+        'revision_author_offset': ('str', '+0200'),
+        'revision_committer_name': ('str', 'swh committer'),
+        'revision_committer_email': ('str', 'swh@inria.fr'),
+        'revision_committer_date': ('int', 1444054085),
+        'revision_committer_offset': ('str', '+0200'),
+        'revision_type': ('str', 'tar'),
+        'revision_message': ('str', 'synthetic revision'),
+
+        # release information
+        'release_name': ('str', 'v0.0.1'),
+        'release_date': ('int', 1444054085),
+        'release_offset': ('str', '+0200'),
+        'release_author_name': ('str', 'swh author'),
+        'release_author_email': ('str', 'swh@inria.fr'),
+        'release_comment': ('str', 'synthetic release'),
     }
 
-    def check_for_missing_mandatory_data(self, info):
-        """Check for presence of mandatory information.
-
-        Args:
-            Dictionary of mandatory values.
-
-        Returns:
-            List of missing keys if any, an empty list otherwise.
-
-        Note:
-            Does not check the values, just that they are present.
+    def run(self, tar_path):
+        """Import a tarball tar_path.
 
         """
-        missing_data = []
-        for key in self.mandatory_keys:
-            if key not in info:
-                missing_data.append(key)
+        info = {}
+        for key in ['dir_path',
+                    # origin
+                    'branch', 'authority_id', 'validity',
+                    # revision
+                    'revision_author_name', 'revision_author_email',
+                    'revision_author_date', 'revision_author_offset',
+                    'revision_committer_name', 'revision_committer_email',
+                    'revision_committer_date', 'revision_committer_offset',
+                    'revision_type', 'revision_message',
+                    # release
+                    'release_name', 'release_date', 'release_offset',
+                    'release_author_name', 'release_author_email',
+                    'release_comment']:
+            info.update({key: self.config[key]})
 
-        return missing_data
+        print(info)
 
-    def run(self, info):
-        """Import a tarball.
-
-        """
-        missing_data = self.check_for_missing_mandatory_data(info)
-        if not missing_data:
-            raise ValueError('%s are mandatory, failing!' % missing_data)
-
-        config.prepare_folders(info, 'dir_path')
-        tar_path = info['tar_path']
+        # unarchive in dir_path
+        config.prepare_folders(self.config, 'dir_path')
         dir_path = info['dir_path']
         untar(tar_path, dir_path)
-        super().run(info)
-        shutil.rmtree(dir_path)
+
+        # Update the origin's url
+        origin_url = 'file://' + tar_path
+        info.update({
+            'origin_url': origin_url
+        })
+
+        # Load the directory result
+        try:
+            super().run(info)
+        finally:  # always clean up
+            shutil.rmtree(dir_path)
