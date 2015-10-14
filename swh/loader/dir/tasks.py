@@ -80,6 +80,17 @@ class LoadTarRepository(LoadDirRepository):
     """Import a tarball to Software Heritage
 
     """
+    mandatory_keys = ['tar_path', 'dir_path',
+                      'authority_id', 'validity',
+                      'revision_author_name', 'revision_author_email',
+                      'revision_author_date', 'revision_author_offset',
+                      'revision_committer_name', 'revision_committer_email',
+                      'revision_committer_date', 'revision_committer_offset',
+                      'revision_type', 'revision_message',
+                      'release_name', 'release_date', 'release_offset',
+                      'release_author_name', 'release_author_email',
+                      'release_comment']
+
     task_queue = 'swh_loader_tar'
 
     CONFIG_BASE_FILENAME = 'loader/tar.ini'
@@ -88,15 +99,37 @@ class LoadTarRepository(LoadDirRepository):
         'tar_path': ('str', '/some/path/to/tarball.tar')
     }
 
-    def run(self, info=None):
+    def check_for_missing_mandatory_data(self, info):
+        """Check for presence of mandatory information.
+
+        Args:
+            Dictionary of mandatory values.
+
+        Returns:
+            List of missing keys if any, an empty list otherwise.
+
+        Note:
+            Does not check the values, just that they are present.
+
+        """
+        missing_data = []
+        for key in self.mandatory_keys:
+            if key not in info:
+                missing_data.append(key)
+
+        return missing_data
+
+    def run(self, info):
         """Import a tarball.
 
         """
-        info = info if info else self.config
+        missing_data = self.check_for_missing_mandatory_data(info)
+        if not missing_data:
+            raise ValueError('%s are mandatory, failing!' % missing_data)
+
+        config.prepare_folders(info, 'dir_path')
         tar_path = info['tar_path']
         dir_path = info['dir_path']
-
-        config.prepare_folders(self.config, 'dir_path')
         untar(tar_path, dir_path)
         super().run(info)
         shutil.rmtree(dir_path)
