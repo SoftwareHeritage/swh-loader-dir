@@ -4,9 +4,9 @@ from swh.loader.dir.tasks import LoadTarRepository
 # from ~/.config/swh/loader/tar.ini)
 loadertar = LoadTarRepository()
 
-tar_path = '/home/tony/Downloads/org2jekyll-0.1.8.tar'
+tar_path = '/home/tony/work/inria/repo/linux.tgz'
 info = {
-    'dir_path': '/tmp/swh/loader/tar/org2jekyll',
+    'dir_path': '/tmp/swh/loader/tar/linux',
 }
 
-loadertar.run(tar_path)
+loadertar.delay(tar_path)
