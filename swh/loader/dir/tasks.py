@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 import subprocess
+import shutil
 
 from swh.core.scheduling import Task
 from swh.core import config
@@ -92,6 +93,10 @@ class LoadTarRepository(LoadDirRepository):
 
         """
         info = info if info else self.config
+        tar_path = info['tar_path']
+        dir_path = info['dir_path']
+
         config.prepare_folders(self.config, 'dir_path')
-        untar(info['tar_path'], info['dir_path'])
+        untar(tar_path, dir_path)
         super().run(info)
+        shutil.rmtree(dir_path)
