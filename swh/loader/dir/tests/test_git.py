@@ -8,7 +8,7 @@ import unittest
 from nose.tools import istest
 
 from swh.loader.dir.git import git
-from swh.loader.dir.git.git import GitPerm
+from swh.loader.dir.git.git import GitPerm, GitType
 
 
 class GitHashlib(unittest.TestCase):
@@ -52,14 +52,17 @@ blah
         dirpath = 'some-dir-path'
         hashes = {
             dirpath: [{'perms': GitPerm.TREE,
+                       'type': GitType.TREE,
                        'name': b'barfoo',
                        'sha1_git': bytes.fromhex('c3020f6bf135a38c6df'
                                                  '3afeb5fb38232c5e07087')},
                       {'perms': GitPerm.BLOB,
+                       'type': GitType.BLOB,
                        'name': b'hello',
                        'sha1_git': bytes.fromhex('907b308167f0880fb2a'
                                                  '5c0e1614bb0c7620f9dc3')},
                       {'perms': GitPerm.BLOB,
+                       'type': GitType.BLOB,
                        'name': b'blah',
                        'sha1_git': bytes.fromhex('63756ef0df5e4f10b6efa'
                                                  '33cfe5c758749615f20')}]
