@@ -5,9 +5,18 @@
 
 """Convert dir objects to dictionaries suitable for swh.storage"""
 
-from datetime import datetime
+import datetime
 
 from swh.loader.dir.git.git import GitType
+from swh.loader.dir.git import git, utils
+
+
+def to_datetime(ts):
+    """Convert a timestamp to utc datetime.
+
+    """
+    return datetime.datetime.utcfromtimestamp(ts).replace(
+        tzinfo=datetime.timezone.utc)
 
 
 def format_to_minutes(offset_str):
@@ -26,9 +35,19 @@ def format_to_minutes(offset_str):
     return minutes if sign == '+' else -1 * minutes
 
 
-def blob_to_content(obj, objects, log=None,
-                    max_content_size=None,
+def blob_to_content(obj, log=None, max_content_size=None,
                     origin_id=None):
+    if 'data' not in obj:
+        filepath = obj['path']
+        content_raw, length = utils._read_raw(filepath)
+        obj.update({'data': content_raw,
+                    'length': length})
+    return _blob_to_content(obj, log, max_content_size, origin_id)
+
+
+def _blob_to_content(obj, log=None,
+                     max_content_size=None,
+                     origin_id=None):
     """Convert to a compliant swh content.
 
     """
@@ -90,15 +109,15 @@ def commit_to_revision(commit, objects, log=None):
     """Format a commit as a revision.
 
     """
-    upper_directory = objects['<root>'][0]
+    upper_directory = objects[git.ROOT_TREE_KEY][0]
     return {
         'id': commit['sha1_git'],
         'date':
-        datetime.fromtimestamp(commit['revision_author_date']),
+        to_datetime(commit['revision_author_date']),
         'date_offset':
         format_to_minutes(commit['revision_author_offset']),
         'committer_date':
-        datetime.fromtimestamp(commit['revision_committer_date']),
+        to_datetime(commit['revision_committer_date']),
         'committer_date_offset':
         format_to_minutes(commit['revision_committer_offset']),
         'type': commit['revision_type'],
@@ -112,7 +131,7 @@ def commit_to_revision(commit, objects, log=None):
     }
 
 
-def annotated_tag_to_release(release, objects, log=None):
+def annotated_tag_to_release(release, log=None):
     """Format a swh release.
 
     """
@@ -121,7 +140,7 @@ def annotated_tag_to_release(release, objects, log=None):
         'revision': release['revision_sha1_git'],
         'name': release['release_name'],
         'comment': release['release_comment'],
-        'date': datetime.fromtimestamp(release['release_date']),
+        'date': to_datetime(release['release_date']),
         'date_offset': format_to_minutes(release['release_offset']),
         'author_name': release['release_author_name'],
         'author_email': release['release_author_email'],

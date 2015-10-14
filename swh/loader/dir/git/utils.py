@@ -12,6 +12,7 @@ from io import BytesIO
 from swh.core import hashutil
 
 
+hashfile = hashutil.hashfile
 hash_to_hex = hashutil.hash_to_hex
 hex_to_hash = hashutil.hex_to_hash
 
@@ -81,6 +82,12 @@ def hashdata(data, header_type):
 def _read_raw(filepath):
     """Read filepath's raw content and returns it.
 
+    Args:
+        filepath: absolute path to an existing file.
+
+    Returns:
+        raw content in bytes + its length
+
     """
     content_raw = b''
     length = 0
@@ -93,27 +100,6 @@ def _read_raw(filepath):
             length += len(chunk)
 
     return content_raw, length
-
-
-def hashfile(filepath):
-    """Compute the hashes of filepath (sha1, sha1_git, sha256).
-
-    Args:
-        filepath: the absolute path name to the file to hash.
-
-    Returns:
-        A dictionary of values:
-        - sha1
-        - sha256
-        - sha1_git
-        - content: the raw content of the filepath
-
-    """
-    hashes = hashutil.hashfile(filepath)
-    content_raw, length = _read_raw(filepath)
-    hashes.update({'data': content_raw,
-                   'length': length})
-    return hashes
 
 
 def hashlink(linkpath):

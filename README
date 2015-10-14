@@ -1,67 +1,55 @@
 SWH-loader-dir
 ==============
 
-# TL;DR
-
-WIP -> Main entry point is scratch/walking.py for the moment
-
-
 The Software Heritage Loader Dir is a tool and a library to walk a local
 Directory and inject into the SWH dataset all unknown contained files.
 
+It can also deal with:
+- a tarball
+- ...
 
 
-Git sha1 computation
---------------------
+Configuration sample
+====================
 
-### commit/revision
+### tar
 
-sha1 git commit/revision computation:
+Sample tar.ini:
 
-    commit `size`\0
-    tree `sha1-git-tree-and-subtree-in-plain-hex-string`
-    (parent `commit-parent`)
-    author `name` <`email`> `date-ts` `date-offset`
-    committer `name` <`email`> `date-ts` `date-offset`
+    [main]    
+    dir_path = /tmp/swh/loader/tar/
 
-    `commit-message`
+    storage_class = remote_storage
+    storage_args = http://localhost:5000/
+    send_contents = True
+    send_directories = True
+    send_revisions = True
+    send_releases = True
+    send_occurrences = True
+    content_packet_size = 10000
+    content_packet_size_bytes = 1073741824
+    directory_packet_size = 25000
+    revision_packet_size = 100000
+    release_packet_size = 100000
+    occurrence_packet_size = 100000
 
+Present in possible locations:
+- ~/.config/swh/loader/tar.ini
+- ~/.swh/loader/tar.ini
+- /etc/softwareheritage/loader/tar.ini
 
-Notes:
-- () denotes optional entry. Indeed, first commit does not contain any parent commit.
-- empty line at the end of the commit message
-- timestamp example: 1444054085
-- date offset for example: +0200
+### Load tarball
 
-### directory/tree
+#### toplevel
 
-sha1 git directory/tree computation:
+    from swh.loader.dir.tasks import LoadTarRepository
+    LoadTarRepository().run('/path/to/tarball.tgz')
 
-    tree `tree-size`\0
-    <file-perm> <file-name>\0<file-sha1-in-20-bytes-string>...<dir-perm> <dir-name>\0<dir-sha1-in-20-bytes-string>...
+#### celery
 
+Providing you have a celery up and running
+(cf. https://forge.softwareheritage.org/diffusion/DCORE/browse/master/README.md)
 
-Notes:
-- no newline separator between tree entries
-- no empty newline at the end of the tree entries
-- tree content header size is the length of the content
-- The tree entries are ordered according to bytes in their <name> properties.
+    from swh.loader.dir.tasks import LoadTarRepository
+    LoadTarRepository().delay('/path/to/tarball.tgz')
 
-Possible permissions are:
-- 100644 - file
-- 40000  - directory
-- 100755 - executable file
-- 120000 - symbolink link
-- 160000 - git link (relative to submodule)
-
-### content/file
-
-sha1 git content computation:
-
-    blob `blob-size`\0
-    `blob-content`
-
-Notes:
-- no newline at the end of the blob content
-
-Compress with DEFLATE and compute sha1

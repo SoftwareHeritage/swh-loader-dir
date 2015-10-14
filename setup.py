@@ -13,8 +13,6 @@ def parse_requirements():
     return requirements
 
 
-# Edit this part to match your module
-# full sample: https://forge.softwareheritage.org/diffusion/DCORE/browse/master/setup.py
 setup(
     name='swh.loader.dir',
     description='Software Heritage Loader Directory',
