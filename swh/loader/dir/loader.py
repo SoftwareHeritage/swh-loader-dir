@@ -86,35 +86,6 @@ class DirLoader(config.SWHConfig):
         'revision_packet_size': ('int', 100000),
         'release_packet_size': ('int', 100000),
         'occurrence_packet_size': ('int', 100000),
-
-        # origin information
-        'origin_url': ('str', 'file:///dev/null'),
-
-        # occurrence information
-        'branch': ('str', 'master'),
-        'authority_id': ('int', 1),
-        'validity': ('str', '2015-01-01 00:00:00+00'),
-
-        # revision information
-        'revision_author_name': ('str', 'swh author'),
-        'revision_author_email': ('str', 'swh@inria.fr'),
-        'revision_author_date': ('int', '1444054085'),
-        'revision_author_offset': ('str', '+0200'),
-        'revision_committer_name': ('str', 'swh committer'),
-        'revision_committer_email': ('str', 'swh@inria.fr'),
-        'revision_committer_date': ('int', '1444054085'),
-        'revision_committer_offset': ('str', '+0200'),
-        'revision_type': ('str', 'tar'),
-        'revision_message': ('str', 'synthetic revision'),
-
-        # release information
-        'release_name': ('str', 'v0.0.1'),
-        'release_date': ('int', '1444054085'),
-        'release_offset': ('str', '+0200'),
-        'release_author_name': ('str', 'swh author'),
-        'release_author_email': ('str', 'swh@inria.fr'),
-        'release_comment': ('str', 'synthetic release'),
-
     }
 
     def __init__(self, config):
@@ -302,7 +273,6 @@ class DirLoader(config.SWHConfig):
         send_in_packets(blobs, converters.blob_to_content,
                         self.send_contents, packet_size,
                         packet_size_bytes=packet_size_bytes,
-                        objects=objects,
                         log=self.log,
                         max_content_size=max_content_size,
                         origin_id=origin_id)
@@ -333,7 +303,6 @@ class DirLoader(config.SWHConfig):
 
         send_in_packets(tags, converters.annotated_tag_to_release,
                         self.send_releases, packet_size,
-                        objects=objects,
                         log=self.log)
 
     def bulk_send_refs(self, objects, refs):
@@ -371,7 +340,6 @@ class DirLoader(config.SWHConfig):
                 - authority (int)
             Compatible with occurrence_add.
         """
-
         log_id = str(uuid.uuid4())
 
         self.log.debug("Computing occurrence %s representation at %s" % (
@@ -419,7 +387,7 @@ class DirLoader(config.SWHConfig):
         log_id = str(uuid.uuid4())
 
         self.log.info("Started listing %s" % root_dir, extra={
-            'swh_type': 'git_list_objs_start',
+            'swh_type': 'dir_list_objs_start',
             'swh_repo': root_dir,
             'swh_id': log_id,
         })
@@ -428,7 +396,7 @@ class DirLoader(config.SWHConfig):
 
         objects = get_objects_per_object_type(objects_per_path)
 
-        tree_hash = objects_per_path['<root>'][0]['sha1_git']
+        tree_hash = objects_per_path[git.ROOT_TREE_KEY][0]['sha1_git']
 
         revision = git.compute_revision_git_sha1(tree_hash, info)
         objects.update({
@@ -449,7 +417,7 @@ class DirLoader(config.SWHConfig):
                           len(objects[GitType.COMM]),
                           len(objects[GitType.RELE])
                       ), extra={
-                          'swh_type': 'git_list_objs_end',
+                          'swh_type': 'dir_list_objs_end',
                           'swh_repo': root_dir,
                           'swh_num_blobs': len(objects[GitType.BLOB]),
                           'swh_num_trees': len(objects[GitType.TREE]),
@@ -488,7 +456,8 @@ class DirLoader(config.SWHConfig):
         else:
             self.log.info('Not sending occurrences')
 
-    def process(self, root_dir):
+    def process(self, info):
+        root_dir = info['dir_path']
         if not os.path.exists(root_dir):
             self.log.info('Skipping inexistant directory %s' % root_dir,
                           extra={
@@ -509,21 +478,21 @@ class DirLoader(config.SWHConfig):
             return
 
         # Add origin to storage if needed, use the one from config if not
-        origin = self.dir_origin(root_dir, self.config['origin_url'])
+        origin = self.dir_origin(root_dir, info['origin_url'])
 
         # We want to load the repository, walk all the objects
-        objects, objects_per_path = self.list_repo_objs(root_dir, self.config)
+        objects, objects_per_path = self.list_repo_objs(root_dir, info)
 
         # Compute revision information (mixed from outside input + dir content)
         revision = objects[GitType.COMM][0]
 
         # Parse all the refs from our root_dir
         ref = self.compute_dir_ref(root_dir,
-                                   self.config['branch'],
+                                   info['branch'],
                                    revision['sha1_git'],
                                    origin['id'],
-                                   self.config['authority_id'],
-                                   self.config['validity'])
+                                   info['authority_id'],
+                                   info['validity'])
 
         # Finally, load the repository
         self.load_dir(root_dir, objects, objects_per_path, [ref], origin['id'])

@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 
+# Tryouts scratch buffer
+# Not for production
+
+# Copyright (C) 2015  The Software Heritage developers
+# See the AUTHORS file at the top-level directory of this distribution
+# License: GNU General Public License version 3, or any later version
+# See top-level LICENSE file for more information
+
 import os
 import shutil
 import tempfile
@@ -43,7 +51,7 @@ def git_ls_tree_rec(hashes, info):
     revision = git.compute_revision_git_sha1(hashes, info)
     print('revision %s -> directory %s' % (
         utils.hash_to_hex(revision['sha1_git']),
-        utils.hash_to_hex(hashes['<root>'][0]['sha1_git'])
+        utils.hash_to_hex(hashes[git.ROOT_TREE_KEY][0]['sha1_git'])
     ))
 
 

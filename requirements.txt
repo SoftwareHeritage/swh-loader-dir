@@ -4,3 +4,4 @@
 vcversioner
 swh.core
 swh.storage
+retrying
