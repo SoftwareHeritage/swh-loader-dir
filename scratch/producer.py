@@ -5,8 +5,4 @@ from swh.loader.dir.tasks import LoadTarRepository
 loadertar = LoadTarRepository()
 
 tar_path = '/home/tony/work/inria/repo/linux.tgz'
-info = {
-    'dir_path': '/tmp/swh/loader/tar/linux',
-}
-
 loadertar.delay(tar_path)
