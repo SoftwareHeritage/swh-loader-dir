@@ -87,10 +87,11 @@ class LoadTarRepository(LoadDirRepository):
         'tar_path': ('str', '/some/path/to/tarball.tar')
     }
 
-    def run(self, info):
+    def run(self, info=None):
         """Import a tarball.
 
         """
+        info = info if info else self.config
         config.prepare_folders(self.config, 'dir_path')
         untar(info['tar_path'], info['dir_path'])
         super().run(info)
