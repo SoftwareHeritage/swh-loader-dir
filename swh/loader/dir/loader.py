@@ -485,7 +485,8 @@ class DirLoader(config.SWHConfig):
         else:
             self.log.info('Not sending occurrences')
 
-    def process(self, root_dir):
+    def process(self, info):
+        root_dir = info['dir_path']
         if not os.path.exists(root_dir):
             self.log.info('Skipping inexistant directory %s' % root_dir,
                           extra={
@@ -506,21 +507,21 @@ class DirLoader(config.SWHConfig):
             return
 
         # Add origin to storage if needed, use the one from config if not
-        origin = self.dir_origin(root_dir, self.config['origin_url'])
+        origin = self.dir_origin(root_dir, info['origin_url'])
 
         # We want to load the repository, walk all the objects
-        objects, objects_per_path = self.list_repo_objs(root_dir, self.config)
+        objects, objects_per_path = self.list_repo_objs(root_dir, info)
 
         # Compute revision information (mixed from outside input + dir content)
         revision = objects[GitType.COMM][0]
 
         # Parse all the refs from our root_dir
         ref = self.compute_dir_ref(root_dir,
-                                   self.config['branch'],
+                                   info['branch'],
                                    revision['sha1_git'],
                                    origin['id'],
-                                   self.config['authority_id'],
-                                   self.config['validity'])
+                                   info['authority_id'],
+                                   info['validity'])
 
         # Finally, load the repository
         self.load_dir(root_dir, objects, objects_per_path, [ref], origin['id'])
