@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# NOT FOR PRODUCTION
+
 # Copyright (C) 2015  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
@@ -26,5 +28,28 @@ logging.basicConfig(
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.CRITICAL)
 
+
+def load_keys_from_properties(config, key_pattern):
+    m = {
+        key[len(key_pattern):]: value
+        for key, value in dir_loader_config.items()
+        if key.startswith(key_pattern)
+    }
+    return m
+
+
+dir_path = dir_loader_config['dir_path']
+
+origin = load_keys_from_properties(dir_loader_config, 'origin_')
+
+release = load_keys_from_properties(dir_loader_config, 'release_')
+release['date'] = int(release['date'])
+
+revision = load_keys_from_properties(dir_loader_config, 'revision_')
+revision['committer_date'] = int(revision['committer_date'])
+revision['author_date'] = int(revision['author_date'])
+
+occurrence = load_keys_from_properties(dir_loader_config, 'occurrence_')
+
 loader = DirLoader(dir_loader_config)
-loader.process(dir_loader_config)
+loader.process(dir_path, origin, revision, release, occurrence)
