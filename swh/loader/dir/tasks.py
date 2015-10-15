@@ -8,7 +8,6 @@ import shutil
 import tempfile
 
 from swh.core.scheduling import Task
-from swh.core import config
 
 from swh.loader.dir.loader import DirLoader
 
