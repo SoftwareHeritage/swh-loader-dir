@@ -112,21 +112,17 @@ def commit_to_revision(commit, objects, log=None):
     upper_directory = objects[git.ROOT_TREE_KEY][0]
     return {
         'id': commit['sha1_git'],
-        'date':
-        to_datetime(commit['revision_author_date']),
-        'date_offset':
-        format_to_minutes(commit['revision_author_offset']),
-        'committer_date':
-        to_datetime(commit['revision_committer_date']),
-        'committer_date_offset':
-        format_to_minutes(commit['revision_committer_offset']),
-        'type': commit['revision_type'],
+        'date': to_datetime(commit['author_date']),
+        'date_offset': format_to_minutes(commit['author_offset']),
+        'committer_date': to_datetime(commit['committer_date']),
+        'committer_date_offset': format_to_minutes(commit['committer_offset']),
+        'type': commit['type'],
         'directory': upper_directory['sha1_git'],
-        'message': commit['revision_message'],
-        'author_name': commit['revision_author_name'],
-        'author_email': commit['revision_author_email'],
-        'committer_name': commit['revision_committer_name'],
-        'committer_email': commit['revision_committer_email'],
+        'message': commit['message'],
+        'author_name': commit['author_name'],
+        'author_email': commit['author_email'],
+        'committer_name': commit['committer_name'],
+        'committer_email': commit['committer_email'],
         'parents': [],
     }
 
@@ -137,19 +133,11 @@ def annotated_tag_to_release(release, log=None):
     """
     return {
         'id': release['sha1_git'],
-        'revision': release['revision_sha1_git'],
-        'name': release['release_name'],
-        'comment': release['release_comment'],
-        'date': to_datetime(release['release_date']),
-        'date_offset': format_to_minutes(release['release_offset']),
-        'author_name': release['release_author_name'],
-        'author_email': release['release_author_email'],
-    }
-
-
-def origin_url_to_origin(origin_url):
-    """Format a pygit2.Repository as an origin suitable for swh.storage"""
-    return {
-        'type': 'dir',
-        'url': origin_url,
+        'revision': release['revision'],
+        'name': release['name'],
+        'comment': release['comment'],
+        'date': to_datetime(release['date']),
+        'date_offset': format_to_minutes(release['offset']),
+        'author_name': release['author_name'],
+        'author_email': release['author_email'],
     }

@@ -23,28 +23,17 @@ class TestConverters(unittest.TestCase):
         self.assertEquals(converters.format_to_minutes('-0000'), 0)
 
     @istest
-    def origin_url_to_origin(self):
-        # given
-        origin_url = 'foobar'
-
-        # when
-        self.assertDictEqual({
-            'type': 'dir',
-            'url': origin_url,
-        }, converters.origin_url_to_origin(origin_url))
-
-    @istest
     def annotated_tag_to_release(self):
         # given
         release = {
             'sha1_git': '123',
-            'revision_sha1_git': '456',
-            'release_name': 'some-release',
-            'release_comment': 'some-comment-on-release',
-            'release_date': 1444054085,
-            'release_offset': '-0300',
-            'release_author_name': 'someone',
-            'release_author_email': 'someone@whatelse.eu'
+            'revision': '456',
+            'name': 'some-release',
+            'comment': 'some-comment-on-release',
+            'date': 1444054085,
+            'offset': '-0300',
+            'author_name': 'someone',
+            'author_email': 'someone@whatelse.eu'
         }
 
         expected_release = {
@@ -170,16 +159,17 @@ class TestConverters(unittest.TestCase):
         # given
         commit = {
             'sha1_git': 'commit-git-sha1',
-            'revision_author_date': 1444054085,
-            'revision_author_offset': '+0000',
-            'revision_committer_date': 1444054085,
-            'revision_committer_offset': '-0000',
-            'revision_type': 'tar',
-            'revision_message': 'synthetic-message-input',
-            'revision_author_name': 'author-name',
-            'revision_author_email': 'author-email',
-            'revision_committer_name': 'committer-name',
-            'revision_committer_email': 'committer-email',
+            'author_date': 1444054085,
+            'author_offset': '+0000',
+            'committer_date': 1444054085,
+            'committer_offset': '-0000',
+            'type': 'tar',
+            'message': 'synthetic-message-input',
+            'author_name': 'author-name',
+            'author_email': 'author-email',
+            'committer_name': 'committer-name',
+            'committer_email': 'committer-email',
+            'directory': 'targeted-tree-sha1',
         }
 
         objects = {

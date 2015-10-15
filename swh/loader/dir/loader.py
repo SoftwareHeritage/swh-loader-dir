@@ -205,35 +205,8 @@ class DirLoader(config.SWHConfig):
                            'swh_id': log_id,
                        })
 
-    def get_or_create_origin(self, origin_url):
-        origin = converters.origin_url_to_origin(origin_url)
-
-        origin['id'] = self.storage.origin_add_one(origin)
-
-        return origin
-
-    def dir_origin(self, root_dir, origin_url):
-        log_id = str(uuid.uuid4())
-        self.log.debug('Creating origin for %s' % origin_url,
-                       extra={
-                           'swh_type': 'storage_send_start',
-                           'swh_content_type': 'origin',
-                           'swh_num': 1,
-                           'swh_id': log_id
-                       })
-        origin = self.get_or_create_origin(origin_url)
-        self.log.debug('Done creating origin for %s' % origin_url,
-                       extra={
-                           'swh_type': 'storage_send_end',
-                           'swh_content_type': 'origin',
-                           'swh_num': 1,
-                           'swh_id': log_id
-                       })
-
-        return origin
-
     def dir_revision(self,
-                     root_dir,
+                     dir_path,
                      origin_url,
                      revision_date,
                      revision_offset,
@@ -313,56 +286,13 @@ class DirLoader(config.SWHConfig):
         send_in_packets(refs, lambda ref: ref,
                         self.send_occurrences, packet_size)
 
-    def compute_dir_ref(self, root_dir,
-                        branch,
-                        revision_hash,
-                        origin_id,
-                        authority_id,
-                        validity):
-        """List all the refs from the given root directory root_dir.
+    def list_repo_objs(self, dir_path, revision, release):
+        """List all objects from dir_path.
 
         Args:
-            - root_dir: the root directory
-            - branch: occurrence's branch name
-            - revision_hash: the revision hash
-            - origin_id (int): the id of the origin from which the root_dir is
-                taken
-            - validity (datetime.datetime): the validity date for the
-                repository's refs
-            - authority_id (int): the id of the authority on `validity`.
-
-        Returns:
-            One dictionary with keys:
-                - branch (str): name of the ref
-                - revision (sha1_git): revision pointed at by the ref
-                - origin (int)
-                - validity (datetime.DateTime)
-                - authority (int)
-            Compatible with occurrence_add.
-        """
-        log_id = str(uuid.uuid4())
-
-        self.log.debug("Computing occurrence %s representation at %s" % (
-            branch, revision_hash), extra={
-                'swh_type': 'computing_occurrence_dir',
-                'swh_name': branch,
-                'swh_target': str(revision_hash),
-                'swh_id': log_id,
-            })
-
-        return {
-            'branch': branch,
-            'revision': revision_hash,
-            'origin': origin_id,
-            'validity': validity,
-            'authority': authority_id,
-        }
-
-    def list_repo_objs(self, root_dir, info):
-        """List all objects from root_dir.
-
-        Args:
-            - root_dir (path): the directory to list
+            - dir_path (path): the directory to list
+            - revision: revision dictionary representation
+            - release: release dictionary representation
 
         Returns:
             a dict containing lists of `Oid`s with keys for each object type:
@@ -386,39 +316,38 @@ class DirLoader(config.SWHConfig):
 
         log_id = str(uuid.uuid4())
 
-        self.log.info("Started listing %s" % root_dir, extra={
+        self.log.info("Started listing %s" % dir_path, extra={
             'swh_type': 'dir_list_objs_start',
-            'swh_repo': root_dir,
+            'swh_repo': dir_path,
             'swh_id': log_id,
         })
 
-        objects_per_path = git.walk_and_compute_sha1_from_directory(root_dir)
+        objects_per_path = git.walk_and_compute_sha1_from_directory(dir_path)
 
         objects = get_objects_per_object_type(objects_per_path)
 
         tree_hash = objects_per_path[git.ROOT_TREE_KEY][0]['sha1_git']
+        revision['directory'] = tree_hash
 
-        revision = git.compute_revision_git_sha1(tree_hash, info)
-        objects.update({
-            GitType.COMM: [revision]
-        })
+        revision['sha1_git'] = git.compute_revision_sha1_git(revision)
 
-        revision_hash = revision['sha1_git']
-        release = git.compute_release(revision_hash, info)
-        objects.update({
-            GitType.RELE: [release]
-        })
+        objects[GitType.COMM] = [revision]
+
+        release['revision'] = revision['sha1_git']
+        release['sha1_git'] = git.compute_release_sha1_git(release)
+
+        objects[GitType.RELE] = [release]
 
         self.log.info("Done listing the objects in %s: %d contents, "
                       "%d directories, %d revisions, %d releases" % (
-                          root_dir,
+                          dir_path,
                           len(objects[GitType.BLOB]),
                           len(objects[GitType.TREE]),
                           len(objects[GitType.COMM]),
                           len(objects[GitType.RELE])
                       ), extra={
                           'swh_type': 'dir_list_objs_end',
-                          'swh_repo': root_dir,
+                          'swh_repo': dir_path,
                           'swh_num_blobs': len(objects[GitType.BLOB]),
                           'swh_num_trees': len(objects[GitType.TREE]),
                           'swh_num_commits': len(objects[GitType.COMM]),
@@ -428,7 +357,7 @@ class DirLoader(config.SWHConfig):
 
         return objects, objects_per_path
 
-    def load_dir(self, root_dir, objects, objects_per_path, refs, origin_id):
+    def load_dir(self, dir_path, objects, objects_per_path, refs, origin_id):
         if self.config['send_contents']:
             self.bulk_send_blobs(objects_per_path, objects[GitType.BLOB],
                                  origin_id)
@@ -456,43 +385,40 @@ class DirLoader(config.SWHConfig):
         else:
             self.log.info('Not sending occurrences')
 
-    def process(self, info):
-        root_dir = info['dir_path']
-        if not os.path.exists(root_dir):
-            self.log.info('Skipping inexistant directory %s' % root_dir,
+    def process(self, dir_path, origin, revision, release, occurrence):
+        if not os.path.exists(dir_path):
+            self.log.info('Skipping inexistant directory %s' % dir_path,
                           extra={
                               'swh_type': 'dir_repo_list_refs',
-                              'swh_repo': root_dir,
+                              'swh_repo': dir_path,
                               'swh_num_refs': 0,
                           })
             return
 
-        files = os.listdir(root_dir)
+        files = os.listdir(dir_path)
         if not(files):
-            self.log.info('Skipping empty directory %s' % root_dir,
+            self.log.info('Skipping empty directory %s' % dir_path,
                           extra={
                               'swh_type': 'dir_repo_list_refs',
-                              'swh_repo': root_dir,
+                              'swh_repo': dir_path,
                               'swh_num_refs': 0,
                           })
             return
 
-        # Add origin to storage if needed, use the one from config if not
-        origin = self.dir_origin(root_dir, info['origin_url'])
+        origin['id'] = self.storage.origin_add_one(origin)
 
         # We want to load the repository, walk all the objects
-        objects, objects_per_path = self.list_repo_objs(root_dir, info)
+        objects, objects_per_path = self.list_repo_objs(dir_path, revision,
+                                                        release)
 
         # Compute revision information (mixed from outside input + dir content)
         revision = objects[GitType.COMM][0]
 
-        # Parse all the refs from our root_dir
-        ref = self.compute_dir_ref(root_dir,
-                                   info['branch'],
-                                   revision['sha1_git'],
-                                   origin['id'],
-                                   info['authority_id'],
-                                   info['validity'])
+        occurrence.update({
+            'revision': revision['sha1_git'],
+            'origin': origin['id'],
+        })
 
         # Finally, load the repository
-        self.load_dir(root_dir, objects, objects_per_path, [ref], origin['id'])
+        self.load_dir(dir_path, objects, objects_per_path, [occurrence],
+                      origin['id'])
