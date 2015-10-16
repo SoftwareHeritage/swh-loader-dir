@@ -386,7 +386,39 @@ class DirLoader(config.SWHConfig):
         else:
             self.log.info('Not sending occurrences')
 
-    def process(self, dir_path, origin, revision, release, occurrence):
+    def process(self, dir_path, origin, revision, release, occurrences):
+        """Load a directory in backend.
+
+        Args:
+            - dir_path: source of the directory to import
+            - origin: Dictionary origin
+              - url: url origin we fetched
+              - type: type of the origin
+            - revision: Dictionary of information needed, keys are:
+              - author_name: revision's author name
+              - author_email: revision's author email
+              - author_date: timestamp (e.g. 1444054085)
+              - author_offset: date offset e.g. -0220, +0100
+              - committer_name: revision's committer name
+              - committer_email: revision's committer email
+              - committer_date: timestamp
+              - committer_offset: date offset e.g. -0220, +0100
+              - type: type of revision dir, tar
+              - message: synthetic message for the revision
+            - release: Dictionary of information needed, keys are:
+              - name: release name
+              - date: release timestamp (e.g. 1444054085)
+              - offset: release date offset e.g. -0220, +0100
+              - author_name: release author's name
+              - author_email: release author's email
+              - comment: release's comment message
+            - occurrences: List of occurrence dictionary.
+              Information needed, keys are:
+              - branch: occurrence's branch name
+              - authority_id: authority id (e.g. 1 for swh)
+              - validity: validity date (e.g. 2015-01-01 00:00:00+00)
+
+        """
         if not os.path.exists(dir_path):
             self.log.info('Skipping inexistant directory %s' % dir_path,
                           extra={
@@ -415,11 +447,13 @@ class DirLoader(config.SWHConfig):
         # Compute revision information (mixed from outside input + dir content)
         revision = objects[GitType.COMM][0]
 
-        occurrence.update({
-            'revision': revision['sha1_git'],
-            'origin': origin['id'],
-        })
+        # Update occurrences
+        for occurrence in occurrences:
+            occurrence.update({
+                'revision': revision['sha1_git'],
+                'origin': origin['id'],
+            })
 
         # Finally, load the repository
-        self.load_dir(dir_path, objects, objects_per_path, [occurrence],
+        self.load_dir(dir_path, objects, objects_per_path, occurrences,
                       origin['id'])

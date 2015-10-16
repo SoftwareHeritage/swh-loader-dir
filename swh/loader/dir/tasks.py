@@ -27,41 +27,16 @@ class LoadDirRepository(Task):
             additional_configs=[self.ADDITIONAL_CONFIG],
         )
 
-    def run(self, dir_path, origin, revision, release, occurrence):
+    def run(self, dir_path, origin, revision, release, occurrences):
         """Import a directory.
 
         Args:
-            - dir_path: source of the directory to import
-            - origin: Dictionary origin
-              - url: url origin we fetched
-              - type: type of the origin
-            - revision: Dictionary of information needed, keys are:
-              - author_name: revision's author name
-              - author_email: revision's author email
-              - author_date: timestamp (e.g. 1444054085)
-              - author_offset: date offset e.g. -0220, +0100
-              - committer_name: revision's committer name
-              - committer_email: revision's committer email
-              - committer_date: timestamp
-              - committer_offset: date offset e.g. -0220, +0100
-              - type: type of revision dir, tar
-              - message: synthetic message for the revision
-            - release: Dictionary of information needed, keys are:
-              - name: release name
-              - date: release timestamp (e.g. 1444054085)
-              - offset: release date offset e.g. -0220, +0100
-              - author_name: release author's name
-              - author_email: release author's email
-              - comment: release's comment message
-            - occurrence: Dictionary of information needed, keys are:
-              - branch: occurrence's branch name
-              - authority_id: authority id (e.g. 1 for swh)
-              - validity: validity date (e.g. 2015-01-01 00:00:00+00)
+            cf. swh.loader.dir.loader.run docstring
 
         """
         loader = DirLoader(self.config)
         loader.log = self.log
-        loader.process(dir_path, origin, revision, release, occurrence)
+        loader.process(dir_path, origin, revision, release, occurrences)
 
 
 def untar(tar_path, dir_path):
@@ -89,41 +64,15 @@ class LoadTarRepository(LoadDirRepository):
     CONFIG_BASE_FILENAME = 'loader/tar.ini'
     ADDITIONAL_CONFIG = {
         'extraction_dir': ('str', '/tmp/swh.loader.tar/'),
-
-        # # occurrence information
-        # 'branch': ('str', 'master'),
-        # 'authority_id': ('int', 1),
-        # 'validity': ('str', '2015-01-01 00:00:00+00'),
-
-        # # revision information
-        # 'revision_type': ('str', 'tar'),
-
-        # 'revision_author_name': ('str', 'swh author'),
-        # 'revision_author_email': ('str', 'swh@inria.fr'),
-        # 'revision_author_date': ('int', 1444054085),
-        # 'revision_author_offset': ('str', '+0200'),
-        # 'revision_committer_name': ('str', 'swh committer'),
-        # 'revision_committer_email': ('str', 'swh@inria.fr'),
-        # 'revision_committer_date': ('int', 1444054085),
-        # 'revision_committer_offset': ('str', '+0200'),
-        # 'revision_message': ('str', 'synthetic revision'),
-
-        # # release information
-        # 'release_name': ('str', 'v0.0.1'),
-        # 'release_date': ('int', 1444054085),
-        # 'release_offset': ('str', '+0200'),
-        # 'release_author_name': ('str', 'swh author'),
-        # 'release_author_email': ('str', 'swh@inria.fr'),
-        # 'release_comment': ('str', 'synthetic release'),
     }
 
-    def run(self, tar_path, origin_url, revision, release, occurrence):
+    def run(self, tar_path, origin_url, revision, release, occurrences):
         """Import a tarball tar_path.
 
         Args:
             - tar_path: path access to the tarball
             - origin_url: url where we fetched the tarball
-            - revision, release, occurrence: see LoadDirRepository.run
+            - revision, release, occurrences: see LoadDirRepository.run
 
         """
         extraction_dir = self.config['extraction_dir']
@@ -139,6 +88,6 @@ class LoadTarRepository(LoadDirRepository):
         }
 
         try:
-            super().run(dir_path, origin, revision, release, occurrence)
+            super().run(dir_path, origin, revision, release, occurrences)
         finally:  # always clean up
             shutil.rmtree(dir_path)
