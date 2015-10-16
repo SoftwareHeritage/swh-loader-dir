@@ -66,13 +66,12 @@ class LoadTarRepository(LoadDirRepository):
         'extraction_dir': ('str', '/tmp/swh.loader.tar/'),
     }
 
-    def run(self, tar_path, origin_url, revision, release, occurrences):
+    def run(self, tar_path, origin, revision, release, occurrences):
         """Import a tarball tar_path.
 
         Args:
             - tar_path: path access to the tarball
-            - origin_url: url where we fetched the tarball
-            - revision, release, occurrences: see LoadDirRepository.run
+            - origin, revision, release, occurrences: see LoadDirRepository.run
 
         """
         extraction_dir = self.config['extraction_dir']
@@ -82,10 +81,8 @@ class LoadTarRepository(LoadDirRepository):
         # unarchive in dir_path
         untar(tar_path, dir_path)
 
-        origin = {
-            'url': origin_url,
-            'type': 'tar'
-        }
+        if 'type' not in origin:  # let the type flow if present
+            origin['type'] = 'tar'
 
         try:
             super().run(dir_path, origin, revision, release, occurrences)
