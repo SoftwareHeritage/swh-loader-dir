@@ -334,9 +334,10 @@ class DirLoader(config.SWHConfig):
         objects[GitType.COMM] = [revision]
 
         release['revision'] = revision['sha1_git']
-        release['sha1_git'] = git.compute_release_sha1_git(release)
 
-        objects[GitType.RELE] = [release]
+        if 'name' in release:  # if no name is specified
+            release['sha1_git'] = git.compute_release_sha1_git(release)
+            objects[GitType.RELE] = [release]
 
         self.log.info("Done listing the objects in %s: %d contents, "
                       "%d directories, %d revisions, %d releases" % (
