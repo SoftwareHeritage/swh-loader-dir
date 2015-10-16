@@ -47,6 +47,7 @@ class TestConverters(unittest.TestCase):
             'date_offset': -180,
             'author_name': 'someone',
             'author_email': 'someone@whatelse.eu',
+            'synthetic': True,
         }
 
         # when
@@ -193,6 +194,7 @@ class TestConverters(unittest.TestCase):
             'author_email': 'author-email',
             'committer_name': 'committer-name',
             'committer_email': 'committer-email',
+            'synthetic': True,
             'parents': [],
         }
 

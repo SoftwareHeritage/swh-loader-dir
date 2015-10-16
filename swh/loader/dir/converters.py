@@ -123,6 +123,7 @@ def commit_to_revision(commit, objects, log=None):
         'author_email': commit['author_email'],
         'committer_name': commit['committer_name'],
         'committer_email': commit['committer_email'],
+        'synthetic': True,
         'parents': [],
     }
 
@@ -140,4 +141,5 @@ def annotated_tag_to_release(release, log=None):
         'date_offset': format_to_minutes(release['offset']),
         'author_name': release['author_name'],
         'author_email': release['author_email'],
+        'synthetic': True,
     }
