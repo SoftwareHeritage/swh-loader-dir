@@ -88,3 +88,21 @@ class LoadTarRepository(LoadDirRepository):
             super().run(dir_path, origin, revision, release, occurrences)
         finally:  # always clean up
             shutil.rmtree(dir_path)
+
+
+class LoadTarRepositoryPrint(LoadDirRepository):
+    """Import a tarball to Software Heritage
+
+    DEBUG purposes
+    """
+    task_queue = 'swh_loader_tar_print'
+
+    def run(self, tar_path, origin, revision, release, occurrences):
+        """Import a tarball tar_path.
+
+        Args:
+            - tar_path: path access to the tarball
+            - origin, revision, release, occurrences: see LoadDirRepository.run
+
+        """
+        print(tar_path, origin, revision, release, occurrences)
