@@ -15,6 +15,22 @@ from swh.loader.dir import producer
 # Static setup
 EPOCH = 0
 UTC_OFFSET = '+0000'
+SWH_PERSON = 'Software Heritage'
+SWH_MAIL = 'robot@swh.org'
+REVISION_MESSAGE = 'synthetic message'
+REVISION_TYPE = 'tar'
+REVISION = {
+    'author_date': EPOCH,
+    'author_offset': UTC_OFFSET,
+    'author_name': SWH_PERSON,
+    'author_email': SWH_MAIL,
+    'committer_date': EPOCH,
+    'committer_offset': UTC_OFFSET,
+    'committer_name': SWH_PERSON,
+    'committer_email': SWH_MAIL,
+    'type': REVISION_TYPE,
+    'message': REVISION_MESSAGE,
+}
 
 
 conf_file = sys.argv[1]
@@ -87,11 +103,16 @@ def compute_release(filepath):
 
 
 def compute_revision(filepath):
-    pass
+    """Compute the revision from filepath.
 
+    Args:
+        filepath: file's absolute path
 
-def compute_from_filepath(filepath):
-    pass
+    Returns:
+        Synthetic revision.
+
+    """
+    return REVISION
 
 
 def list_archives_from(path):
