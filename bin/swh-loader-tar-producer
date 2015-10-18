@@ -33,18 +33,22 @@ REVISION = {
 }
 
 
-conf_file = sys.argv[1]
-if not os.path.exists(conf_file):
-    conf_file = '../resources/producer/tar.ini'
-
-
-conf = config.read(conf_file)
-
-
 def compute_origin(config, filename):
+    """Compute the origin.
+
+    Args:
+        - config:
+        - filename:
+
+    Returns:
+        Dictionary origin with keys:
+       - url: origin's url
+       - type: origin's type
+
+    """
     return {
-        'origin_url': os.path.join(config['origin_url_scheme'], filename),
-        'origin_type': config['origin_type'],
+        'url': os.path.join(config['url_scheme'], filename),
+        'type': config['type'],
     }
 
 
@@ -152,5 +156,11 @@ def produce_archive_messages(path):
             return
         limit += 1
 
+
+conf_file = sys.argv[1]
+if not os.path.exists(conf_file):
+    conf_file = '../resources/producer/tar.ini'
+
+conf = config.read(conf_file)
 
 produce_archive_messages(conf['mirror_root_directory'])
