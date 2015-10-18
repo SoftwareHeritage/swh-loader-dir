@@ -12,6 +12,11 @@ from swh.core import config
 from swh.loader.dir import producer
 
 
+# Static setup
+EPOCH = 0
+UTC_OFFSET = '+0000'
+
+
 conf_file = sys.argv[1]
 if not os.path.exists(conf_file):
     conf_file = '../resources/producer/tar.ini'
@@ -27,13 +32,6 @@ def compute_origin(config, filename):
     }
 
 
-def compute_release_number(filename):
-    """Compute the release number from a given filename.
-
-    """
-    pass
-
-
 def compute_occurrence(filepath):
     pass
 
@@ -42,12 +40,50 @@ def compute_occurrences(filepath):
     pass
 
 
+def time_from_file(filepath):
+    """Extract time from filepath.
+
+    Args:
+        filepath: path to the file we want to extract metadata
+
+    Returns:
+        Modification time from filepath.
+
+    """
+    return os.lstat(filepath).st_mtime
+
+
 def compute_release(filepath):
     """Compute a release from a given filepath.
     If the filepath does not contain a recognizable release number, the release
     can be skipped.
+
+    Args:
+        filepath: file's absolute path
+
+    Returns:
+        None if the release number cannot be extracted from the filename.
+        Otherwise a synthetic release is computed with the following keys:
+            - name: the release computed from the filename
+            - date: the modification timestamp as returned by a fstat call
+            - offset: +0000
+            - author_name: ''
+            - author_email: ''
+            - comment: ''
+
     """
-    pass
+    filename = os.path.basename(filepath)
+    release_number = producer.release_number(filename)
+    if release_number:
+        return {
+            'name': release_number,
+            'date': time_from_file(filepath),
+            'offset': UTC_OFFSET,
+            'author_name': '',
+            'author_email': '',
+            'comment': '',
+        }
+    return None
 
 
 def compute_revision(filepath):
