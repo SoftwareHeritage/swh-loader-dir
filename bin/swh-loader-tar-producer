@@ -10,6 +10,7 @@ import os
 
 from swh.core import config
 from swh.loader.dir import producer
+from swh.loader.dir import tasks
 
 
 # Static setup
@@ -33,6 +34,9 @@ REVISION = {
 }
 SWH_AUTHORITY = 1
 GNU_AUTHORITY = 2
+
+LIMIT = 1
+# LIMIT = None
 
 
 def compute_origin(config, filepath):
@@ -117,14 +121,14 @@ def time_from_file(filepath):
     return os.lstat(filepath).st_mtime
 
 
-def compute_release(filepath, filename):
+def compute_release(filename, filepath):
     """Compute a release from a given filepath, filename.
     If the filepath does not contain a recognizable release number, the release
     can be skipped.
 
     Args:
-        filepath: file's absolute path
         filename: file's name without path
+        filepath: file's absolute path
 
     Returns:
         None if the release number cannot be extracted from the filename.
@@ -150,19 +154,6 @@ def compute_release(filepath, filename):
     return None
 
 
-def compute_revision(filepath):
-    """Compute the revision from filepath.
-
-    Args:
-        filepath: file's absolute path
-
-    Returns:
-        Synthetic revision.
-
-    """
-    return REVISION
-
-
 def list_archives_from(path):
     """From path, produce archive tarball message to celery.
 
@@ -175,27 +166,44 @@ def list_archives_from(path):
             yield dirpath, fname
 
 
-# LIMIT = 100
-LIMIT = None
+def compute_message_from(conf, dirpath, filename):
+    """Post the message to workers.
+
+    Args:
+        conf: dictionary holding static metadata
+        dirpath: directory containing the filename
+        filename: filename without any path
+
+    Returns:
+        None
+
+    """
+    filepath = os.path.join(dirpath, filename)
+
+    origin = compute_origin(conf, filepath)
+    occurrences = compute_occurrences(filepath)
+    release = compute_release(filename, filepath)
+
+    task = tasks.LoadTarRepository()  # tasks.LoadTarRepositoryPrint()
+    task.apply_async((filepath,
+                      origin,
+                      REVISION,
+                      release,
+                      occurrences))
 
 
-def compute_message_from(dirpath, filename):
-    # filepath = os.path.join(dirpath, filename)
-
-    version = producer.release_number(filename)
-    print('|'.join(['', filename, version, '']))
-
-
-def produce_archive_messages(path):
+def produce_archive_messages(conf, path):
     """From path, produce archive tarball message to celery.
 
     Args:
         path: top directory to list archives from.
 
+    Returns:
+        None
     """
     limit = 0
     for dirpath, filename in list_archives_from(path):
-        compute_message_from(dirpath, filename)
+        compute_message_from(conf, dirpath, filename)
         if LIMIT and limit > LIMIT:
             return
         limit += 1
@@ -207,4 +215,4 @@ if not os.path.exists(conf_file):
 
 conf = config.read(conf_file)
 
-produce_archive_messages(conf['mirror_root_directory'])
+produce_archive_messages(conf, conf['mirror_root_directory'])
