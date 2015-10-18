@@ -117,13 +117,14 @@ def time_from_file(filepath):
     return os.lstat(filepath).st_mtime
 
 
-def compute_release(filepath):
-    """Compute a release from a given filepath.
+def compute_release(filepath, filename):
+    """Compute a release from a given filepath, filename.
     If the filepath does not contain a recognizable release number, the release
     can be skipped.
 
     Args:
         filepath: file's absolute path
+        filename: file's name without path
 
     Returns:
         None if the release number cannot be extracted from the filename.
@@ -136,7 +137,6 @@ def compute_release(filepath):
             - comment: ''
 
     """
-    filename = os.path.basename(filepath)
     release_number = producer.release_number(filename)
     if release_number:
         return {
