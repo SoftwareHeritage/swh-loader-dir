@@ -31,6 +31,8 @@ REVISION = {
     'type': REVISION_TYPE,
     'message': REVISION_MESSAGE,
 }
+SWH_AUTHORITY = 1
+GNU_AUTHORITY = 2
 
 
 def compute_origin(config, filename):
@@ -52,12 +54,54 @@ def compute_origin(config, filename):
     }
 
 
-def compute_occurrence(filepath):
-    pass
+def swh_occurrence(filepath):
+    """Compute the occurrence from the filepath with swh authority.
+
+    Args:
+        filepath: file's path
+
+    Return:
+        Occurrence.
+        - branch: occurrence's branch name
+        - authority: swh authority
+        - validity: validity date (e.g. 2015-01-01 00:00:00+00)
+
+    """
+    return {
+        'branch': os.path.dirname(filepath),
+        'authority': SWH_AUTHORITY,
+        'validity': time_from_file(filepath)  # FIXME: Use the right time
+    }
+
+
+def gnu_occurrence(filepath):
+    """Compute the occurrence from the filepath with gnu authority.
+
+    Args:
+        filepath: file's path
+
+    Return:
+        Occurrence.
+
+    """
+    return {
+        'branch': os.path.dirname(filepath),
+        'authority': GNU_AUTHORITY,
+        'validity': time_from_file(filepath)
+    }
 
 
 def compute_occurrences(filepath):
-    pass
+    """Compute the occurrences from filepath.
+
+    Args:
+        filepath:
+
+    Returns:
+        list of occurrences from filepath.
+
+    """
+    return [gnu_occurrence(filepath), swh_occurrence(filepath)]
 
 
 def time_from_file(filepath):
