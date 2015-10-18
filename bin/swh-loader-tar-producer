@@ -35,12 +35,12 @@ SWH_AUTHORITY = 1
 GNU_AUTHORITY = 2
 
 
-def compute_origin(config, filename):
+def compute_origin(config, filepath):
     """Compute the origin.
 
     Args:
-        - config:
-        - filename:
+        - config: configuration dict with url_scheme and type keys.
+        - filepath: file's path
 
     Returns:
         Dictionary origin with keys:
@@ -49,7 +49,7 @@ def compute_origin(config, filename):
 
     """
     return {
-        'url': os.path.join(config['url_scheme'], filename),
+        'url': os.path.join(config['url_scheme'], filepath),
         'type': config['type'],
     }
 
