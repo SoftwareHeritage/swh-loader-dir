@@ -41,7 +41,7 @@ LIMIT = 1
 # LIMIT = None
 
 
-def compute_origin(config, tarpath):
+def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
     """Compute the origin.
 
     Args:
@@ -54,10 +54,13 @@ def compute_origin(config, tarpath):
        - type: origin's type
 
     """
+    relative_path = tarpath.split(root_dirpath)[1]
+
     return {
-        'url': os.path.join(config['url_scheme'], tarpath),
-        'type': config['type'],
+        'url': ''.join([url_scheme, relative_path]),
+        'type': url_type,
     }
+
 
 def build_occurrence(tarpath, authority_id, validity_ts):
     """Build an occurrence from tarpath, authority_id and validity_ts.
@@ -176,7 +179,10 @@ def compute_message_from(conf, dirpath, filename):
     """
     tarpath = os.path.join(dirpath, filename)
 
-    origin = compute_origin(conf, tarpath)
+    origin = compute_origin(conf['url_scheme'],
+                            conf['type'],
+                            conf['mirror_root_directory'],
+                            tarpath)
     occurrences = compute_occurrences(tarpath)
     release = compute_release(filename, tarpath)
 
@@ -205,10 +211,32 @@ def produce_archive_messages(conf, path):
         limit += 1
 
 
+def load_config(conf_file):
+    """Load the configuration from file.
+
+    """
+    conf = config.read(conf_file)
+    url_scheme = conf['url_scheme']
+    mirror_dir = conf['mirror_root_directory']
+
+    # remove trailing / in configuration (to ease ulterior computation)
+    if url_scheme[-1] == '/':
+        conf.update({
+            'url_scheme': url_scheme[0:-1]
+        })
+
+    if mirror_dir[-1] == '/':
+        conf.update({
+            'mirror_root_directory': mirror_dir[0:-1]
+        })
+
+    return conf
+
+
 conf_file = sys.argv[1]
 if not os.path.exists(conf_file):
     conf_file = '../resources/producer/tar.ini'
 
-conf = config.read(conf_file)
+conf = load_config(conf_file)
 
 produce_archive_messages(conf, conf['mirror_root_directory'])
