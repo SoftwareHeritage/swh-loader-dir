@@ -204,10 +204,12 @@ def produce_archive_messages(conf, path):
     """
     limit = 0
     for dirpath, filename in list_archives_from(path):
-        compute_message_from(conf, dirpath, filename)
-        if LIMIT and limit > LIMIT:
-            return
         limit += 1
+        compute_message_from(conf, dirpath, filename)
+        if LIMIT and limit >= LIMIT:
+            return limit
+
+    return limit
 
 
 def load_config(conf_file):
@@ -238,4 +240,6 @@ if not os.path.exists(conf_file):
 
 conf = load_config(conf_file)
 
-produce_archive_messages(conf, conf['mirror_root_directory'])
+nb_tarballs = produce_archive_messages(conf, conf['mirror_root_directory'])
+
+print('%s sent to celery!' % nb_tarballs)
