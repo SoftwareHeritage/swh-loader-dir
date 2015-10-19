@@ -3,9 +3,9 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import subprocess
 import shutil
 import tempfile
+import tarfile
 
 from swh.core.scheduling import Task
 
@@ -49,10 +49,22 @@ def untar(tar_path, dir_path):
         tar_path: the path to access the tarball
         dir_path: The path where to extract the tarball's content.
     """
-    untar_cmd = ['tar', 'xavf', tar_path,
-                 '--preserve-permissions',
-                 '-C', dir_path]
-    subprocess.check_call(untar_cmd, stderr=subprocess.STDOUT)
+    # tryout1
+    # untar_cmd = ['tar', 'xavf', tar_path,
+    #              '--preserve-permissions',
+    #              '-C', dir_path]
+    # subprocess.check_call(untar_cmd, stderr=subprocess.STDOUT)
+
+    # tryout2
+    # try:
+    #     subprocess.check_call(untar_cmd, stderr=subprocess.STDOUT)
+    # except:
+    #     unzip_cmd = ['gzip', '--keep', '--decompress', tar_path]
+    #     subprocess.check_call(unzip_cmd, stderr=subprocess.STDOUT)
+
+    # tryout3
+    with tarfile.open(tar_path) as tarball:
+        tarball.extractall(path=dir_path)
 
 
 class LoadTarRepository(LoadDirRepository):

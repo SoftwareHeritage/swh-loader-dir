@@ -41,22 +41,6 @@ digit_pattern = re.compile('[0-9]')
 release_pattern = re.compile('[0-9.]+')
 
 
-def is_archive(filename):
-    """Determine if the filename is an archive or not.
-
-    This is dependent on the filename only.
-
-    Args:
-        filename: the filename without any paths.
-
-    Returns:
-        Boolean True if an archive, False otherwise.
-
-    """
-    return any(map(lambda ext: filename.endswith(ext),
-                   archive_extension_patterns))
-
-
 def _extension(filename):
     m = re_archive_patterns.search(filename)
     if m:

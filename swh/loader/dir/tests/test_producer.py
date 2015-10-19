@@ -12,52 +12,6 @@ from swh.loader.dir import producer
 
 class TestProducer(unittest.TestCase):
     @istest
-    def is_archive(self):
-        # given
-        file_tryouts = [
-            'free-ipmi-1.2.2.tar',
-            'free-ipmi-1.2.2.tar.gz',
-            'free-ipmi-1.2.2.tar.tgz',
-            'gcc-testsuite-4.4.2-4.4.3.diff.bz2',
-            'gcc-java-4.0.4.tar.gz',
-            'gmp-2.0.tar.lzma',
-            'win-gerwin-0.6.zip',
-            'ballandpaddle-0.8.0.tar.xz',
-            'mail-1.1.1.some.lz',
-            'gmp-4.1.1-4.1.2.diff.tar.blah.foo.bar.Z',
-            'findutils-4.2.18.tar.bzip2'
-        ]
-
-        # then
-        for f in file_tryouts:
-            res = producer.is_archive(f)
-            self.assertTrue(res,
-                            '%s should be identified as archive' % f)
-
-    @istest
-    def is_archive_not(self):
-        # given
-        file_tryouts = [
-            'free-ipmi-1.2.2.gz.sig',
-            'free-ipmi-1.2.2.bz3',
-            'free-ipmi-1.2.2.blah',
-            'free-ipmi-1.2.2.other',
-            'free-ipmi-1.2.2.md5',
-            'free-ipmi-1.2.2.rpm',
-            'free-ipmi-1.2.2.dpkg',
-            'free-ipmi-1.2.2.deb',
-            'free-ipmi-1.2.2.7z',
-            'free-ipmi-1.2.2.foobar',
-            'apl_1.3-1_i386.deb.sig'
-        ]
-
-        # then
-        for f in file_tryouts:
-            self.assertFalse(
-                producer.is_archive(f),
-                '%s should not be identified as archive' % f)
-
-    @istest
     def compute_basic_release_number(self):
         files = {
             'free-ipmi-1.2.2.tar': '1.2.2',

@@ -7,6 +7,7 @@
 
 import sys
 import os
+import tarfile
 
 from swh.core import config
 from swh.loader.dir import producer
@@ -162,8 +163,10 @@ def list_archives_from(path):
 
     """
     for dirpath, dirnames, filenames in os.walk(path):
-        for fname in [f for f in filenames if producer.is_archive(f)]:
-            yield dirpath, fname
+        for fname in filenames:
+            filepath = os.path.join(dirpath, fname)
+            if os.path.exists(filepath) and tarfile.is_tarfile(filepath):
+                yield dirpath, fname
 
 
 def compute_message_from(conf, dirpath, filename):
