@@ -65,7 +65,9 @@ def _blob_to_content(obj, log=None,
     if max_content_size and size > max_content_size:
         if log:
             log.info('Skipping content %s, too large (%s > %s)' %
-                     (obj['sha1_git'], size, max_content_size))
+                     (utils.hash_to_hex(obj['sha1_git']),
+                      size,
+                      max_content_size))
             ret.update({'status': 'absent',
                         'reason': 'Content too large',
                         'origin': origin_id})
