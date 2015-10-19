@@ -41,6 +41,13 @@ LIMIT = 1
 # LIMIT = None
 
 
+def relative_path(root_dirpath, tarpath):
+    """Compute the relative_path from root_dirpath and tarpath.
+
+    """
+    return tarpath.split(root_dirpath)[1]
+
+
 def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
     """Compute the origin.
 
@@ -54,68 +61,58 @@ def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
        - type: origin's type
 
     """
-    relative_path = tarpath.split(root_dirpath)[1]
-
     return {
-        'url': ''.join([url_scheme, relative_path]),
+        'url': ''.join([url_scheme, relative_path(root_dirpath, tarpath)]),
         'type': url_type,
     }
 
 
-def build_occurrence(tarpath, authority_id, validity_ts):
-    """Build an occurrence from tarpath, authority_id and validity_ts.
+def _build_occurrence(branch_name, authority_id, validity_ts):
+    """Build an occurrence from branch_name, authority_id and validity_ts.
 
+    Returns:
+        Occurrence dictionary
+        - branch: occurrence's branch name
+        - authority: swh authority
+        - validity: validity date (e.g. 2015-01-01 00:00:00+00)
     """
     validity = '%s+00' % datetime.datetime.utcfromtimestamp(validity_ts)
     return {
-        'branch': os.path.dirname(tarpath),
+        'branch': branch_name,
         'authority': authority_id,
         'validity': validity
     }
 
 
-def swh_occurrence(tarpath):
+def swh_occurrence(root_dirpath, tarpath):
     """Compute the occurrence from the tarpath with swh authority.
 
     Args:
         tarpath: file's path
 
-    Return:
-        Occurrence.
-        - branch: occurrence's branch name
-        - authority: swh authority
-        - validity: validity date (e.g. 2015-01-01 00:00:00+00)
+    Returns:
+        Occurrence dictionary (cf. _build_occurrence)
 
     """
     validity_ts = os.lstat(tarpath).st_atime
-    return build_occurrence(tarpath, SWH_AUTHORITY, validity_ts)
+    branch_name = relative_path(root_dirpath, tarpath)
+    return _build_occurrence(branch_name, SWH_AUTHORITY, validity_ts)
 
 
-def gnu_occurrence(tarpath):
+def gnu_occurrence(root_dirpath, tarpath):
     """Compute the occurrence from the tarpath with gnu authority.
 
     Args:
+        root_dirpath: root_dirpath containing the tarpath.
         tarpath: file's path
 
     Return:
-        Occurrence.
+        Occurrence dictionary (cf. _build_occurrence)
 
     """
     validity_ts = os.lstat(tarpath).st_mtime
-    return build_occurrence(tarpath, GNU_AUTHORITY, validity_ts)
-
-
-def compute_occurrences(tarpath):
-    """Compute the occurrences from tarpath.
-
-    Args:
-        tarpath:
-
-    Returns:
-        list of occurrences from tarpath.
-
-    """
-    return [gnu_occurrence(tarpath), swh_occurrence(tarpath)]
+    branch_name = relative_path(root_dirpath, tarpath)
+    return _build_occurrence(branch_name, GNU_AUTHORITY, validity_ts)
 
 
 def compute_release(filename, tarpath):
@@ -178,12 +175,14 @@ def compute_message_from(conf, dirpath, filename):
 
     """
     tarpath = os.path.join(dirpath, filename)
+    root_dirpath = conf['mirror_root_directory']
 
     origin = compute_origin(conf['url_scheme'],
                             conf['type'],
-                            conf['mirror_root_directory'],
+                            root_dirpath,
                             tarpath)
-    occurrences = compute_occurrences(tarpath)
+    occurrences = [gnu_occurrence(root_dirpath, tarpath),
+                   swh_occurrence(root_dirpath, tarpath)]
     release = compute_release(filename, tarpath)
 
     task = tasks.LoadTarRepository()  # tasks.LoadTarRepositoryPrint()
