@@ -40,12 +40,12 @@ LIMIT = 1
 # LIMIT = None
 
 
-def compute_origin(config, filepath):
+def compute_origin(config, tarpath):
     """Compute the origin.
 
     Args:
         - config: configuration dict with url_scheme and type keys.
-        - filepath: file's path
+        - tarpath: file's path
 
     Returns:
         Dictionary origin with keys:
@@ -54,16 +54,16 @@ def compute_origin(config, filepath):
 
     """
     return {
-        'url': os.path.join(config['url_scheme'], filepath),
+        'url': os.path.join(config['url_scheme'], tarpath),
         'type': config['type'],
     }
 
 
-def swh_occurrence(filepath):
-    """Compute the occurrence from the filepath with swh authority.
+def swh_occurrence(tarpath):
+    """Compute the occurrence from the tarpath with swh authority.
 
     Args:
-        filepath: file's path
+        tarpath: file's path
 
     Return:
         Occurrence.
@@ -73,63 +73,63 @@ def swh_occurrence(filepath):
 
     """
     return {
-        'branch': os.path.dirname(filepath),
+        'branch': os.path.dirname(tarpath),
         'authority': SWH_AUTHORITY,
-        'validity': time_from_file(filepath)  # FIXME: Use the right time
+        'validity': time_from_file(tarpath)  # FIXME: Use the right time
     }
 
 
-def gnu_occurrence(filepath):
-    """Compute the occurrence from the filepath with gnu authority.
+def gnu_occurrence(tarpath):
+    """Compute the occurrence from the tarpath with gnu authority.
 
     Args:
-        filepath: file's path
+        tarpath: file's path
 
     Return:
         Occurrence.
 
     """
     return {
-        'branch': os.path.dirname(filepath),
+        'branch': os.path.dirname(tarpath),
         'authority': GNU_AUTHORITY,
-        'validity': time_from_file(filepath)
+        'validity': time_from_file(tarpath)
     }
 
 
-def compute_occurrences(filepath):
-    """Compute the occurrences from filepath.
+def compute_occurrences(tarpath):
+    """Compute the occurrences from tarpath.
 
     Args:
-        filepath:
+        tarpath:
 
     Returns:
-        list of occurrences from filepath.
+        list of occurrences from tarpath.
 
     """
-    return [gnu_occurrence(filepath), swh_occurrence(filepath)]
+    return [gnu_occurrence(tarpath), swh_occurrence(tarpath)]
 
 
-def time_from_file(filepath):
-    """Extract time from filepath.
+def time_from_file(tarpath):
+    """Extract time from tarpath.
 
     Args:
-        filepath: path to the file we want to extract metadata
+        tarpath: path to the file we want to extract metadata
 
     Returns:
-        Modification time from filepath.
+        Modification time from tarpath.
 
     """
-    return os.lstat(filepath).st_mtime
+    return os.lstat(tarpath).st_mtime
 
 
-def compute_release(filename, filepath):
-    """Compute a release from a given filepath, filename.
-    If the filepath does not contain a recognizable release number, the release
+def compute_release(filename, tarpath):
+    """Compute a release from a given tarpath, filename.
+    If the tarpath does not contain a recognizable release number, the release
     can be skipped.
 
     Args:
         filename: file's name without path
-        filepath: file's absolute path
+        tarpath: file's absolute path
 
     Returns:
         None if the release number cannot be extracted from the filename.
@@ -146,7 +146,7 @@ def compute_release(filename, filepath):
     if release_number:
         return {
             'name': release_number,
-            'date': time_from_file(filepath),
+            'date': time_from_file(tarpath),
             'offset': UTC_OFFSET,
             'author_name': '',
             'author_email': '',
@@ -164,8 +164,8 @@ def list_archives_from(path):
     """
     for dirpath, dirnames, filenames in os.walk(path):
         for fname in filenames:
-            filepath = os.path.join(dirpath, fname)
-            if os.path.exists(filepath) and tarfile.is_tarfile(filepath):
+            tarpath = os.path.join(dirpath, fname)
+            if os.path.exists(tarpath) and tarfile.is_tarfile(tarpath):
                 yield dirpath, fname
 
 
@@ -181,14 +181,14 @@ def compute_message_from(conf, dirpath, filename):
         None
 
     """
-    filepath = os.path.join(dirpath, filename)
+    tarpath = os.path.join(dirpath, filename)
 
-    origin = compute_origin(conf, filepath)
-    occurrences = compute_occurrences(filepath)
-    release = compute_release(filename, filepath)
+    origin = compute_origin(conf, tarpath)
+    occurrences = compute_occurrences(tarpath)
+    release = compute_release(filename, tarpath)
 
     task = tasks.LoadTarRepository()  # tasks.LoadTarRepositoryPrint()
-    task.apply_async((filepath,
+    task.apply_async((tarpath,
                       origin,
                       REVISION,
                       release,
