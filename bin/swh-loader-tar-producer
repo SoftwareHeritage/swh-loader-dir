@@ -8,6 +8,7 @@
 import sys
 import os
 import tarfile
+import datetime
 
 from swh.core import config
 from swh.loader.dir import producer
@@ -58,6 +59,17 @@ def compute_origin(config, tarpath):
         'type': config['type'],
     }
 
+def build_occurrence(tarpath, authority_id, validity_ts):
+    """Build an occurrence from tarpath, authority_id and validity_ts.
+
+    """
+    validity = '%s+00' % datetime.datetime.utcfromtimestamp(validity_ts)
+    return {
+        'branch': os.path.dirname(tarpath),
+        'authority': authority_id,
+        'validity': validity
+    }
+
 
 def swh_occurrence(tarpath):
     """Compute the occurrence from the tarpath with swh authority.
@@ -72,11 +84,8 @@ def swh_occurrence(tarpath):
         - validity: validity date (e.g. 2015-01-01 00:00:00+00)
 
     """
-    return {
-        'branch': os.path.dirname(tarpath),
-        'authority': SWH_AUTHORITY,
-        'validity': time_from_file(tarpath)  # FIXME: Use the right time
-    }
+    validity_ts = os.lstat(tarpath).st_atime
+    return build_occurrence(tarpath, SWH_AUTHORITY, validity_ts)
 
 
 def gnu_occurrence(tarpath):
@@ -89,11 +98,8 @@ def gnu_occurrence(tarpath):
         Occurrence.
 
     """
-    return {
-        'branch': os.path.dirname(tarpath),
-        'authority': GNU_AUTHORITY,
-        'validity': time_from_file(tarpath)
-    }
+    validity_ts = os.lstat(tarpath).st_mtime
+    return build_occurrence(tarpath, GNU_AUTHORITY, validity_ts)
 
 
 def compute_occurrences(tarpath):
@@ -107,19 +113,6 @@ def compute_occurrences(tarpath):
 
     """
     return [gnu_occurrence(tarpath), swh_occurrence(tarpath)]
-
-
-def time_from_file(tarpath):
-    """Extract time from tarpath.
-
-    Args:
-        tarpath: path to the file we want to extract metadata
-
-    Returns:
-        Modification time from tarpath.
-
-    """
-    return os.lstat(tarpath).st_mtime
 
 
 def compute_release(filename, tarpath):
@@ -146,7 +139,7 @@ def compute_release(filename, tarpath):
     if release_number:
         return {
             'name': release_number,
-            'date': time_from_file(tarpath),
+            'date': os.lstat(tarpath).st_mtime,
             'offset': UTC_OFFSET,
             'author_name': '',
             'author_email': '',
