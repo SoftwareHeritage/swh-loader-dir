@@ -39,7 +39,7 @@ class LoadDirRepository(Task):
         loader.process(dir_path, origin, revision, release, occurrences)
 
 
-def untar(tar_path, dir_path):
+def uncompress(tar_path, dir_path):
     """Decompress an archive tar_path to dir_path.
 
     At the end of this call, dir_path contains the tarball's
@@ -76,8 +76,8 @@ class LoadTarRepository(LoadDirRepository):
         dir_path = tempfile.mkdtemp(prefix='swh.loader.tar',
                                     dir=extraction_dir)
 
-        # unarchive in dir_path
-        untar(tar_path, dir_path)
+        self.log.info('Uncompress %s to %s' % (tar_path, dir_path))
+        uncompress(tar_path, dir_path)
 
         if 'type' not in origin:  # let the type flow if present
             origin['type'] = 'tar'
