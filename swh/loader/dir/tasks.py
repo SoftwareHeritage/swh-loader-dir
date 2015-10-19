@@ -73,7 +73,7 @@ class LoadTarRepository(LoadDirRepository):
 
         """
         extraction_dir = self.config['extraction_dir']
-        dir_path = tempfile.mkdtemp(prefix='swh.loader.tar',
+        dir_path = tempfile.mkdtemp(prefix='swh.loader.tar-',
                                     dir=extraction_dir)
 
         self.log.info('Uncompress %s to %s' % (tar_path, dir_path))
