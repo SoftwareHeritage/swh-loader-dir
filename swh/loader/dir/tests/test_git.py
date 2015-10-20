@@ -76,48 +76,46 @@ blah
                          self.checksums['tree_sha1_git'])
 
     @istest
-    def compute_revision_git_sha1(self):
+    def compute_revision_sha1_git(self):
         # given
         tree_hash = bytes.fromhex('1c61f7259dcb770f46b194d941df4f08ff0a3970')
         revision = {
-            'revision_author_name': 'Antoine R. Dumont (@ardumont)',
-            'revision_author_email': 'antoine.romain.dumont@gmail.com',
-            'revision_author_date': '1444054085',
-            'revision_author_offset': '+0200',
-            'revision_committer_name': 'Antoine R. Dumont (@ardumont)',
-            'revision_committer_email': 'antoine.romain.dumont@gmail.com',
-            'revision_committer_date': '1444054085',
-            'revision_committer_offset': '+0200',
-            'revision_message': 'initial',
-            'revision_type': 'tar'
+            'author_name': 'Antoine R. Dumont (@ardumont)',
+            'author_email': 'antoine.romain.dumont@gmail.com',
+            'author_date': '1444054085',
+            'author_offset': '+0200',
+            'committer_name': 'Antoine R. Dumont (@ardumont)',
+            'committer_email': 'antoine.romain.dumont@gmail.com',
+            'committer_date': '1444054085',
+            'committer_offset': '+0200',
+            'message': 'initial',
+            'type': 'tar',
+            'directory': tree_hash,
         }
 
         # when
-        checksums = git.compute_revision_git_sha1(tree_hash, revision)
+        checksum = git.compute_revision_sha1_git(revision)
 
         # then
-        self.assertEqual(checksums['sha1_git'],
-                         self.checksums['commit_sha1_git'])
-        self.assertDictContainsSubset(revision, checksums)
+        self.assertEqual(checksum, self.checksums['commit_sha1_git'])
 
     @istest
-    def compute_release(self):
+    def compute_release_sha1_git(self):
         # given
         revision_hash = bytes.fromhex('24d012aaec0bc5a4d2f62c56399053'
                                       'd6cc72a241')
         release = {
-            'release_name': '0.0.1',
-            'release_author_name': 'Antoine R. Dumont (@ardumont)',
-            'release_author_email': 'antoine.romain.dumont@gmail.com',
-            'release_date': '1444225145',
-            'release_offset': '+0200',
-            'release_comment': 'blah',
+            'name': '0.0.1',
+            'author_name': 'Antoine R. Dumont (@ardumont)',
+            'author_email': 'antoine.romain.dumont@gmail.com',
+            'date': '1444225145',
+            'offset': '+0200',
+            'comment': 'blah',
+            'revision': revision_hash,
         }
 
         # when
-        checksums = git.compute_release(revision_hash, release)
+        checksum = git.compute_release_sha1_git(release)
 
         # then
-        self.assertEqual(checksums['sha1_git'],
-                         self.checksums['tag_sha1_git'])
-        self.assertDictContainsSubset(release, checksums)
+        self.assertEqual(checksum, self.checksums['tag_sha1_git'])
