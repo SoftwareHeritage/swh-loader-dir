@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# NOT FOR PRODUCTION
+
 # Copyright (C) 2015  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
@@ -10,10 +12,9 @@ import sys
 
 
 from swh.loader.dir.loader import DirLoader
+from swh.core import config
 
-
-dir_loader_config = DirLoader.parse_config_file(config_filename=sys.argv[1])
-
+config_filename = sys.argv[1]
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -26,5 +27,37 @@ logging.basicConfig(
 requests_log = logging.getLogger("requests")
 requests_log.setLevel(logging.CRITICAL)
 
+
+def load_keys_from_properties(conf, key_pattern):
+    """Load keys from the dictionary conf which match the key_pattern.
+
+    """
+    m = {
+        key[len(key_pattern):]: value
+        for key, value in conf.items()
+        if key.startswith(key_pattern)
+    }
+    return m
+
+
+# full configuration needed to instantiate misc objects (release,
+# revision, etc...)
+simple_config = config.read(config_filename)
+
+dir_path = simple_config['dir_path']
+
+origin = load_keys_from_properties(simple_config, 'origin_')
+
+release = load_keys_from_properties(simple_config, 'release_')
+release['date'] = int(release['date'])  # hackish
+
+revision = load_keys_from_properties(simple_config, 'revision_')
+revision['committer_date'] = int(revision['committer_date'])  # hackish
+revision['author_date'] = int(revision['author_date'])  # hackish
+
+occurrence_2 = load_keys_from_properties(simple_config, 'occurrence2_')
+occurrence = load_keys_from_properties(simple_config, 'occurrence_')
+
+dir_loader_config = DirLoader.parse_config_file(config_filename)
 loader = DirLoader(dir_loader_config)
-loader.process(dir_loader_config)
+loader.process(dir_path, origin, revision, release, [occurrence, occurrence_2])
