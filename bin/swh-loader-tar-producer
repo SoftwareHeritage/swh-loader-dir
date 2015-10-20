@@ -200,7 +200,7 @@ def produce_archive_messages(conf, path):
 
     for dirpath, filename in list_archives_from(path):
         count += 1
-        # compute_message_from(conf, dirpath, filename)
+        compute_message_from(conf, dirpath, filename)
         if LIMIT and count >= LIMIT:
             return count
 
