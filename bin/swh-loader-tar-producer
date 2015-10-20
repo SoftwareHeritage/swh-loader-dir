@@ -64,6 +64,12 @@ def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
 def _build_occurrence(tarpath, authority_id, validity_ts):
     """Build an occurrence from branch_name, authority_id and validity_ts.
 
+    Args:
+        - tarpath: file's path
+        - authority_id: swh authority id (as per swh's storage values in
+        organization table)
+        - validity_ts: validity timestamp
+
     Returns:
         Occurrence dictionary
         - tarpath: file's path
