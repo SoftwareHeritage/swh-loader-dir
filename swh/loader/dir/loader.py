@@ -313,6 +313,18 @@ class DirLoader(config.SWHConfig):
 
             return m
 
+        def _revision_from(tree_hash, revision):
+            full_rev = dict(revision)
+            full_rev['directory'] = tree_hash
+            full_rev['sha1_git'] = git.compute_revision_sha1_git(full_rev)
+            return full_rev
+
+        def _release_from(revision_hash, release):
+            full_rel = dict(release)
+            full_rel['revision'] = revision_hash
+            full_rel['sha1_git'] = git.compute_release_sha1_git(full_rel)
+            return full_rel
+
         log_id = str(uuid.uuid4())
 
         self.log.info("Started listing %s" % dir_path, extra={
@@ -326,16 +338,14 @@ class DirLoader(config.SWHConfig):
         objects = get_objects_per_object_type(objects_per_path)
 
         tree_hash = objects_per_path[git.ROOT_TREE_KEY][0]['sha1_git']
-        revision['directory'] = tree_hash
 
-        revision['sha1_git'] = git.compute_revision_sha1_git(revision)
+        full_rev = _revision_from(tree_hash, revision)
 
-        objects[GitType.COMM] = [revision]
+        objects[GitType.COMM] = [full_rev]
 
         if release and 'name' in release:
-            release['revision'] = revision['sha1_git']
-            release['sha1_git'] = git.compute_release_sha1_git(release)
-            objects[GitType.RELE] = [release]
+            full_rel = _release_from(full_rev['sha1_git'], release)
+            objects[GitType.RELE] = [full_rel]
 
         self.log.info("Done listing the objects in %s: %d contents, "
                       "%d directories, %d revisions, %d releases" % (
@@ -417,6 +427,23 @@ class DirLoader(config.SWHConfig):
               - validity: validity date (e.g. 2015-01-01 00:00:00+00)
 
         """
+        def _occurrence_from(origin_id, revision_hash, occurrence):
+            occ = dict(occurrence)
+            occ.update({
+                'revision': full_rev['sha1_git'],
+                'origin': origin['id'],
+            })
+            return occ
+
+        def _occurrences_from(origin_id, revision_hash, occurrences):
+            full_occs = []
+            for occurrence in occurrences:
+                full_occ = _occurrence_from(origin_id,
+                                            revision_hash,
+                                            occurrence)
+                full_occs.append(full_occ)
+            return full_occs
+
         if not os.path.exists(dir_path):
             self.log.info('Skipping inexistant directory %s' % dir_path,
                           extra={
@@ -438,20 +465,15 @@ class DirLoader(config.SWHConfig):
 
         origin['id'] = self.storage.origin_add_one(origin)
 
-        # We want to load the repository, walk all the objects
+        # to load the repository, walk all objects, compute their hash
         objects, objects_per_path = self.list_repo_objs(dir_path, revision,
                                                         release)
 
-        # Compute revision information (mixed from outside input + dir content)
-        revision = objects[GitType.COMM][0]
+        full_rev = objects[GitType.COMM][0]  # only 1 revision
 
-        # Update occurrences
-        for occurrence in occurrences:
-            occurrence.update({
-                'revision': revision['sha1_git'],
-                'origin': origin['id'],
-            })
+        full_occs = _occurrences_from(origin['id'],
+                                      full_rev['sha1_git'],
+                                      occurrences)
 
-        # Finally, load the repository
-        self.load_dir(dir_path, objects, objects_per_path, occurrences,
+        self.load_dir(dir_path, objects, objects_per_path, full_occs,
                       origin['id'])
