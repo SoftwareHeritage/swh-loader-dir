@@ -37,9 +37,6 @@ REVISION = {
 SWH_AUTHORITY = 1
 GNU_AUTHORITY = 2
 
-LIMIT = 10
-# LIMIT = None
-
 
 def compute_origin(url_scheme, url_type, root_dirpath, tarpath):
     """Compute the origin.
@@ -198,21 +195,24 @@ def produce_archive_messages(conf, path):
     Returns:
         None
     """
-    limit = 0
-    for dirpath, filename in list_archives_from(path):
-        limit += 1
-        compute_message_from(conf, dirpath, filename)
-        if LIMIT and limit >= LIMIT:
-            return limit
+    LIMIT = conf['limit']
+    count = 0
 
-    return limit
+    for dirpath, filename in list_archives_from(path):
+        count += 1
+        # compute_message_from(conf, dirpath, filename)
+        if LIMIT and count >= LIMIT:
+            return count
+
+    return count
 
 
 def load_config(conf_file):
     """Load the configuration from file.
 
     """
-    conf = config.read(conf_file)
+    conf = config.read(conf_file,
+                       default_conf={'limit': ('int', None)})
     url_scheme = conf['url_scheme']
     mirror_dir = conf['mirror_root_directory']
 
