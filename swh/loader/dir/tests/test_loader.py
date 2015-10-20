@@ -47,34 +47,39 @@ class TestLoader(unittest.TestCase):
         self.info = {
             'storage_class': 'remote_storage',
             'storage_args': ['http://localhost:5000/'],
+        }
 
-            # origin information
-            'origin_url': 'file:///dev/null',
+        self.origin = {
+            'url': 'file:///dev/null',
+            'type': 'dir',
+        }
 
-            # occurrence information
+        self.occurrence = {
             'branch': 'master',
             'authority_id': 1,
             'validity': '2015-01-01 00:00:00+00',
+        }
 
-            # revision information
-            'revision_author_name': 'swh author',
-            'revision_author_email': 'swh@inria.fr',
-            'revision_author_date': '1444054085',
-            'revision_author_offset': '+0200',
-            'revision_committer_name': 'swh committer',
-            'revision_committer_email': 'swh@inria.fr',
-            'revision_committer_date': '1444054085',
-            'revision_committer_offset': '+0200',
-            'revision_type': 'tar',
-            'revision_message': 'synthetic revision',
+        self.revision = {
+            'author_name': 'swh author',
+            'author_email': 'swh@inria.fr',
+            'author_date': '1444054085',
+            'author_offset': '+0200',
+            'committer_name': 'swh committer',
+            'committer_email': 'swh@inria.fr',
+            'committer_date': '1444054085',
+            'committer_offset': '+0200',
+            'type': 'tar',
+            'message': 'synthetic revision',
+        }
 
-            # release information
-            'release_name': 'v0.0.1',
-            'release_date': '1444054085',
-            'release_offset': '+0200',
-            'release_author_name': 'swh author',
-            'release_author_email': 'swh@inria.fr',
-            'release_comment': 'synthetic release',
+        self.release = {
+            'name': 'v0.0.1',
+            'date': '1444054085',
+            'offset': '+0200',
+            'author_name': 'swh author',
+            'author_email': 'swh@inria.fr',
+            'comment': 'synthetic release',
         }
 
         self.dirloader = DirLoader(self.info)
@@ -84,7 +89,8 @@ class TestLoader(unittest.TestCase):
         # when
         objects, objects_per_path = self.dirloader.list_repo_objs(
             self.root_path,
-            self.info)
+            self.revision,
+            self.release)
 
         # then
         self.assertEquals(len(objects), 4,

@@ -1,23 +1,19 @@
 SWH-loader-dir
 ==============
 
-The Software Heritage Loader Dir is a tool and a library to walk a local
-Directory and inject into the SWH dataset all unknown contained files.
-
-It can also deal with:
-- a tarball
-- ...
+The Software Heritage Directory Loader is a tool and a library to walk a local
+directory and inject into the SWH dataset all unknown contained files.
 
 
 Configuration sample
 ====================
 
-### tar
+### dir
 
-Sample tar.ini:
+Sample dir.ini:
 
     [main]    
-    dir_path = /tmp/swh/loader/tar/
+    dir_path = /tmp/swh/loader/dir/
 
     storage_class = remote_storage
     storage_args = http://localhost:5000/
@@ -34,22 +30,22 @@ Sample tar.ini:
     occurrence_packet_size = 100000
 
 Present in possible locations:
-- ~/.config/swh/loader/tar.ini
-- ~/.swh/loader/tar.ini
-- /etc/softwareheritage/loader/tar.ini
+- ~/.config/swh/loader/dir.ini
+- ~/.swh/loader/dir.ini
+- /etc/softwareheritage/loader/dir.ini
 
-### Load tarball
+### Load directory
 
 #### toplevel
 
-    from swh.loader.dir.tasks import LoadTarRepository
-    LoadTarRepository().run('/path/to/tarball.tgz')
+    from swh.loader.dir.tasks import LoadDirRepository
+    LoadDirRepository().run('/path/to/dir')
 
 #### celery
 
 Providing you have a celery up and running
 (cf. https://forge.softwareheritage.org/diffusion/DCORE/browse/master/README.md)
 
-    from swh.loader.dir.tasks import LoadTarRepository
-    LoadTarRepository().delay('/path/to/tarball.tgz')
+    from swh.loader.dir.tasks import LoadDirRepository
+    LoadDirRepository().delay('/path/to/dir')
 

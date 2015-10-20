@@ -15,7 +15,7 @@ def parse_requirements():
 
 setup(
     name='swh.loader.dir',
-    description='Software Heritage Loader Directory',
+    description='Software Heritage Directory Loader',
     author='Software Heritage developers',
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/diffusion/DLDDIR',

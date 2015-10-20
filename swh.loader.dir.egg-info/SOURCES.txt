@@ -1,4 +1,6 @@
 .gitignore
+AUTHORS
+LICENSE
 MANIFEST.in
 Makefile
 README
@@ -14,9 +16,7 @@ debian/control
 debian/copyright
 debian/rules
 debian/source/format
-resources/test/loader-dir.ini
-resources/test/loader-tar.ini
-scratch/producer.py
+resources/loader/dir.ini
 scratch/walking.py
 swh.loader.dir.egg-info/PKG-INFO
 swh.loader.dir.egg-info/SOURCES.txt
