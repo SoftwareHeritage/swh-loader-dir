@@ -229,13 +229,13 @@ def load_config(conf_file):
 
     return conf
 
+if __name__ == '__main__':
+    conf_file = sys.argv[1]
+    if not os.path.exists(conf_file):
+        conf_file = '../resources/producer/tar.ini'
 
-conf_file = sys.argv[1]
-if not os.path.exists(conf_file):
-    conf_file = '../resources/producer/tar.ini'
+    conf = load_config(conf_file)
 
-conf = load_config(conf_file)
+    nb_tarballs = produce_archive_messages(conf, conf['mirror_root_directory'])
 
-nb_tarballs = produce_archive_messages(conf, conf['mirror_root_directory'])
-
-print('%s sent to celery!' % nb_tarballs)
+    print('%s tasks sent!' % nb_tarballs)
