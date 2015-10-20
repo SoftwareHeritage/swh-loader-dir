@@ -308,7 +308,6 @@ class DirLoader(config.SWHConfig):
             }
             for tree_path in objects_per_path:
                 objs = objects_per_path[tree_path]
-                # print('tree_path: %s, objs: %s' % (tree_path, objs))
                 for obj in objs:
                     m[obj['type']].append(obj)
 
