@@ -1,3 +1,11 @@
+swh-loader-dir (0.0.4-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.4
+  * Update documentation
+  * Escape surrogate characters in filename
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 21 Oct 2015 12:01:37 +0200
+
 swh-loader-dir (0.0.3-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.3
