@@ -4,19 +4,24 @@ SWH-loader-dir
 The Software Heritage Directory Loader is a tool and a library to walk a local
 directory and inject into the SWH dataset all unknown contained files.
 
-
 Configuration sample
 ====================
 
-### dir
+### Directory loader
 
-Sample dir.ini:
+#### Configuration
 
-    [main]    
-    dir_path = /tmp/swh/loader/dir/
+This is the loader's (or task's) configuration file.
 
+loader/dir.ini:
+
+    [main]
+
+    # access to swh's storage
     storage_class = remote_storage
     storage_args = http://localhost:5000/
+
+    # parameters to condition loading into swh storage
     send_contents = True
     send_directories = True
     send_revisions = True
@@ -34,18 +39,49 @@ Present in possible locations:
 - ~/.swh/loader/dir.ini
 - /etc/softwareheritage/loader/dir.ini
 
-### Load directory
-
 #### toplevel
 
+Load directory directly from code or toplevel:
+
     from swh.loader.dir.tasks import LoadDirRepository
-    LoadDirRepository().run('/path/to/dir')
+
+    dir_path = '/path/to/directory
+
+    # Fill in those
+    origin = {}
+    release = None
+    revision = {}
+    occurrence = {}
+
+    LoadDirRepository().run(dir_path, origin, revision, release, [occurrence])
 
 #### celery
 
-Providing you have a celery up and running
-(cf. https://forge.softwareheritage.org/diffusion/DCORE/browse/master/README.md)
+Load directory using celery.
+
+Providing you have a properly configured celery up and running
+
+worker.ini needs to be updated with the following keys:
+
+    task_modules = swh.loader.dir.tasks
+    task_queues = swh_loader_dir
+
+cf. https://forge.softwareheritage.org/diffusion/DCORE/browse/master/README.md
+for more details
+
+You can send the following message to the task queue:
 
     from swh.loader.dir.tasks import LoadDirRepository
-    LoadDirRepository().delay('/path/to/dir')
 
+    # Fill in those
+    origin = {}
+    release = None
+    revision = {}
+    occurrence = {}
+
+    # Send message to the task queue
+    LoadDirRepository().apply_async(('/path/to/dir,
+                                     origin,
+                                     revision,
+                                     release,
+                                     [occurrence]))

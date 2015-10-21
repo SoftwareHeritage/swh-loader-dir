@@ -168,7 +168,7 @@ def compute_link_metadata(linkpath):
     """
     m_hashes = utils.hashlink(linkpath)
     m_hashes.update({
-        'name': bytes(os.path.basename(linkpath), 'utf-8'),
+        'name': utils.to_bytes(os.path.basename(linkpath)),
         'perms': GitPerm.LINK,
         'type': GitType.BLOB,
         'path': linkpath
@@ -192,7 +192,7 @@ def compute_blob_metadata(filepath):
     m_hashes = utils.hashfile(filepath)
     perms = GitPerm.EXEC if os.access(filepath, os.X_OK) else GitPerm.BLOB
     m_hashes.update({
-        'name': bytes(os.path.basename(filepath), 'utf-8'),
+        'name': utils.to_bytes(os.path.basename(filepath)),
         'perms': perms,
         'type': GitType.BLOB,
         'path': filepath
@@ -215,7 +215,7 @@ def compute_tree_metadata(dirname, ls_hashes):
     """
     tree_hash = compute_directory_git_sha1(dirname, ls_hashes)
     tree_hash.update({
-        'name': bytes(os.path.basename(dirname), 'utf-8'),
+        'name': utils.to_bytes(os.path.basename(dirname)),
         'perms': GitPerm.TREE,
         'type': GitType.TREE,
         'path': dirname
@@ -288,7 +288,7 @@ def walk_and_compute_sha1_from_directory(rootdir):
     root_hash = compute_directory_git_sha1(rootdir, ls_hashes)
     root_hash.update({
         'path': rootdir,
-        'name': bytes(os.path.basename(rootdir), 'utf-8'),
+        'name': utils.to_bytes(os.path.basename(rootdir)),
         'perms': GitPerm.TREE,
         'type': GitType.TREE
     })
