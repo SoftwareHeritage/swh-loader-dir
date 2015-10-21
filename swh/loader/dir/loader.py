@@ -454,7 +454,7 @@ class DirLoader(config.SWHConfig):
             return
 
         files = os.listdir(dir_path)
-        if not(files):
+        if not files:
             self.log.info('Skipping empty directory %s' % dir_path,
                           extra={
                               'swh_type': 'dir_repo_list_refs',
