@@ -119,3 +119,10 @@ def hashlink(linkpath):
         'length': len(raw_data)
     })
     return hashes
+
+
+def to_bytes(path):
+    """Convert the string to bytes.
+
+    """
+    return path.encode('utf-8', errors='surrogateescape')
