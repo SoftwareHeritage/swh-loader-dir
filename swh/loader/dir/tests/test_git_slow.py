@@ -33,7 +33,7 @@ def to_hash_data_entry(ls_tree_format_input_line):
     prepared_str = prepare_str(ls_tree_format_input_line)
     perms, type, sha1_git, name = prepared_str.split(' ')
     return {'perms': _perms_to_git_perm[perms],
-            'name': name.encode('utf-8'),
+            'name': utils.to_bytes(name),
             'type': _type_to_git_type[type],
             'sha1_git': bytes.fromhex(sha1_git)}
 
@@ -369,7 +369,23 @@ class GitHashTreelib(unittest.TestCase):
 100644 blob 2cf3e2608de324b5622673943807b8e8b353e2da	xz.txt
 040000 tree d9c00fe0c456581fc233ad805191be86b387b605	zh_CN
 100644 blob 90a64d52bea2f33464f86e4dc93954b2bc105f50	zorro.txt
-"""  # NOQA
+            """,  # NOQA
+            "e202fc2cf10dcc460aaf469db4cb5379bbe326d8":
+            """
+100644 blob 5b6e7c66c276e7610d4a73c70ec1a1f7c1003259    COPYING
+100644 blob 13248728a1c884756a0e265faf5b679ec27f47bc    Copyright
+100644 blob d8b02abb7e1a3523a40f8b7cbfb7d05f6fca8557    Makefile.pre
+100644 blob 886eacfa48acef07d6d0b5b3b197811ab7775340    README
+100755 blob 2a5781c640c10f05d7f194e0f1d24aaa96833e46    configure
+040000 tree 656a2f680866edaf80fdfbcc7db503fe06b6772d    doc
+100644 blob b4d29e3dd5710423b57f388dfec3acd3d04b76f7    es.cwl
+100644 blob b883cd6b699486be32abaeeb15eacdfb4d816893    es.dat
+100644 blob 4103348bbbbc69ea08f2c970c3e360794137ed8c    es.multi
+100644 blob c3afb3608574b7afa5364468b5267c0824c8f079    espa\udcf1ol.alias
+100644 blob c3afb3608574b7afa5364468b5267c0824c8f079    esponol.alias
+100644 blob 7926a11dac0dc13055ed8a4ada14b7985a3332f5    info
+100644 blob c3afb3608574b7afa5364468b5267c0824c8f079    spanish.alias
+"""
     }  # NOQA
 
     @istest
