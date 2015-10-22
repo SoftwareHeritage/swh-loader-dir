@@ -8,6 +8,7 @@ import uuid
 import traceback
 import os
 import psycopg2
+import sys
 
 from retrying import retry
 
@@ -464,7 +465,7 @@ class DirLoader(config.SWHConfig):
             return
 
         if isinstance(dir_path, str):
-            dir_path = dir_path.encode('utf-8')
+            dir_path = dir_path.encode(sys.getfilesystemencoding())
 
         origin['id'] = self.storage.origin_add_one(origin)
 
