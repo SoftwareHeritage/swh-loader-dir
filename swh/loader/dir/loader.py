@@ -4,11 +4,11 @@
 # See top-level LICENSE file for more information
 
 import logging
-import uuid
-import traceback
 import os
 import psycopg2
 import sys
+import traceback
+import uuid
 
 from retrying import retry
 
