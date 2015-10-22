@@ -26,6 +26,13 @@ _perms_to_git_perm = {
 }
 
 
+def to_bytes(path):
+    """Convert the string to bytes.
+
+    """
+    return path.encode('utf-8', errors='surrogateescape')
+
+
 def to_hash_data_entry(ls_tree_format_input_line):
     def prepare_str(s):
         return s.strip().replace('\t', ' ').replace('    ', ' ')
@@ -33,7 +40,7 @@ def to_hash_data_entry(ls_tree_format_input_line):
     prepared_str = prepare_str(ls_tree_format_input_line)
     perms, type, sha1_git, name = prepared_str.split(' ')
     return {'perms': _perms_to_git_perm[perms],
-            'name': utils.to_bytes(name),
+            'name': to_bytes(name),
             'type': _type_to_git_type[type],
             'sha1_git': bytes.fromhex(sha1_git)}
 

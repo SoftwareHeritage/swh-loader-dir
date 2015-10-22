@@ -463,6 +463,9 @@ class DirLoader(config.SWHConfig):
                           })
             return
 
+        if isinstance(dir_path, str):
+            dir_path = dir_path.encode('utf-8')
+
         origin['id'] = self.storage.origin_add_one(origin)
 
         # to load the repository, walk all objects, compute their hash
