@@ -19,15 +19,17 @@ class TestLoader(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.tmp_root_path = tempfile.mkdtemp()
 
-        sample_folder_archive = os.path.join(os.path.dirname(__file__),
-                                             '../../../../..',
-                                             'swh-storage-testdata',
-                                             'dir-folders',
-                                             'sample-folder.tgz')
+        cls.tmp_root_path = tempfile.mkdtemp().encode('utf-8')
 
-        cls.root_path = os.path.join(cls.tmp_root_path, 'sample-folder')
+        start_path = os.path.dirname(__file__).encode('utf-8')
+        sample_folder_archive = os.path.join(start_path,
+                                             b'../../../../..',
+                                             b'swh-storage-testdata',
+                                             b'dir-folders',
+                                             b'sample-folder.tgz')
+
+        cls.root_path = os.path.join(cls.tmp_root_path, b'sample-folder')
 
         # uncompress the sample folder
         subprocess.check_output(

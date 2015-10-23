@@ -112,17 +112,10 @@ def hashlink(linkpath):
         dictionary with sha1_git as key and the actual binary sha1 as value.
 
     """
-    raw_data = os.readlink(linkpath).encode('utf-8')
+    raw_data = os.readlink(linkpath)
     hashes = hashutil.hashdata(raw_data)
     hashes.update({
         'data': raw_data,
         'length': len(raw_data)
     })
     return hashes
-
-
-def to_bytes(path):
-    """Convert the string to bytes.
-
-    """
-    return path.encode('utf-8', errors='surrogateescape')
