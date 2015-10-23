@@ -327,10 +327,11 @@ class DirLoader(config.SWHConfig):
             return full_rel
 
         log_id = str(uuid.uuid4())
+        sdir_path = dir_path.decode('utf-8')
 
         self.log.info("Started listing %s" % dir_path, extra={
             'swh_type': 'dir_list_objs_start',
-            'swh_repo': dir_path,
+            'swh_repo': sdir_path,
             'swh_id': log_id,
         })
 
@@ -350,14 +351,14 @@ class DirLoader(config.SWHConfig):
 
         self.log.info("Done listing the objects in %s: %d contents, "
                       "%d directories, %d revisions, %d releases" % (
-                          dir_path,
+                          sdir_path,
                           len(objects[GitType.BLOB]),
                           len(objects[GitType.TREE]),
                           len(objects[GitType.COMM]),
                           len(objects[GitType.RELE])
                       ), extra={
                           'swh_type': 'dir_list_objs_end',
-                          'swh_repo': dir_path,
+                          'swh_repo': sdir_path,
                           'swh_num_blobs': len(objects[GitType.BLOB]),
                           'swh_num_trees': len(objects[GitType.TREE]),
                           'swh_num_commits': len(objects[GitType.COMM]),
