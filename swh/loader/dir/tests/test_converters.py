@@ -54,9 +54,7 @@ class TestConverters(unittest.TestCase):
         actual_release = converters.annotated_tag_to_release(release)
 
         # then
-        self.assertDictEqual(
-            expected_release,
-            actual_release)
+        self.assertDictEqual(actual_release, expected_release)
 
     @istest
     def _blob_to_content_visible(self):
@@ -85,7 +83,7 @@ class TestConverters(unittest.TestCase):
         actual_content = converters._blob_to_content(obj)
 
         # then
-        self.assertEqual(expected_content, actual_content)
+        self.assertEqual(actual_content, expected_content)
 
     @istest
     def _blob_to_content_absent(self):
@@ -117,7 +115,7 @@ class TestConverters(unittest.TestCase):
                                                      origin_id=3)
 
         # then
-        self.assertEqual(expected_content, actual_content)
+        self.assertDictEqual(actual_content, expected_content)
 
     @istest
     def tree_to_directory_no_entries(self):
