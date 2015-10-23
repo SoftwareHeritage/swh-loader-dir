@@ -99,7 +99,6 @@ class TestConverters(unittest.TestCase):
 
         expected_content = {
             'length': 9,
-            'data': b'some-data',
             'sha1': b'sha1',
             'sha1_git': b'sha1-git',
             'sha256': b'sha256',

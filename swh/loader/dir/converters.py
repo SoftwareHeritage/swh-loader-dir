@@ -56,10 +56,9 @@ def _blob_to_content(obj, log=None,
         'sha1': obj['sha1'],
         'sha256': obj['sha256'],
         'sha1_git': obj['sha1_git'],
-        'data': obj['data'],
         'length': size,
         'perms': obj['perms'].value,
-        'type': obj['type'].value
+        'type': obj['type'].value,
     }
 
     if max_content_size and size > max_content_size:
@@ -74,7 +73,8 @@ def _blob_to_content(obj, log=None,
         return ret
 
     ret.update({
-        'status': 'visible'
+        'status': 'visible',
+        'data': obj['data'],
     })
 
     return ret
