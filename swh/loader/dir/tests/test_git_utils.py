@@ -92,18 +92,3 @@ blah
         # then
         self.assertEqual(checksums['sha1_git'],
                          self.checksums['tag_sha1_git'])
-
-    @istest
-    def to_bytes(self):
-        # given
-        inputs = ['ha\udcefti.ogg', 'blah-123']
-        expected_outputs = [b'ha\xefti.ogg', b'blah-123']
-
-        input_outputs = zip(inputs, expected_outputs)
-
-        # when
-        for input, expected_output in input_outputs:
-            self.assertEquals(
-                utils.to_bytes(input),
-                expected_output,
-                'For %s, should have been %s' % (input, expected_output))
