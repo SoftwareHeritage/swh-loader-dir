@@ -57,7 +57,7 @@ class TestConverters(unittest.TestCase):
         self.assertDictEqual(actual_release, expected_release)
 
     @istest
-    def _blob_to_content_visible(self):
+    def blob_to_content_visible(self):
         obj = {
             'length': 9,
             'data': b'some-data',
@@ -86,7 +86,7 @@ class TestConverters(unittest.TestCase):
         self.assertEqual(actual_content, expected_content)
 
     @istest
-    def _blob_to_content_absent(self):
+    def blob_to_content_absent(self):
         obj = {
             'length': 9,
             'data': b'some-data',
