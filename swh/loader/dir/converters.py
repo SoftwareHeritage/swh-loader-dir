@@ -68,9 +68,9 @@ def _blob_to_content(obj, log=None,
                      (utils.hash_to_hex(obj['sha1_git']),
                       size,
                       max_content_size))
-            ret.update({'status': 'absent',
-                        'reason': 'Content too large',
-                        'origin': origin_id})
+        ret.update({'status': 'absent',
+                    'reason': 'Content too large',
+                    'origin': origin_id})
         return ret
 
     ret.update({
