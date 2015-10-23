@@ -4,12 +4,12 @@ SWH-loader-dir
 The Software Heritage Directory Loader is a tool and a library to walk a local
 directory and inject into the SWH dataset all unknown contained files.
 
-Configuration sample
-====================
 
-### Directory loader
+Directory loader
+================
 
-#### Configuration
+
+### Configuration
 
 This is the loader's (or task's) configuration file.
 
@@ -39,7 +39,8 @@ Present in possible locations:
 - ~/.swh/loader/dir.ini
 - /etc/softwareheritage/loader/dir.ini
 
-#### toplevel
+
+#### Toplevel
 
 Load directory directly from code or toplevel:
 
@@ -55,7 +56,8 @@ Load directory directly from code or toplevel:
 
     LoadDirRepository().run(dir_path, origin, revision, release, [occurrence])
 
-#### celery
+
+#### Celery
 
 Load directory using celery.
 
@@ -85,3 +87,9 @@ You can send the following message to the task queue:
                                      revision,
                                      release,
                                      [occurrence]))
+
+
+Directory producer
+==================
+
+None
