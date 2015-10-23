@@ -1,3 +1,10 @@
+swh-loader-dir (0.0.5-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.5
+  * Use bytes when walking the fs
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 23 Oct 2015 11:21:54 +0200
+
 swh-loader-dir (0.0.4-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.4
