@@ -1,3 +1,13 @@
+swh-loader-dir (0.0.9-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.9
+  * No more script to deploy
+  * Fix log typo
+  * Debian packaging:
+  * align requirements.txt with debian/control
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 26 Oct 2015 13:40:02 +0100
+
 swh-loader-dir (0.0.8-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.8
