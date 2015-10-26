@@ -1,4 +1,4 @@
 retrying
-swh.core
+swh.core>=0.0.14
 swh.storage
 vcversioner
