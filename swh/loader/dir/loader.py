@@ -52,7 +52,7 @@ def retry_loading(error):
     if not isinstance(error, psycopg2.IntegrityError):
         return False
 
-    logger = logging.getLogger('swh.loader.git.DirLoader')
+    logger = logging.getLogger('swh.loader.dir.DirLoader')
 
     error_name = error.__module__ + '.' + error.__class__.__name__
     logger.warning('Retry loading a batch', exc_info=False, extra={
