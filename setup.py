@@ -22,7 +22,7 @@ setup(
     packages=['swh.loader.dir',
               'swh.loader.dir.git',
               'swh.loader.dir.tests'],
-    scripts=['bin/swh-loader-dir'],
+    scripts=[],
     install_requires=parse_requirements(),
     setup_requires=['vcversioner'],
     vcversioner={},
