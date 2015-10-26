@@ -6,6 +6,7 @@
 import logging
 import os
 import psycopg2
+import requests
 import sys
 import traceback
 import uuid
@@ -49,7 +50,14 @@ def send_in_packets(source_list, formatter, sender, packet_size,
 
 def retry_loading(error):
     """Retry policy when the database raises an integrity error"""
-    if not isinstance(error, psycopg2.IntegrityError):
+    exception_classes = [
+        # raised when two parallel insertions insert the same data.
+        psycopg2.IntegrityError,
+        # raised when uWSGI restarts and hungs up on the worker.
+        requests.exceptions.ConnectionError,
+    ]
+
+    if not any(isinstance(error, exc) for exc in exception_classes):
         return False
 
     logger = logging.getLogger('swh.loader.dir.DirLoader')
