@@ -499,6 +499,10 @@ class DirLoaderWithHistory(DirLoader):
     - close the entry in fetch_history
 
     """
+    def __init__(self, config):
+        super().__init__(config)
+        self.log = logging.getLogger('swh.loader.dir.DirLoaderWithHistory')
+
     def process(self, dir_path, origin, revision, release, occurrences):
         """Load a directory in backend.
 
