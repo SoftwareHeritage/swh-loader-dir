@@ -77,8 +77,11 @@ def retry_loading(error):
 
 
 class DirLoader(config.SWHConfig):
-    """A bulk loader for a directory"""
+    """A bulk loader for a directory.
 
+    This will load the content of the directory.
+
+    """
     DEFAULT_CONFIG = {
         'storage_class': ('str', 'remote_storage'),
         'storage_args': ('list[str]', ['http://localhost:5000/']),
@@ -108,6 +111,22 @@ class DirLoader(config.SWHConfig):
         self.storage = Storage(*self.config['storage_args'])
 
         self.log = logging.getLogger('swh.loader.dir.DirLoader')
+
+    def open_fetch_history(self, origin_id):
+        return self.storage.fetch_history_start(origin_id)
+
+    def close_fetch_history(self, fetch_history_id, objects):
+        data = {
+            'status': True,
+            'result': {
+                'contents': len(objects.get(GitType.BLOB, [])),
+                'directories': len(objects.get(GitType.TREE, [])),
+                'revisions': len(objects.get(GitType.COMM, [])),
+                'releases': len(objects.get(GitType.RELE, [])),
+                'occurrences': len(objects.get(GitType.REFS, [])),
+            },
+        }
+        return self.storage.fetch_history_end(fetch_history_id, data)
 
     @retry(retry_on_exception=retry_loading, stop_max_attempt_number=3)
     def send_contents(self, content_list):
@@ -378,6 +397,7 @@ class DirLoader(config.SWHConfig):
         Args:
             - dir_path: source of the directory to import
             - origin: Dictionary origin
+              - id: origin's id
               - url: url origin we fetched
               - type: type of the origin
             - revision: Dictionary of information needed, keys are:
@@ -444,8 +464,6 @@ class DirLoader(config.SWHConfig):
         if isinstance(dir_path, str):
             dir_path = dir_path.encode(sys.getfilesystemencoding())
 
-        origin['id'] = self.storage.origin_add_one(origin)
-
         # to load the repository, walk all objects, compute their hash
         objects, objects_per_path = self.list_repo_objs(dir_path, revision,
                                                         release)
@@ -458,3 +476,60 @@ class DirLoader(config.SWHConfig):
 
         self.load_dir(dir_path, objects, objects_per_path, full_occs,
                       origin['id'])
+
+        objects[GitType.REFS] = full_occs
+
+        return objects
+
+
+class DirLoaderWithHistory(DirLoader):
+    """A bulk loader for a directory.
+
+    This will:
+    - create the origin if it does not exist
+    - open an entry in fetch_history
+    - load the content of the directory
+    - close the entry in fetch_history
+
+    """
+    def process(self, dir_path, origin, revision, release, occurrences):
+        """Load a directory in backend.
+
+        Args:
+            - dir_path: source of the directory to import
+            - origin: Dictionary origin
+              - url: url origin we fetched
+              - type: type of the origin
+            - revision: Dictionary of information needed, keys are:
+              - author_name: revision's author name
+              - author_email: revision's author email
+              - author_date: timestamp (e.g. 1444054085)
+              - author_offset: date offset e.g. -0220, +0100
+              - committer_name: revision's committer name
+              - committer_email: revision's committer email
+              - committer_date: timestamp
+              - committer_offset: date offset e.g. -0220, +0100
+              - type: type of revision dir, tar
+              - message: synthetic message for the revision
+            - release: Dictionary of information needed, keys are:
+              - name: release name
+              - date: release timestamp (e.g. 1444054085)
+              - offset: release date offset e.g. -0220, +0100
+              - author_name: release author's name
+              - author_email: release author's email
+              - comment: release's comment message
+            - occurrences: List of occurrence dictionary.
+              Information needed, keys are:
+              - branch: occurrence's branch name
+              - authority_id: authority id (e.g. 1 for swh)
+              - validity: validity date (e.g. 2015-01-01 00:00:00+00)
+
+        """
+        origin['id'] = self.storage.origin_add_one(origin)
+
+        fetch_history_id = self.open_fetch_history(origin['id'])
+
+        objects = super().process(dir_path, origin, revision, release,
+                                  occurrences)
+
+        self.close_fetch_history(fetch_history_id, objects)
