@@ -214,38 +214,6 @@ class DirLoader(config.SWHConfig):
                            'swh_id': log_id,
                        })
 
-    def dir_revision(self,
-                     dir_path,
-                     origin_url,
-                     revision_date,
-                     revision_offset,
-                     revision_committer_date,
-                     revision_committer_offset,
-                     revision_type,
-                     revision_message,
-                     revision_author,
-                     revision_committer):
-        """Create a revision.
-
-        """
-        log_id = str(uuid.uuid4())
-
-        self.log.debug('Creating origin for %s' % origin_url,
-                       extra={
-                           'swh_type': 'storage_send_start',
-                           'swh_content_type': 'origin',
-                           'swh_num': 1,
-                           'swh_id': log_id
-                       })
-        self.get_or_create_origin(origin_url)
-        self.log.debug('Done creating origin for %s' % origin_url,
-                       extra={
-                           'swh_type': 'storage_send_end',
-                           'swh_content_type': 'origin',
-                           'swh_num': 1,
-                           'swh_id': log_id
-                       })
-
     def bulk_send_blobs(self, objects, blobs, origin_id):
         """Format blobs as swh contents and send them to the database"""
         packet_size = self.config['content_packet_size']
