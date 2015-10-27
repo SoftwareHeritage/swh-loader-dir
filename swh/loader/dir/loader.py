@@ -60,6 +60,7 @@ def retry_loading(error):
     if not any(isinstance(error, exc) for exc in exception_classes):
         return False
 
+    # FIXME: it could be DirLoaderWithHistory, TarLoader
     logger = logging.getLogger('swh.loader.dir.DirLoader')
 
     error_name = error.__module__ + '.' + error.__class__.__name__
