@@ -115,16 +115,21 @@ class DirLoader(config.SWHConfig):
     def open_fetch_history(self, origin_id):
         return self.storage.fetch_history_start(origin_id)
 
-    def close_fetch_history(self, fetch_history_id, objects):
+    def close_fetch_history(self, fetch_history_id, res):
+        result = None
+        if 'objects' in res:
+            result = {
+                'contents': len(res['objects'].get(GitType.BLOB, [])),
+                'directories': len(res['objects'].get(GitType.TREE, [])),
+                'revisions': len(res['objects'].get(GitType.COMM, [])),
+                'releases': len(res['objects'].get(GitType.RELE, [])),
+                'occurrences': len(res['objects'].get(GitType.REFS, [])),
+            }
+
         data = {
-            'status': True,
-            'result': {
-                'contents': len(objects.get(GitType.BLOB, [])),
-                'directories': len(objects.get(GitType.TREE, [])),
-                'revisions': len(objects.get(GitType.COMM, [])),
-                'releases': len(objects.get(GitType.RELE, [])),
-                'occurrences': len(objects.get(GitType.REFS, [])),
-            },
+            'status': res['status'],
+            'result': result,
+            'stderr': res.get('stderr')
         }
         return self.storage.fetch_history_end(fetch_history_id, data)
 
@@ -443,23 +448,25 @@ class DirLoader(config.SWHConfig):
             return full_occs
 
         if not os.path.exists(dir_path):
-            self.log.info('Skipping inexistant directory %s' % dir_path,
+            warn_msg = 'Skipping inexistant directory %s' % dir_path
+            self.log.warn(warn_msg,
                           extra={
                               'swh_type': 'dir_repo_list_refs',
                               'swh_repo': dir_path,
                               'swh_num_refs': 0,
                           })
-            return
+            return {'status': False, 'stderr': warn_msg}
 
         files = os.listdir(dir_path)
         if not files:
-            self.log.info('Skipping empty directory %s' % dir_path,
+            warn_msg = 'Skipping empty directory %s' % dir_path
+            self.log.warn('Skipping empty directory %s' % dir_path,
                           extra={
                               'swh_type': 'dir_repo_list_refs',
                               'swh_repo': dir_path,
                               'swh_num_refs': 0,
                           })
-            return
+            return {'status': False, 'stderr': warn_msg}
 
         if isinstance(dir_path, str):
             dir_path = dir_path.encode(sys.getfilesystemencoding())
@@ -479,7 +486,7 @@ class DirLoader(config.SWHConfig):
 
         objects[GitType.REFS] = full_occs
 
-        return objects
+        return {'status': True, 'objects': objects}
 
 
 class DirLoaderWithHistory(DirLoader):
@@ -529,7 +536,7 @@ class DirLoaderWithHistory(DirLoader):
 
         fetch_history_id = self.open_fetch_history(origin['id'])
 
-        objects = super().process(dir_path, origin, revision, release,
-                                  occurrences)
+        result = super().process(dir_path, origin, revision, release,
+                                 occurrences)
 
-        self.close_fetch_history(fetch_history_id, objects)
+        self.close_fetch_history(fetch_history_id, result)
