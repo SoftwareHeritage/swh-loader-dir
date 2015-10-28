@@ -424,7 +424,7 @@ class DirLoader(config.SWHConfig):
               - author_name: release author's name
               - author_email: release author's email
               - comment: release's comment message
-            - occurrences: List of occurrence dictionary.
+            - occurrences: List of occurrences as dictionary.
               Information needed, keys are:
               - branch: occurrence's branch name
               - authority_id: authority id (e.g. 1 for swh)
