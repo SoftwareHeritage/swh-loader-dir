@@ -167,6 +167,7 @@ class TestConverters(unittest.TestCase):
             'author_email': 'author-email',
             'committer_name': 'committer-name',
             'committer_email': 'committer-email',
+            'metadata': {'checksums': {'sha1': b'sha1-as-bytes'}},
             'directory': 'targeted-tree-sha1',
         }
 
@@ -192,6 +193,7 @@ class TestConverters(unittest.TestCase):
             'committer_name': 'committer-name',
             'committer_email': 'committer-email',
             'synthetic': True,
+            'metadata': {'checksums': {'sha1': b'sha1-as-bytes'}},
             'parents': [],
         }
 
