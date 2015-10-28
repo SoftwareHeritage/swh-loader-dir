@@ -430,6 +430,12 @@ class DirLoader(config.SWHConfig):
               - authority_id: authority id (e.g. 1 for swh)
               - validity: validity date (e.g. 2015-01-01 00:00:00+00)
 
+        Returns:
+            Dictionary with the following keys:
+            - status: mandatory, the status result as a boolean
+            - stderr: optional when status is True, mandatory otherwise
+            - objects: the actual objects sent to swh storage
+
         """
         def _occurrence_from(origin_id, revision_hash, occurrence):
             occ = dict(occurrence)
