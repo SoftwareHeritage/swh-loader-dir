@@ -5,7 +5,7 @@
 
 from swh.core.scheduling import Task
 
-from swh.loader.dir.loader import DirLoader
+from swh.loader.dir.loader import DirLoaderWithHistory
 
 
 class LoadDirRepository(Task):
@@ -18,7 +18,7 @@ class LoadDirRepository(Task):
     ADDITIONAL_CONFIG = {}
 
     def __init__(self):
-        self.config = DirLoader.parse_config_file(
+        self.config = DirLoaderWithHistory.parse_config_file(
             base_filename=self.CONFIG_BASE_FILENAME,
             additional_configs=[self.ADDITIONAL_CONFIG],
         )
@@ -30,6 +30,6 @@ class LoadDirRepository(Task):
             cf. swh.loader.dir.loader.run docstring
 
         """
-        loader = DirLoader(self.config)
+        loader = DirLoaderWithHistory(self.config)
         loader.log = self.log
         loader.process(dir_path, origin, revision, release, occurrences)

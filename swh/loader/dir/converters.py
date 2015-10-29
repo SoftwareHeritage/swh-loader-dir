@@ -126,6 +126,7 @@ def commit_to_revision(commit, objects, log=None):
         'committer_name': commit['committer_name'],
         'committer_email': commit['committer_email'],
         'synthetic': True,
+        'metadata': commit['metadata'],
         'parents': [],
     }
 
