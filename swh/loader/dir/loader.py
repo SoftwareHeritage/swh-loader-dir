@@ -60,6 +60,7 @@ def retry_loading(error):
     if not any(isinstance(error, exc) for exc in exception_classes):
         return False
 
+    # FIXME: it could be DirLoaderWithHistory, TarLoader
     logger = logging.getLogger('swh.loader.dir.DirLoader')
 
     error_name = error.__module__ + '.' + error.__class__.__name__
@@ -77,8 +78,11 @@ def retry_loading(error):
 
 
 class DirLoader(config.SWHConfig):
-    """A bulk loader for a directory"""
+    """A bulk loader for a directory.
 
+    This will load the content of the directory.
+
+    """
     DEFAULT_CONFIG = {
         'storage_class': ('str', 'remote_storage'),
         'storage_args': ('list[str]', ['http://localhost:5000/']),
@@ -108,6 +112,27 @@ class DirLoader(config.SWHConfig):
         self.storage = Storage(*self.config['storage_args'])
 
         self.log = logging.getLogger('swh.loader.dir.DirLoader')
+
+    def open_fetch_history(self, origin_id):
+        return self.storage.fetch_history_start(origin_id)
+
+    def close_fetch_history(self, fetch_history_id, res):
+        result = None
+        if 'objects' in res:
+            result = {
+                'contents': len(res['objects'].get(GitType.BLOB, [])),
+                'directories': len(res['objects'].get(GitType.TREE, [])),
+                'revisions': len(res['objects'].get(GitType.COMM, [])),
+                'releases': len(res['objects'].get(GitType.RELE, [])),
+                'occurrences': len(res['objects'].get(GitType.REFS, [])),
+            }
+
+        data = {
+            'status': res['status'],
+            'result': result,
+            'stderr': res.get('stderr')
+        }
+        return self.storage.fetch_history_end(fetch_history_id, data)
 
     @retry(retry_on_exception=retry_loading, stop_max_attempt_number=3)
     def send_contents(self, content_list):
@@ -212,38 +237,6 @@ class DirLoader(config.SWHConfig):
                            'swh_content_type': 'occurrence',
                            'swh_num': num_occurrences,
                            'swh_id': log_id,
-                       })
-
-    def dir_revision(self,
-                     dir_path,
-                     origin_url,
-                     revision_date,
-                     revision_offset,
-                     revision_committer_date,
-                     revision_committer_offset,
-                     revision_type,
-                     revision_message,
-                     revision_author,
-                     revision_committer):
-        """Create a revision.
-
-        """
-        log_id = str(uuid.uuid4())
-
-        self.log.debug('Creating origin for %s' % origin_url,
-                       extra={
-                           'swh_type': 'storage_send_start',
-                           'swh_content_type': 'origin',
-                           'swh_num': 1,
-                           'swh_id': log_id
-                       })
-        self.get_or_create_origin(origin_url)
-        self.log.debug('Done creating origin for %s' % origin_url,
-                       extra={
-                           'swh_type': 'storage_send_end',
-                           'swh_content_type': 'origin',
-                           'swh_num': 1,
-                           'swh_id': log_id
                        })
 
     def bulk_send_blobs(self, objects, blobs, origin_id):
@@ -410,6 +403,119 @@ class DirLoader(config.SWHConfig):
         Args:
             - dir_path: source of the directory to import
             - origin: Dictionary origin
+              - id: origin's id
+              - url: url origin we fetched
+              - type: type of the origin
+            - revision: Dictionary of information needed, keys are:
+              - author_name: revision's author name
+              - author_email: revision's author email
+              - author_date: timestamp (e.g. 1444054085)
+              - author_offset: date offset e.g. -0220, +0100
+              - committer_name: revision's committer name
+              - committer_email: revision's committer email
+              - committer_date: timestamp
+              - committer_offset: date offset e.g. -0220, +0100
+              - type: type of revision dir, tar
+              - message: synthetic message for the revision
+            - release: Dictionary of information needed, keys are:
+              - name: release name
+              - date: release timestamp (e.g. 1444054085)
+              - offset: release date offset e.g. -0220, +0100
+              - author_name: release author's name
+              - author_email: release author's email
+              - comment: release's comment message
+            - occurrences: List of occurrences as dictionary.
+              Information needed, keys are:
+              - branch: occurrence's branch name
+              - authority_id: authority id (e.g. 1 for swh)
+              - validity: validity date (e.g. 2015-01-01 00:00:00+00)
+
+        Returns:
+            Dictionary with the following keys:
+            - status: mandatory, the status result as a boolean
+            - stderr: optional when status is True, mandatory otherwise
+            - objects: the actual objects sent to swh storage
+
+        """
+        def _occurrence_from(origin_id, revision_hash, occurrence):
+            occ = dict(occurrence)
+            occ.update({
+                'revision': full_rev['sha1_git'],
+                'origin': origin['id'],
+            })
+            return occ
+
+        def _occurrences_from(origin_id, revision_hash, occurrences):
+            full_occs = []
+            for occurrence in occurrences:
+                full_occ = _occurrence_from(origin_id,
+                                            revision_hash,
+                                            occurrence)
+                full_occs.append(full_occ)
+            return full_occs
+
+        if not os.path.exists(dir_path):
+            warn_msg = 'Skipping inexistant directory %s' % dir_path
+            self.log.warn(warn_msg,
+                          extra={
+                              'swh_type': 'dir_repo_list_refs',
+                              'swh_repo': dir_path,
+                              'swh_num_refs': 0,
+                          })
+            return {'status': False, 'stderr': warn_msg}
+
+        files = os.listdir(dir_path)
+        if not files:
+            warn_msg = 'Skipping empty directory %s' % dir_path
+            self.log.warn('Skipping empty directory %s' % dir_path,
+                          extra={
+                              'swh_type': 'dir_repo_list_refs',
+                              'swh_repo': dir_path,
+                              'swh_num_refs': 0,
+                          })
+            return {'status': False, 'stderr': warn_msg}
+
+        if isinstance(dir_path, str):
+            dir_path = dir_path.encode(sys.getfilesystemencoding())
+
+        # to load the repository, walk all objects, compute their hash
+        objects, objects_per_path = self.list_repo_objs(dir_path, revision,
+                                                        release)
+
+        full_rev = objects[GitType.COMM][0]  # only 1 revision
+
+        full_occs = _occurrences_from(origin['id'],
+                                      full_rev['sha1_git'],
+                                      occurrences)
+
+        self.load_dir(dir_path, objects, objects_per_path, full_occs,
+                      origin['id'])
+
+        objects[GitType.REFS] = full_occs
+
+        return {'status': True, 'objects': objects}
+
+
+class DirLoaderWithHistory(DirLoader):
+    """A bulk loader for a directory.
+
+    This will:
+    - create the origin if it does not exist
+    - open an entry in fetch_history
+    - load the content of the directory
+    - close the entry in fetch_history
+
+    """
+    def __init__(self, config):
+        super().__init__(config)
+        self.log = logging.getLogger('swh.loader.dir.DirLoaderWithHistory')
+
+    def process(self, dir_path, origin, revision, release, occurrences):
+        """Load a directory in backend.
+
+        Args:
+            - dir_path: source of the directory to import
+            - origin: Dictionary origin
               - url: url origin we fetched
               - type: type of the origin
             - revision: Dictionary of information needed, keys are:
@@ -437,56 +543,11 @@ class DirLoader(config.SWHConfig):
               - validity: validity date (e.g. 2015-01-01 00:00:00+00)
 
         """
-        def _occurrence_from(origin_id, revision_hash, occurrence):
-            occ = dict(occurrence)
-            occ.update({
-                'revision': full_rev['sha1_git'],
-                'origin': origin['id'],
-            })
-            return occ
-
-        def _occurrences_from(origin_id, revision_hash, occurrences):
-            full_occs = []
-            for occurrence in occurrences:
-                full_occ = _occurrence_from(origin_id,
-                                            revision_hash,
-                                            occurrence)
-                full_occs.append(full_occ)
-            return full_occs
-
-        if not os.path.exists(dir_path):
-            self.log.info('Skipping inexistant directory %s' % dir_path,
-                          extra={
-                              'swh_type': 'dir_repo_list_refs',
-                              'swh_repo': dir_path,
-                              'swh_num_refs': 0,
-                          })
-            return
-
-        files = os.listdir(dir_path)
-        if not files:
-            self.log.info('Skipping empty directory %s' % dir_path,
-                          extra={
-                              'swh_type': 'dir_repo_list_refs',
-                              'swh_repo': dir_path,
-                              'swh_num_refs': 0,
-                          })
-            return
-
-        if isinstance(dir_path, str):
-            dir_path = dir_path.encode(sys.getfilesystemencoding())
-
         origin['id'] = self.storage.origin_add_one(origin)
 
-        # to load the repository, walk all objects, compute their hash
-        objects, objects_per_path = self.list_repo_objs(dir_path, revision,
-                                                        release)
+        fetch_history_id = self.open_fetch_history(origin['id'])
 
-        full_rev = objects[GitType.COMM][0]  # only 1 revision
+        result = super().process(dir_path, origin, revision, release,
+                                 occurrences)
 
-        full_occs = _occurrences_from(origin['id'],
-                                      full_rev['sha1_git'],
-                                      occurrences)
-
-        self.load_dir(dir_path, objects, objects_per_path, full_occs,
-                      origin['id'])
+        self.close_fetch_history(fetch_history_id, result)
