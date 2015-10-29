@@ -21,6 +21,7 @@ class GitType(Enum):
     LINK = b'link'
     COMM = b'commit'
     RELE = b'release'
+    REFS = b'ref'
 
 
 class GitPerm(Enum):
