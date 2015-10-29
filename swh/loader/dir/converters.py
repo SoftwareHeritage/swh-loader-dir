@@ -39,9 +39,9 @@ def blob_to_content(obj, log=None, max_content_size=None,
                     origin_id=None):
     if 'data' not in obj:
         filepath = obj['path']
-        content_raw, length = utils._read_raw(filepath)
+        content_raw = open(filepath, 'rb').read()
         obj.update({'data': content_raw,
-                    'length': length})
+                    'length': len(content_raw)})
     return _blob_to_content(obj, log, max_content_size, origin_id)
 
 
