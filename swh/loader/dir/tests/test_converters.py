@@ -4,7 +4,7 @@
 # See top-level LICENSE file for more information
 
 import datetime
-import os
+import shutil
 import tempfile
 import unittest
 
@@ -15,7 +15,30 @@ from swh.loader.dir.git import git
 from swh.loader.dir.git.git import GitType, GitPerm
 
 
+def tmpfile_with_content(fromdir, contentfile):
+    """Create a temporary file with content contentfile in directory fromdir.
+
+    """
+    tmpfilepath = tempfile.mktemp(
+        suffix='.swh',
+        prefix='tmp-file-for-test',
+        dir=fromdir)
+
+    with open(tmpfilepath, 'wb') as f:
+        f.write(contentfile)
+
+    return tmpfilepath
+
+
 class TestConverters(unittest.TestCase):
+
+    @classmethod
+    def setupClass(cls):
+        cls.tmpdir = tempfile.mkdtemp(prefix='test-swh-loader-dir.')
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmpdir)
 
     @istest
     def format_to_minutes(self):
@@ -60,15 +83,10 @@ class TestConverters(unittest.TestCase):
         self.assertDictEqual(actual_release, expected_release)
 
     @istest
-    def blob_to_content(self):
+    def blob_to_content_visible_data(self):
         # given
         contentfile = b'temp file for testing blob to content convertion'
-        tmpfilepath = tempfile.mktemp(
-            suffix='.swh',
-            prefix='tmp-file-check-converter-visible',
-            dir='/tmp')
-        with open(tmpfilepath, 'wb') as f:
-            f.write(contentfile)
+        tmpfilepath = tmpfile_with_content(self.tmpdir, contentfile)
 
         obj = {
             'path': tmpfilepath,
@@ -96,17 +114,11 @@ class TestConverters(unittest.TestCase):
         # then
         self.assertEqual(actual_blob, expected_blob)
 
-        os.remove(tmpfilepath)
-
     @istest
-    def blob_to_content_absent2(self):
+    def blob_to_content2_absent_data(self):
         # given
         contentfile = b'temp file for testing blob to content convertion'
-        tmpfilepath = tempfile.mktemp(suffix='.swh',
-                                      prefix='tmp-file-check-converter-absent',
-                                      dir='/tmp')
-        with open(tmpfilepath, 'wb') as f:
-            f.write(contentfile)
+        tmpfilepath = tmpfile_with_content(self.tmpdir, contentfile)
 
         obj = {
             'path': tmpfilepath,
@@ -136,8 +148,6 @@ class TestConverters(unittest.TestCase):
 
         # then
         self.assertEqual(actual_blob, expected_blob)
-
-        os.remove(tmpfilepath)
 
     @istest
     def blob_to_content_visible(self):
