@@ -79,29 +79,6 @@ def hashdata(data, header_type):
     return _hash_file_obj(buf, header_type, len(data))
 
 
-def _read_raw(filepath):
-    """Read filepath's raw content and returns it.
-
-    Args:
-        filepath: absolute path to an existing file.
-
-    Returns:
-        raw content in bytes + its length
-
-    """
-    content_raw = b''
-    length = 0
-    with open(filepath, 'rb') as f:
-        while True:
-            chunk = f.read(hashutil.HASH_BLOCK_SIZE)
-            if not chunk:
-                break
-            content_raw += chunk
-            length += len(chunk)
-
-    return content_raw, length
-
-
 def hashlink(linkpath):
     """Compute hashes for a link.
 
