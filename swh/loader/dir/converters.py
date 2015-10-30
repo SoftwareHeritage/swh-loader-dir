@@ -42,29 +42,12 @@ def blob_to_content(obj, log=None, max_content_size=None,
 
     """
     filepath = obj['path']
-    obj['length'] = os.path.getsize(filepath)
-    blob = _blob_to_content(obj, log, max_content_size, origin_id)
-
-    # performance reason, we load only the content now
-    if blob['status'] == 'visible':
-        blob['data'] = open(filepath, 'rb').read()
-
-    return blob
-
-
-def _blob_to_content(obj, log=None,
-                     max_content_size=None,
-                     origin_id=None):
-    """Convert to a compliant swh content.
-
-    """
-    size = obj['length']
+    size = os.path.getsize(filepath)
     ret = {
         'sha1': obj['sha1'],
         'sha256': obj['sha256'],
         'sha1_git': obj['sha1_git'],
         'length': size,
-        'status': 'visible',
         'perms': obj['perms'].value,
         'type': obj['type'].value,
     }
@@ -79,6 +62,12 @@ def _blob_to_content(obj, log=None,
                     'reason': 'Content too large',
                     'origin': origin_id})
         return ret
+
+    ret.update({
+        'data': open(filepath, 'rb').read(),
+        'status': 'visible'
+    })
+
     return ret
 
 

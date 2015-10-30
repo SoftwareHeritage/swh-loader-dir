@@ -85,7 +85,7 @@ class TestConverters(unittest.TestCase):
     @istest
     def blob_to_content_visible_data(self):
         # given
-        contentfile = b'temp file for testing blob to content convertion'
+        contentfile = b'temp file for testing blob to content conversion'
         tmpfilepath = tmpfile_with_content(self.tmpdir, contentfile)
 
         obj = {
@@ -117,7 +117,7 @@ class TestConverters(unittest.TestCase):
     @istest
     def blob_to_content2_absent_data(self):
         # given
-        contentfile = b'temp file for testing blob to content convertion'
+        contentfile = b'temp file for testing blob to content conversion'
         tmpfilepath = tmpfile_with_content(self.tmpdir, contentfile)
 
         obj = {
@@ -148,63 +148,6 @@ class TestConverters(unittest.TestCase):
 
         # then
         self.assertEqual(actual_blob, expected_blob)
-
-    @istest
-    def blob_to_content_visible(self):
-        obj = {
-            'length': 9,
-            'sha1': b'sha1',
-            'sha1_git': b'sha1-git',
-            'sha256': b'sha256',
-            'perms': GitPerm.BLOB,
-            'type': GitType.BLOB
-        }
-
-        expected_content = {
-            'length': 9,
-            'sha1': b'sha1',
-            'sha1_git': b'sha1-git',
-            'sha256': b'sha256',
-            'perms': GitPerm.BLOB.value,
-            'type': GitType.BLOB.value,
-            'status': 'visible'
-        }
-
-        # when
-        actual_content = converters._blob_to_content(obj)
-
-        # then
-        self.assertEqual(actual_content, expected_content)
-
-    @istest
-    def blob_to_content_absent(self):
-        obj = {
-            'length': 9,
-            'sha1': b'sha1',
-            'sha1_git': b'sha1-git',
-            'sha256': b'sha256',
-            'perms': GitPerm.BLOB,
-            'type': GitType.BLOB
-        }
-
-        expected_content = {
-            'length': 9,
-            'sha1': b'sha1',
-            'sha1_git': b'sha1-git',
-            'sha256': b'sha256',
-            'perms': GitPerm.BLOB.value,
-            'type': GitType.BLOB.value,
-            'status': 'absent',
-            'reason': 'Content too large',
-            'origin': 3}
-
-        # when
-        actual_content = converters._blob_to_content(obj,
-                                                     max_content_size=5,
-                                                     origin_id=3)
-
-        # then
-        self.assertDictEqual(actual_content, expected_content)
 
     @istest
     def tree_to_directory_no_entries(self):
