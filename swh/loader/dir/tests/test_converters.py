@@ -3,8 +3,10 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import unittest
 import datetime
+import os
+import tempfile
+import unittest
 
 from nose.tools import istest
 
@@ -14,6 +16,7 @@ from swh.loader.dir.git.git import GitType, GitPerm
 
 
 class TestConverters(unittest.TestCase):
+
     @istest
     def format_to_minutes(self):
         self.assertEquals(converters.format_to_minutes('+0100'), 60)
@@ -57,10 +60,89 @@ class TestConverters(unittest.TestCase):
         self.assertDictEqual(actual_release, expected_release)
 
     @istest
+    def blob_to_content(self):
+        # given
+        contentfile = b'temp file for testing blob to content convertion'
+        tmpfilepath = tempfile.mktemp(
+            suffix='.swh',
+            prefix='tmp-file-check-converter-visible',
+            dir='/tmp')
+        with open(tmpfilepath, 'wb') as f:
+            f.write(contentfile)
+
+        obj = {
+            'path': tmpfilepath,
+            'perms': GitPerm.BLOB,
+            'type': GitType.BLOB,
+            'sha1': 'some-sha1',
+            'sha256': 'some-sha256',
+            'sha1_git': 'some-sha1git',
+        }
+
+        expected_blob = {
+            'data': contentfile,
+            'length': len(contentfile),
+            'status': 'visible',
+            'sha1': 'some-sha1',
+            'sha256': 'some-sha256',
+            'sha1_git': 'some-sha1git',
+            'perms': GitPerm.BLOB.value,
+            'type': GitType.BLOB.value,
+        }
+
+        # when
+        actual_blob = converters.blob_to_content(obj)
+
+        # then
+        self.assertEqual(actual_blob, expected_blob)
+
+        os.remove(tmpfilepath)
+
+    @istest
+    def blob_to_content_absent2(self):
+        # given
+        contentfile = b'temp file for testing blob to content convertion'
+        tmpfilepath = tempfile.mktemp(suffix='.swh',
+                                      prefix='tmp-file-check-converter-absent',
+                                      dir='/tmp')
+        with open(tmpfilepath, 'wb') as f:
+            f.write(contentfile)
+
+        obj = {
+            'path': tmpfilepath,
+            'perms': GitPerm.BLOB,
+            'type': GitType.BLOB,
+            'sha1': 'some-sha1',
+            'sha256': 'some-sha256',
+            'sha1_git': 'some-sha1git',
+        }
+
+        expected_blob = {
+            'length': len(contentfile),
+            'status': 'absent',
+            'sha1': 'some-sha1',
+            'sha256': 'some-sha256',
+            'sha1_git': 'some-sha1git',
+            'perms': GitPerm.BLOB.value,
+            'type': GitType.BLOB.value,
+            'reason': 'Content too large',
+            'origin': 190
+        }
+
+        # when
+        actual_blob = converters.blob_to_content(obj, None,
+                                                 max_content_size=10,
+                                                 origin_id=190)
+
+        # then
+        self.assertEqual(actual_blob, expected_blob)
+
+        os.remove(tmpfilepath)
+
+    @istest
     def blob_to_content_visible(self):
         obj = {
             'length': 9,
-            'data': b'some-data',
             'sha1': b'sha1',
             'sha1_git': b'sha1-git',
             'sha256': b'sha256',
@@ -70,7 +152,6 @@ class TestConverters(unittest.TestCase):
 
         expected_content = {
             'length': 9,
-            'data': b'some-data',
             'sha1': b'sha1',
             'sha1_git': b'sha1-git',
             'sha256': b'sha256',
@@ -89,7 +170,6 @@ class TestConverters(unittest.TestCase):
     def blob_to_content_absent(self):
         obj = {
             'length': 9,
-            'data': b'some-data',
             'sha1': b'sha1',
             'sha1_git': b'sha1-git',
             'sha256': b'sha256',
