@@ -1,8 +1,11 @@
-swh-loader-dir (0.0.10-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-dir (0.0.11-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.11
+  * Use native python function to read content
+  * Only provide content to status when status visible
+  * Improve testing of blob conversion
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Thu, 29 Oct 2015 10:42:32 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 30 Oct 2015 12:07:45 +0100
 
 swh-loader-dir (0.0.10-1~swh1) unstable-swh; urgency=medium
 
