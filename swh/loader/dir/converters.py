@@ -6,6 +6,7 @@
 """Convert dir objects to dictionaries suitable for swh.storage"""
 
 import datetime
+import os
 
 from swh.loader.dir.git.git import GitType
 from swh.loader.dir.git import git, utils
@@ -37,21 +38,11 @@ def format_to_minutes(offset_str):
 
 def blob_to_content(obj, log=None, max_content_size=None,
                     origin_id=None):
-    if 'data' not in obj:
-        filepath = obj['path']
-        content_raw, length = utils._read_raw(filepath)
-        obj.update({'data': content_raw,
-                    'length': length})
-    return _blob_to_content(obj, log, max_content_size, origin_id)
-
-
-def _blob_to_content(obj, log=None,
-                     max_content_size=None,
-                     origin_id=None):
-    """Convert to a compliant swh content.
+    """Convert obj to a swh storage content.
 
     """
-    size = obj['length']
+    filepath = obj['path']
+    size = os.path.getsize(filepath)
     ret = {
         'sha1': obj['sha1'],
         'sha256': obj['sha256'],
@@ -73,8 +64,8 @@ def _blob_to_content(obj, log=None,
         return ret
 
     ret.update({
-        'status': 'visible',
-        'data': obj['data'],
+        'data': open(filepath, 'rb').read(),
+        'status': 'visible'
     })
 
     return ret
