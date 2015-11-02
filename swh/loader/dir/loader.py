@@ -464,17 +464,6 @@ class DirLoader(config.SWHConfig):
                           })
             return {'status': False, 'stderr': warn_msg}
 
-        files = os.listdir(dir_path)
-        if not files:
-            warn_msg = 'Skipping empty directory %s' % dir_path
-            self.log.warn('Skipping empty directory %s' % dir_path,
-                          extra={
-                              'swh_type': 'dir_repo_list_refs',
-                              'swh_repo': dir_path,
-                              'swh_num_refs': 0,
-                          })
-            return {'status': False, 'stderr': warn_msg}
-
         if isinstance(dir_path, str):
             dir_path = dir_path.encode(sys.getfilesystemencoding())
 
