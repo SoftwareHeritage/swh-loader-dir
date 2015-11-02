@@ -4,6 +4,7 @@
 # See top-level LICENSE file for more information
 
 import datetime
+import os
 import shutil
 import tempfile
 import unittest
@@ -100,6 +101,40 @@ class TestConverters(unittest.TestCase):
         expected_blob = {
             'data': contentfile,
             'length': len(contentfile),
+            'status': 'visible',
+            'sha1': 'some-sha1',
+            'sha256': 'some-sha256',
+            'sha1_git': 'some-sha1git',
+            'perms': GitPerm.BLOB.value,
+            'type': GitType.BLOB.value,
+        }
+
+        # when
+        actual_blob = converters.blob_to_content(obj)
+
+        # then
+        self.assertEqual(actual_blob, expected_blob)
+
+    @istest
+    def blob_to_content_link(self):
+        # given
+        contentfile = b'temp file for testing blob to content conversion'
+        tmpfilepath = tmpfile_with_content(self.tmpdir, contentfile)
+        tmplinkpath = tempfile.mktemp(dir=self.tmpdir)
+        os.symlink(tmpfilepath, tmplinkpath)
+        print(tmpfilepath, tmplinkpath)
+        obj = {
+            'path': tmplinkpath,
+            'perms': GitPerm.BLOB,
+            'type': GitType.BLOB,
+            'sha1': 'some-sha1',
+            'sha256': 'some-sha256',
+            'sha1_git': 'some-sha1git',
+        }
+
+        expected_blob = {
+            'data': contentfile,
+            'length': len(tmpfilepath),
             'status': 'visible',
             'sha1': 'some-sha1',
             'sha256': 'some-sha256',

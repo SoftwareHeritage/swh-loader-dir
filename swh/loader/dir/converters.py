@@ -42,7 +42,7 @@ def blob_to_content(obj, log=None, max_content_size=None,
 
     """
     filepath = obj['path']
-    size = os.path.getsize(filepath)
+    size = os.lstat(filepath).st_size
     ret = {
         'sha1': obj['sha1'],
         'sha256': obj['sha256'],
