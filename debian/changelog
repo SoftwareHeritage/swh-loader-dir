@@ -1,3 +1,12 @@
+swh-loader-dir (0.0.12-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.12
+  * Do not fail when upper root is an empty directory
+  * Fix broken link size and content computations (reuse already
+    computed data)
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 02 Nov 2015 15:38:06 +0100
+
 swh-loader-dir (0.0.11-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.11
