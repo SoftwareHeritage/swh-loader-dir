@@ -40,9 +40,21 @@ def blob_to_content(obj, log=None, max_content_size=None,
                     origin_id=None):
     """Convert obj to a swh storage content.
 
+    Note:
+    - If obj represents a link, the length and data are already
+    provided so we use them directly.
+    - 'data' is returned only if max_content_size is not reached.
+
+    Returns:
+        obj converted to content as a dictionary.
+
     """
     filepath = obj['path']
-    size = os.path.getsize(filepath)
+    if 'length' in obj:  # link already has it
+        size = obj['length']
+    else:
+        size = os.lstat(filepath).st_size
+
     ret = {
         'sha1': obj['sha1'],
         'sha256': obj['sha256'],
@@ -63,8 +75,13 @@ def blob_to_content(obj, log=None, max_content_size=None,
                     'origin': origin_id})
         return ret
 
+    if 'data' in obj:  # link already has it
+        data = obj['data']
+    else:
+        data = open(filepath, 'rb').read()
+
     ret.update({
-        'data': open(filepath, 'rb').read(),
+        'data': data,
         'status': 'visible'
     })
 
