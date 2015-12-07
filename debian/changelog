@@ -1,3 +1,10 @@
+swh-loader-dir (0.0.13-1~swh1) unstable-swh; urgency=medium
+
+  * Prepare swh.loader.dir release v0.0.13
+  * Update to new swh.storage API
+
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Mon, 07 Dec 2015 18:44:48 +0100
+
 swh-loader-dir (0.0.12-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.12
