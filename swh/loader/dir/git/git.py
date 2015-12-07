@@ -10,8 +10,10 @@ from enum import Enum
 
 from swh.loader.dir.git import utils
 
+from swh.model.identifiers import release_identifier, revision_identifier
 
-ROOT_TREE_KEY = ''
+
+ROOT_TREE_KEY = b''
 
 
 class GitType(Enum):
@@ -79,14 +81,10 @@ def compute_revision_sha1_git(revision):
         revision: Additional dictionary information needed to compute a
         synthetic
         revision. Following keys are expected:
-            - author_name
-            - author_email
-            - author_date
-            - author_offset
-            - committer_name
-            - committer_email
+            - author
+            - date
+            - committer
             - committer_date
-            - committer_offset
             - message
             - type
             - directory: binary form of the tree hash
@@ -97,24 +95,7 @@ def compute_revision_sha1_git(revision):
     # FIXME: beware, bytes output from storage api
 
     """
-    revision_bytes = ("""tree %s
-author %s <%s> %s %s
-committer %s <%s> %s %s
-
-%s
-""" % (utils.hash_to_hex(revision['directory']),
-       revision['author_name'],
-       revision['author_email'],
-       revision['author_date'],
-       revision['author_offset'],
-       revision['committer_name'],
-       revision['committer_email'],
-       revision['committer_date'],
-       revision['committer_offset'],
-       revision['message'])).encode('utf-8')
-
-    hashes = utils.hashdata(revision_bytes, 'commit')
-    return hashes['sha1_git']
+    return bytes.fromhex(revision_identifier(revision))
 
 
 def compute_release_sha1_git(release):
@@ -124,35 +105,16 @@ def compute_release_sha1_git(release):
         release: Additional dictionary information needed to compute a
         synthetic release. Following keys are expected:
             - name
-            - comment
+            - message
             - date
-            - offset
-            - author_name
-            - author_email
+            - author
             - revision: binary form of the sha1_git revision targeted by this
 
     Returns:
         release sha1 in bytes
 
-    # FIXME: beware, bytes output from storage api
-
     """
-    release_bytes = ("""object %s
-type commit
-tag %s
-tagger %s <%s> %s %s
-
-%s
-""" % (utils.hash_to_hex(release['revision']),
-       release['name'],
-       release['author_name'],
-       release['author_email'],
-       release['date'],
-       release['offset'],
-       release['comment'])).encode('utf-8')
-
-    hashes = utils.hashdata(release_bytes, 'tag')
-    return hashes['sha1_git']
+    return bytes.fromhex(release_identifier(release))
 
 
 def compute_link_metadata(linkpath):

@@ -73,6 +73,7 @@ class TestLoader(unittest.TestCase):
             'committer_offset': '+0200',
             'type': 'tar',
             'message': 'synthetic revision',
+            'metadata': {'foo': 'bar'},
         }
 
         self.release = {
