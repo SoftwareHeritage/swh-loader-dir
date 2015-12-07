@@ -80,17 +80,26 @@ blah
         # given
         tree_hash = bytes.fromhex('1c61f7259dcb770f46b194d941df4f08ff0a3970')
         revision = {
-            'author_name': 'Antoine R. Dumont (@ardumont)',
-            'author_email': 'antoine.romain.dumont@gmail.com',
-            'author_date': '1444054085',
-            'author_offset': '+0200',
-            'committer_name': 'Antoine R. Dumont (@ardumont)',
-            'committer_email': 'antoine.romain.dumont@gmail.com',
-            'committer_date': '1444054085',
-            'committer_offset': '+0200',
-            'message': 'initial',
+            'author': {
+                'name': b'Antoine R. Dumont (@ardumont)',
+                'email': b'antoine.romain.dumont@gmail.com',
+            },
+            'date': {
+                'timestamp': 1444054085,
+                'offset': 120,
+            },
+            'committer': {
+                'name': b'Antoine R. Dumont (@ardumont)',
+                'email': b'antoine.romain.dumont@gmail.com',
+            },
+            'committer_date': {
+                'timestamp': 1444054085,
+                'offset': 120,
+            },
+            'message': b'initial\n',
             'type': 'tar',
             'directory': tree_hash,
+            'parents': [],
         }
 
         # when
@@ -106,12 +115,17 @@ blah
                                       'd6cc72a241')
         release = {
             'name': '0.0.1',
-            'author_name': 'Antoine R. Dumont (@ardumont)',
-            'author_email': 'antoine.romain.dumont@gmail.com',
-            'date': '1444225145',
-            'offset': '+0200',
-            'comment': 'blah',
-            'revision': revision_hash,
+            'author': {
+                'name': b'Antoine R. Dumont (@ardumont)',
+                'email': b'antoine.romain.dumont@gmail.com',
+            },
+            'date': {
+                'timestamp': 1444225145,
+                'offset': 120,
+            },
+            'message': b'blah\n',
+            'target_type': 'revision',
+            'target': revision_hash,
         }
 
         # when
