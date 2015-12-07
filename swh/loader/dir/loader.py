@@ -265,7 +265,7 @@ class DirLoader(config.SWHConfig):
         """Format commits as swh revisions and send them to the database"""
         packet_size = self.config['revision_packet_size']
 
-        send_in_packets(commits, converters.commit_to_revision,
+        send_in_packets(commits, (lambda x, objects={}, log=None: x),
                         self.send_revisions, packet_size,
                         objects=objects,
                         log=self.log)
@@ -276,7 +276,7 @@ class DirLoader(config.SWHConfig):
         """
         packet_size = self.config['release_packet_size']
 
-        send_in_packets(tags, converters.annotated_tag_to_release,
+        send_in_packets(tags, (lambda x, objects={}, log=None: x),
                         self.send_releases, packet_size,
                         log=self.log)
 
@@ -285,7 +285,7 @@ class DirLoader(config.SWHConfig):
         database
         """
         packet_size = self.config['occurrence_packet_size']
-        send_in_packets(refs, lambda ref: ref,
+        send_in_packets(refs, (lambda ref, objects={}, log=None: ref),
                         self.send_occurrences, packet_size)
 
     def list_repo_objs(self, dir_path, revision, release):
@@ -315,16 +315,19 @@ class DirLoader(config.SWHConfig):
 
             return m
 
-        def _revision_from(tree_hash, revision):
+        def _revision_from(tree_hash, revision, objects):
             full_rev = dict(revision)
             full_rev['directory'] = tree_hash
-            full_rev['sha1_git'] = git.compute_revision_sha1_git(full_rev)
+            full_rev = converters.commit_to_revision(full_rev, objects)
+            full_rev['id'] = git.compute_revision_sha1_git(full_rev)
             return full_rev
 
         def _release_from(revision_hash, release):
             full_rel = dict(release)
-            full_rel['revision'] = revision_hash
-            full_rel['sha1_git'] = git.compute_release_sha1_git(full_rel)
+            full_rel['target'] = revision_hash
+            full_rel['target_type'] = 'revision'
+            full_rel = converters.annotated_tag_to_release(full_rel)
+            full_rel['id'] = git.compute_release_sha1_git(full_rel)
             return full_rel
 
         log_id = str(uuid.uuid4())
@@ -342,12 +345,12 @@ class DirLoader(config.SWHConfig):
 
         tree_hash = objects_per_path[git.ROOT_TREE_KEY][0]['sha1_git']
 
-        full_rev = _revision_from(tree_hash, revision)
+        full_rev = _revision_from(tree_hash, revision, objects_per_path)
 
         objects[GitType.COMM] = [full_rev]
 
         if release and 'name' in release:
-            full_rel = _release_from(full_rev['sha1_git'], release)
+            full_rel = _release_from(full_rev['id'], release)
             objects[GitType.RELE] = [full_rel]
 
         self.log.info("Done listing the objects in %s: %d contents, "
@@ -440,8 +443,8 @@ class DirLoader(config.SWHConfig):
         def _occurrence_from(origin_id, revision_hash, occurrence):
             occ = dict(occurrence)
             occ.update({
-                'revision': full_rev['sha1_git'],
-                'origin': origin['id'],
+                'revision': revision_hash,
+                'origin': origin_id,
             })
             return occ
 
@@ -474,7 +477,7 @@ class DirLoader(config.SWHConfig):
         full_rev = objects[GitType.COMM][0]  # only 1 revision
 
         full_occs = _occurrences_from(origin['id'],
-                                      full_rev['sha1_git'],
+                                      full_rev['id'],
                                       occurrences)
 
         self.load_dir(dir_path, objects, objects_per_path, full_occs,

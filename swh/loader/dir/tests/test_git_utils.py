@@ -55,7 +55,7 @@ blah
         with self.assertRaises(ValueError) as cm:
             utils.hashdata(b'any-data', 'some-unknown-type')
 
-        self.assertIn('Only supported types', cm.exception.args[0])
+        self.assertIn('Unexpected git object type', cm.exception.args[0])
 
     @istest
     def hashdata_content(self):
