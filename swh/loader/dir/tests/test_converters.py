@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import datetime
 import os
 import shutil
 import tempfile
@@ -34,12 +33,14 @@ def tmpfile_with_content(fromdir, contentfile):
 class TestConverters(unittest.TestCase):
 
     @classmethod
-    def setupClass(cls):
+    def setUpClass(cls):
+        super().setUpClass()
         cls.tmpdir = tempfile.mkdtemp(prefix='test-swh-loader-dir.')
 
     @classmethod
     def tearDownClass(cls):
         shutil.rmtree(cls.tmpdir)
+        super().tearDownClass()
 
     @istest
     def format_to_minutes(self):
@@ -53,27 +54,30 @@ class TestConverters(unittest.TestCase):
     def annotated_tag_to_release(self):
         # given
         release = {
-            'sha1_git': '123',
-            'revision': '456',
+            'id': '123',
+            'target': '456',
+            'target_type': 'revision',
             'name': 'some-release',
             'comment': 'some-comment-on-release',
             'date': 1444054085,
             'offset': '-0300',
             'author_name': 'someone',
-            'author_email': 'someone@whatelse.eu'
+            'author_email': 'someone@whatelse.eu',
         }
 
         expected_release = {
-            'id': '123',
-            'revision': '456',
+            'target': '456',
+            'target_type': 'revision',
             'name': 'some-release',
-            'comment': 'some-comment-on-release',
-            'date': datetime.datetime.fromtimestamp(
-                1444054085,
-                tz=datetime.timezone.utc),
-            'date_offset': -180,
-            'author_name': 'someone',
-            'author_email': 'someone@whatelse.eu',
+            'message': b'some-comment-on-release',
+            'date': {
+                'timestamp': 1444054085,
+                'offset': -180
+            },
+            'author': {
+                'name': b'someone',
+                'email': b'someone@whatelse.eu',
+            },
             'synthetic': True,
         }
 
@@ -276,22 +280,25 @@ class TestConverters(unittest.TestCase):
         }
 
         expected_revision = {
-            'id': 'commit-git-sha1',
-            'date': datetime.datetime.fromtimestamp(
-                1444054085,
-                tz=datetime.timezone.utc),
-            'date_offset': 0,
-            'committer_date': datetime.datetime.fromtimestamp(
-                1444054085,
-                tz=datetime.timezone.utc),
-            'committer_date_offset': 0,
+            'date': {
+                'timestamp': 1444054085,
+                'offset': 0,
+            },
+            'committer_date': {
+                'timestamp': 1444054085,
+                'offset': 0,
+            },
             'type': 'tar',
             'directory': 'targeted-tree-sha1',
-            'message': 'synthetic-message-input',
-            'author_name': 'author-name',
-            'author_email': 'author-email',
-            'committer_name': 'committer-name',
-            'committer_email': 'committer-email',
+            'message': b'synthetic-message-input',
+            'author': {
+                'name': b'author-name',
+                'email': b'author-email',
+            },
+            'committer': {
+                'name': b'committer-name',
+                'email': b'committer-email',
+            },
             'synthetic': True,
             'metadata': {'checksums': {'sha1': b'sha1-as-bytes'}},
             'parents': [],

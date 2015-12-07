@@ -1,3 +1,4 @@
+
 # Copyright (C) 2015  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
@@ -121,18 +122,25 @@ def commit_to_revision(commit, objects, log=None):
     """
     upper_directory = objects[git.ROOT_TREE_KEY][0]
     return {
-        'id': commit['sha1_git'],
-        'date': to_datetime(commit['author_date']),
-        'date_offset': format_to_minutes(commit['author_offset']),
-        'committer_date': to_datetime(commit['committer_date']),
-        'committer_date_offset': format_to_minutes(commit['committer_offset']),
+        'date': {
+            'timestamp': commit['author_date'],
+            'offset': format_to_minutes(commit['author_offset']),
+        },
+        'committer_date': {
+            'timestamp': commit['committer_date'],
+            'offset': format_to_minutes(commit['committer_offset']),
+        },
         'type': commit['type'],
         'directory': upper_directory['sha1_git'],
-        'message': commit['message'],
-        'author_name': commit['author_name'],
-        'author_email': commit['author_email'],
-        'committer_name': commit['committer_name'],
-        'committer_email': commit['committer_email'],
+        'message': commit['message'].encode('utf-8'),
+        'author': {
+            'name': commit['author_name'].encode('utf-8'),
+            'email': commit['author_email'].encode('utf-8'),
+        },
+        'committer': {
+            'name': commit['committer_name'].encode('utf-8'),
+            'email': commit['committer_email'].encode('utf-8'),
+        },
         'synthetic': True,
         'metadata': commit['metadata'],
         'parents': [],
@@ -144,13 +152,17 @@ def annotated_tag_to_release(release, log=None):
 
     """
     return {
-        'id': release['sha1_git'],
-        'revision': release['revision'],
+        'target': release['target'],
+        'target_type': release['target_type'],
         'name': release['name'],
-        'comment': release['comment'],
-        'date': to_datetime(release['date']),
-        'date_offset': format_to_minutes(release['offset']),
-        'author_name': release['author_name'],
-        'author_email': release['author_email'],
+        'message': release['comment'].encode('utf-8'),
+        'date': {
+            'timestamp': release['date'],
+            'offset': format_to_minutes(release['offset']),
+        },
+        'author': {
+            'name': release['author_name'].encode('utf-8'),
+            'email': release['author_email'].encode('utf-8'),
+        },
         'synthetic': True,
     }
