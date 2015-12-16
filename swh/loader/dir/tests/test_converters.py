@@ -11,8 +11,7 @@ import unittest
 from nose.tools import istest
 
 from swh.loader.dir import converters
-from swh.loader.dir.git import git
-from swh.loader.dir.git.git import GitType, GitPerm
+from swh.loader.dir import git
 
 
 def tmpfile_with_content(fromdir, contentfile):
@@ -95,8 +94,8 @@ class TestConverters(unittest.TestCase):
 
         obj = {
             'path': tmpfilepath,
-            'perms': GitPerm.BLOB,
-            'type': GitType.BLOB,
+            'perms': git.GitPerm.BLOB,
+            'type': git.GitType.BLOB,
             'sha1': 'some-sha1',
             'sha256': 'some-sha256',
             'sha1_git': 'some-sha1git',
@@ -109,8 +108,8 @@ class TestConverters(unittest.TestCase):
             'sha1': 'some-sha1',
             'sha256': 'some-sha256',
             'sha1_git': 'some-sha1git',
-            'perms': GitPerm.BLOB.value,
-            'type': GitType.BLOB.value,
+            'perms': git.GitPerm.BLOB.value,
+            'type': git.GitType.BLOB.value,
         }
 
         # when
@@ -129,8 +128,8 @@ class TestConverters(unittest.TestCase):
 
         obj = {
             'path': tmplinkpath,
-            'perms': GitPerm.BLOB,
-            'type': GitType.BLOB,
+            'perms': git.GitPerm.BLOB,
+            'type': git.GitType.BLOB,
             'sha1': 'some-sha1',
             'sha256': 'some-sha256',
             'sha1_git': 'some-sha1git',
@@ -143,8 +142,8 @@ class TestConverters(unittest.TestCase):
             'sha1': 'some-sha1',
             'sha256': 'some-sha256',
             'sha1_git': 'some-sha1git',
-            'perms': GitPerm.BLOB.value,
-            'type': GitType.BLOB.value,
+            'perms': git.GitPerm.BLOB.value,
+            'type': git.GitType.BLOB.value,
         }
 
         # when
@@ -161,8 +160,8 @@ class TestConverters(unittest.TestCase):
             'length': 10,  # wrong for test purposes
             'data': 'something wrong',  # again for test purposes
             'path': tmplinkpath,
-            'perms': GitPerm.BLOB,
-            'type': GitType.BLOB,
+            'perms': git.GitPerm.BLOB,
+            'type': git.GitType.BLOB,
             'sha1': 'some-sha1',
             'sha256': 'some-sha256',
             'sha1_git': 'some-sha1git',
@@ -175,8 +174,8 @@ class TestConverters(unittest.TestCase):
             'sha1': 'some-sha1',
             'sha256': 'some-sha256',
             'sha1_git': 'some-sha1git',
-            'perms': GitPerm.BLOB.value,
-            'type': GitType.BLOB.value,
+            'perms': git.GitPerm.BLOB.value,
+            'type': git.GitType.BLOB.value,
         }
 
         # when
@@ -193,8 +192,8 @@ class TestConverters(unittest.TestCase):
 
         obj = {
             'path': tmpfilepath,
-            'perms': GitPerm.BLOB,
-            'type': GitType.BLOB,
+            'perms': git.GitPerm.BLOB,
+            'type': git.GitType.BLOB,
             'sha1': 'some-sha1',
             'sha256': 'some-sha256',
             'sha1_git': 'some-sha1git',
@@ -206,8 +205,8 @@ class TestConverters(unittest.TestCase):
             'sha1': 'some-sha1',
             'sha256': 'some-sha256',
             'sha1_git': 'some-sha1git',
-            'perms': GitPerm.BLOB.value,
-            'type': GitType.BLOB.value,
+            'perms': git.GitPerm.BLOB.value,
+            'type': git.GitType.BLOB.value,
             'reason': 'Content too large',
             'origin': 190
         }
@@ -228,12 +227,12 @@ class TestConverters(unittest.TestCase):
             'sha1_git': b'tree_sha1_git'
         }
         objects = {
-            'foo': [{'type': GitType.TREE,
-                     'perms': GitPerm.TREE,
+            'foo': [{'type': git.GitType.TREE,
+                     'perms': git.GitPerm.TREE,
                      'name': 'bar',
                      'sha1_git': b'sha1-target'},
-                    {'type': GitType.BLOB,
-                     'perms': GitPerm.BLOB,
+                    {'type': git.GitType.BLOB,
+                     'perms': git.GitPerm.BLOB,
                      'name': 'file-foo',
                      'sha1_git': b'file-foo-sha1-target'}]
         }
@@ -241,11 +240,11 @@ class TestConverters(unittest.TestCase):
         expected_directory = {
             'id': b'tree_sha1_git',
             'entries': [{'type': 'dir',
-                         'perms': int(GitPerm.TREE.value),
+                         'perms': int(git.GitPerm.TREE.value),
                          'name': 'bar',
                          'target': b'sha1-target'},
                         {'type': 'file',
-                         'perms': int(GitPerm.BLOB.value),
+                         'perms': int(git.GitPerm.BLOB.value),
                          'name': 'file-foo',
                          'target': b'file-foo-sha1-target'}]
         }
