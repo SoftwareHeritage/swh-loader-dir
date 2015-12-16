@@ -8,21 +8,22 @@ import unittest
 from nose.tools import istest
 from nose.plugins.attrib import attr
 
-from swh.loader.dir.git import git, utils
-from swh.loader.dir.git.git import GitPerm, GitType
+from swh.model import hashutil
+
+from swh.loader.dir import git
 
 
 _type_to_git_type = {
-    'blob': GitType.BLOB,
-    'tree': GitType.TREE,
+    'blob': git.GitType.BLOB,
+    'tree': git.GitType.TREE,
 }
 
 
 _perms_to_git_perm = {
-    '100644': GitPerm.BLOB,
-    '120000': GitPerm.LINK,
-    '040000': GitPerm.TREE,
-    '100755': GitPerm.EXEC
+    '100644': git.GitPerm.BLOB,
+    '120000': git.GitPerm.LINK,
+    '040000': git.GitPerm.TREE,
+    '100755': git.GitPerm.EXEC
 }
 
 
@@ -53,7 +54,7 @@ def to_hash_data(path, ls_tree_format_input):
 def compute_tree_hash(dirpath, ls_tree_format_input, hex_output):
     hashes = to_hash_data(dirpath, ls_tree_format_input)
     bin_hash = git.compute_directory_git_sha1(dirpath, hashes)
-    return utils.hash_to_hex(bin_hash['sha1_git'])
+    return hashutil.hash_to_hex(bin_hash)
 
 
 @attr('slow')

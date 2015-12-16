@@ -15,9 +15,8 @@ from retrying import retry
 
 from swh.core import config
 
-from swh.loader.dir import converters
-from swh.loader.dir.git import git
-from swh.loader.dir.git.git import GitType
+from swh.loader.dir import converters, git
+from swh.loader.dir.git import GitType
 
 
 def send_in_packets(source_list, formatter, sender, packet_size,

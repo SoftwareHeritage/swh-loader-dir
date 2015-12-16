@@ -3,8 +3,7 @@
 import os
 import subprocess
 
-from swh.loader.dir.git import utils
-
+from swh.model.hashutil import hash_path, hash_to_bytes
 
 BATCH_SIZE = 10000
 
@@ -49,7 +48,7 @@ def hashfile(filepath):
     """Hash a file according to what expects storage's api.
 
     """
-    hashes = utils.hashfile(filepath)
+    hashes = hash_path(filepath)
     hashes.update({'length': os.path.getsize(filepath)})
     return hashes
 
@@ -130,7 +129,7 @@ def trees(rootpath):
     """
     for _, type, hex_sha1, name in git_ls_tree(rootpath):
         if type == 'tree':
-            yield{'id': utils.hex_to_hash(hex_sha1),
+            yield{'id': hash_to_bytes(hex_sha1),
                   'name': name}
 
 

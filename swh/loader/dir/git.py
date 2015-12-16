@@ -8,9 +8,7 @@ import os
 
 from enum import Enum
 
-from swh.loader.dir.git import utils
-
-from swh.model.identifiers import release_identifier, revision_identifier
+from swh.model import hashutil, identifiers
 
 
 ROOT_TREE_KEY = b''
@@ -44,34 +42,25 @@ def compute_directory_git_sha1(dirpath, hashes):
             - perms: the tree entry's sha1 permissions
 
         Returns:
-            dictionary with sha1_git as key and the actual binary sha1 as
-            value.
+            the binary sha1 of the dictionary's identifier
 
         Assumes:
             Every path exists in hashes.
 
     """
-    def sorted_key_fn(entry):
-        """Beware the sorted algorithm in git add a / for tree entries.
-
-        """
-        name = entry['name']
-        return name + b'/' if entry['type'] is GitType.TREE else name
-
-    def sort_by_entry_name(hashes):
-        return sorted(hashes, key=sorted_key_fn)
-
-    def row_entry_tree_format(hashes):
-        return map(lambda entry:
-                   b''.join([entry['perms'].value,
-                             b' ',
-                             entry['name'],
-                             b'\0',
-                             entry['sha1_git']]),
-                   hashes)
-
-    rows = row_entry_tree_format(sort_by_entry_name(hashes[dirpath]))
-    return utils.hashdata(b''.join(rows), 'tree')
+    directory = {
+        'entries':
+        [
+            {
+                'name': entry['name'],
+                'perms': int(entry['perms'].value, 8),
+                'target': entry['sha1_git'],
+                'type': 'dir' if entry['perms'] == GitPerm.TREE else 'file',
+            }
+            for entry in hashes[dirpath]
+        ]
+    }
+    return hashutil.hash_to_bytes(identifiers.directory_identifier(directory))
 
 
 def compute_revision_sha1_git(revision):
@@ -95,7 +84,7 @@ def compute_revision_sha1_git(revision):
     # FIXME: beware, bytes output from storage api
 
     """
-    return bytes.fromhex(revision_identifier(revision))
+    return hashutil.hash_to_bytes(identifiers.revision_identifier(revision))
 
 
 def compute_release_sha1_git(release):
@@ -114,7 +103,7 @@ def compute_release_sha1_git(release):
         release sha1 in bytes
 
     """
-    return bytes.fromhex(release_identifier(release))
+    return hashutil.hash_to_bytes(identifiers.release_identifier(release))
 
 
 def compute_link_metadata(linkpath):
@@ -129,14 +118,18 @@ def compute_link_metadata(linkpath):
             - perms: git permission for link
             - type: git type for link
     """
-    m_hashes = utils.hashlink(linkpath)
-    m_hashes.update({
+    data = os.readlink(linkpath)
+    link_metadata = hashutil.hash_data(data)
+    link_metadata.update({
+        'data': data,
+        'length': len(data),
         'name': os.path.basename(linkpath),
         'perms': GitPerm.LINK,
         'type': GitType.BLOB,
         'path': linkpath
     })
-    return m_hashes
+
+    return link_metadata
 
 
 def compute_blob_metadata(filepath):
@@ -152,15 +145,16 @@ def compute_blob_metadata(filepath):
             - type: git type for file
 
     """
-    m_hashes = utils.hashfile(filepath)
+    blob_metadata = hashutil.hash_path(filepath)
     perms = GitPerm.EXEC if os.access(filepath, os.X_OK) else GitPerm.BLOB
-    m_hashes.update({
+    blob_metadata.update({
         'name': os.path.basename(filepath),
         'perms': perms,
         'type': GitType.BLOB,
         'path': filepath
     })
-    return m_hashes
+
+    return blob_metadata
 
 
 def compute_tree_metadata(dirname, ls_hashes):
@@ -176,14 +170,13 @@ def compute_tree_metadata(dirname, ls_hashes):
             - type: git type for directory
 
     """
-    tree_hash = compute_directory_git_sha1(dirname, ls_hashes)
-    tree_hash.update({
+    return {
+        'sha1_git': compute_directory_git_sha1(dirname, ls_hashes),
         'name': os.path.basename(dirname),
         'perms': GitPerm.TREE,
         'type': GitType.TREE,
         'path': dirname
-    })
-    return tree_hash
+    }
 
 
 def walk_and_compute_sha1_from_directory(rootdir):
@@ -230,9 +223,7 @@ def walk_and_compute_sha1_from_directory(rootdir):
             m_hashes = compute_blob_metadata(filepath)
             hashes.append(m_hashes)
 
-        ls_hashes.update({
-            dirpath: hashes
-        })
+        ls_hashes[dirpath] = hashes
 
         dir_hashes = []
         subdirs = [os.path.join(dirpath, dir)
@@ -243,20 +234,16 @@ def walk_and_compute_sha1_from_directory(rootdir):
             tree_hash = compute_tree_metadata(fulldirname, ls_hashes)
             dir_hashes.append(tree_hash)
 
-        ls_hashes.update({
-            dirpath: ls_hashes.get(dirpath, []) + dir_hashes
-        })
+        ls_hashes[dirpath].extend(dir_hashes)
 
     # compute the current directory hashes
-    root_hash = compute_directory_git_sha1(rootdir, ls_hashes)
-    root_hash.update({
+    root_hash = {
+        'sha1_git': compute_directory_git_sha1(rootdir, ls_hashes),
         'path': rootdir,
         'name': os.path.basename(rootdir),
         'perms': GitPerm.TREE,
         'type': GitType.TREE
-    })
-    ls_hashes.update({
-        ROOT_TREE_KEY: [root_hash]
-    })
+    }
+    ls_hashes[ROOT_TREE_KEY] = [root_hash]
 
     return ls_hashes

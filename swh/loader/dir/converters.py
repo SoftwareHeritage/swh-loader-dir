@@ -9,8 +9,9 @@
 import datetime
 import os
 
-from swh.loader.dir.git.git import GitType
-from swh.loader.dir.git import git, utils
+from swh.model.hashutil import hash_to_hex
+
+from swh.loader.dir import git
 
 
 def to_datetime(ts):
@@ -68,7 +69,7 @@ def blob_to_content(obj, log=None, max_content_size=None,
     if max_content_size and size > max_content_size:
         if log:
             log.info('Skipping content %s, too large (%s > %s)' %
-                     (utils.hash_to_hex(obj['sha1_git']),
+                     (hash_to_hex(obj['sha1_git']),
                       size,
                       max_content_size))
         ret.update({'status': 'absent',
@@ -91,9 +92,9 @@ def blob_to_content(obj, log=None, max_content_size=None,
 
 # Map of type to swh types
 _entry_type_map = {
-    GitType.TREE: 'dir',
-    GitType.BLOB: 'file',
-    GitType.COMM: 'rev',
+    git.GitType.TREE: 'dir',
+    git.GitType.BLOB: 'file',
+    git.GitType.COMM: 'rev',
 }
 
 
