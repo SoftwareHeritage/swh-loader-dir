@@ -20,7 +20,6 @@ setup(
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/diffusion/DLDDIR',
     packages=['swh.loader.dir',
-              'swh.loader.dir.git',
               'swh.loader.dir.tests'],
     scripts=[],
     install_requires=parse_requirements(),

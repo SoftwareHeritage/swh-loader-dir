@@ -12,7 +12,7 @@ import unittest
 from nose.tools import istest
 
 from swh.loader.dir.loader import DirLoader
-from swh.loader.dir.git.git import GitType
+from swh.loader.dir.git import GitType
 
 
 class TestLoader(unittest.TestCase):

@@ -12,7 +12,9 @@ import os
 import shutil
 import tempfile
 
-from swh.loader.dir.git import git, utils
+from swh.model.hashutil import hash_to_hex
+
+from swh.loader.dir.git import git
 
 
 def write_file(root, file, content):
@@ -41,7 +43,7 @@ def git_ls_tree_rec(hashes, info):
         entry_properties = hashes[entry]
         print("entry name: %s" % entry)
         for file in entry_properties:
-            sha1 = utils.hash_to_hex(file['sha1_git'])
+            sha1 = hash_to_hex(file['sha1_git'])
             print("%s %s %s\t%s" % (file['perms'].value.decode('utf-8'),
                                     file['type'].value.decode('utf-8'),
                                     sha1,
@@ -50,8 +52,8 @@ def git_ls_tree_rec(hashes, info):
 
     revision = git.compute_revision_git_sha1(hashes, info)
     print('revision %s -> directory %s' % (
-        utils.hash_to_hex(revision['sha1_git']),
-        utils.hash_to_hex(hashes[git.ROOT_TREE_KEY][0]['sha1_git'])
+        hash_to_hex(revision['sha1_git']),
+        hash_to_hex(hashes[git.ROOT_TREE_KEY][0]['sha1_git'])
     ))
 
 
