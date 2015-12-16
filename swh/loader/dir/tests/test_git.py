@@ -7,8 +7,7 @@ import unittest
 
 from nose.tools import istest
 
-from swh.loader.dir.git import git
-from swh.loader.dir.git.git import GitPerm, GitType
+from swh.loader.dir import git
 
 
 class GitHashlib(unittest.TestCase):
@@ -51,29 +50,28 @@ blah
         # given
         dirpath = 'some-dir-path'
         hashes = {
-            dirpath: [{'perms': GitPerm.TREE,
-                       'type': GitType.TREE,
+            dirpath: [{'perms': git.GitPerm.TREE,
+                       'type': git.GitType.TREE,
                        'name': b'barfoo',
                        'sha1_git': bytes.fromhex('c3020f6bf135a38c6df'
                                                  '3afeb5fb38232c5e07087')},
-                      {'perms': GitPerm.BLOB,
-                       'type': GitType.BLOB,
+                      {'perms': git.GitPerm.BLOB,
+                       'type': git.GitType.BLOB,
                        'name': b'hello',
                        'sha1_git': bytes.fromhex('907b308167f0880fb2a'
                                                  '5c0e1614bb0c7620f9dc3')},
-                      {'perms': GitPerm.BLOB,
-                       'type': GitType.BLOB,
+                      {'perms': git.GitPerm.BLOB,
+                       'type': git.GitType.BLOB,
                        'name': b'blah',
                        'sha1_git': bytes.fromhex('63756ef0df5e4f10b6efa'
                                                  '33cfe5c758749615f20')}]
         }
 
         # when
-        checksums = git.compute_directory_git_sha1(dirpath, hashes)
+        checksum = git.compute_directory_git_sha1(dirpath, hashes)
 
         # then
-        self.assertEqual(checksums['sha1_git'],
-                         self.checksums['tree_sha1_git'])
+        self.assertEqual(checksum, self.checksums['tree_sha1_git'])
 
     @istest
     def compute_revision_sha1_git(self):
