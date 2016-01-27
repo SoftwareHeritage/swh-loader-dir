@@ -41,7 +41,6 @@ class TestLoader(unittest.TestCase):
         super().tearDownClass()
 
         shutil.rmtree(cls.tmp_root_path)
-        print(cls.tmp_root_path)
 
     def setUp(self):
         super().setUp()
