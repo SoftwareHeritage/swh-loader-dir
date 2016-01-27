@@ -7,14 +7,10 @@
 
 import datetime
 import os
-import sys
 
 from swh.model.hashutil import hash_to_hex
 
 from swh.loader.dir import git
-
-
-sys_encoding = sys.getfilesystemencoding()
 
 
 def to_datetime(ts):
@@ -136,14 +132,14 @@ def commit_to_revision(commit, objects, log=None):
         },
         'type': commit['type'],
         'directory': upper_directory['sha1_git'],
-        'message': commit['message'].encode(sys_encoding),
+        'message': commit['message'].encode('utf-8'),
         'author': {
-            'name': commit['author_name'].encode(sys_encoding),
-            'email': commit['author_email'].encode(sys_encoding),
+            'name': commit['author_name'].encode('utf-8'),
+            'email': commit['author_email'].encode('utf-8'),
         },
         'committer': {
-            'name': commit['committer_name'].encode(sys_encoding),
-            'email': commit['committer_email'].encode(sys_encoding),
+            'name': commit['committer_name'].encode('utf-8'),
+            'email': commit['committer_email'].encode('utf-8'),
         },
         'synthetic': True,
         'metadata': commit['metadata'],
@@ -158,15 +154,15 @@ def annotated_tag_to_release(release, log=None):
     return {
         'target': release['target'],
         'target_type': release['target_type'],
-        'name': release['name'].encode(sys_encoding),
-        'message': release['comment'].encode(sys_encoding),
+        'name': release['name'].encode('utf-8'),
+        'message': release['comment'].encode('utf-8'),
         'date': {
             'timestamp': release['date'],
             'offset': format_to_minutes(release['offset']),
         },
         'author': {
-            'name': release['author_name'].encode(sys_encoding),
-            'email': release['author_email'].encode(sys_encoding),
+            'name': release['author_name'].encode('utf-8'),
+            'email': release['author_email'].encode('utf-8'),
         },
         'synthetic': True,
     }
@@ -178,7 +174,7 @@ def ref_to_occurrence(ref):
     if 'branch' in ref:
         branch = ref['branch']
         if isinstance(branch, str):
-            occ['branch'] = branch.encode(sys_encoding)
+            occ['branch'] = branch.encode('utf-8')
         else:
             occ['branch'] = branch
     return occ
