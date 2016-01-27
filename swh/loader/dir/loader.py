@@ -284,7 +284,7 @@ class DirLoader(config.SWHConfig):
         database
         """
         packet_size = self.config['occurrence_packet_size']
-        send_in_packets(refs, (lambda ref, objects={}, log=None: ref),
+        send_in_packets(refs, converters.ref_to_occurrence,
                         self.send_occurrences, packet_size)
 
     def list_repo_objs(self, dir_path, revision, release):
