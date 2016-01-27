@@ -1,8 +1,10 @@
-swh-loader-dir (0.0.14-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-dir (0.0.15-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.15
+  * Bump requirements dependency to latest swh-model/swh-storage
+  * Occurrence branch and release name are bytes
 
- -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Wed, 16 Dec 2015 18:35:01 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 27 Jan 2016 16:01:49 +0100
 
 swh-loader-dir (0.0.14-1~swh1) unstable-swh; urgency=medium
 

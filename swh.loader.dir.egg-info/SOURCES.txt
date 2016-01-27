@@ -3,6 +3,7 @@ AUTHORS
 LICENSE
 MANIFEST.in
 Makefile
+Makefile.local
 README
 README-dev.md
 requirements.txt
