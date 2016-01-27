@@ -3,6 +3,6 @@
 # dependency lines, see https://pip.readthedocs.org/en/1.1/requirements.html
 vcversioner
 swh.core >= 0.0.14
-swh.model >= 0.0.2
-swh.storage >= 0.0.20
+swh.model >= 0.0.3
+swh.storage >= 0.0.31
 retrying
