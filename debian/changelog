@@ -1,3 +1,11 @@
+swh-loader-dir (0.0.15-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.15
+  * Bump requirements dependency to latest swh-model/swh-storage
+  * Occurrence branch and release name are bytes
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 27 Jan 2016 16:01:49 +0100
+
 swh-loader-dir (0.0.14-1~swh1) unstable-swh; urgency=medium
 
   * Prepare swh.loader.dir release v0.0.14
