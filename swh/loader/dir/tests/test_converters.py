@@ -67,7 +67,7 @@ class TestConverters(unittest.TestCase):
         expected_release = {
             'target': '456',
             'target_type': 'revision',
-            'name': 'some-release',
+            'name': b'some-release',
             'message': b'some-comment-on-release',
             'date': {
                 'timestamp': 1444054085,
@@ -308,3 +308,30 @@ class TestConverters(unittest.TestCase):
 
         # then
         self.assertEquals(actual_revision, expected_revision)
+
+    @istest
+    def ref_to_occurrence_1(self):
+        # when
+        actual_occ = converters.ref_to_occurrence({
+            'id': 'some-id',
+            'branch': 'some/branch'
+        })
+        # then
+        self.assertEquals(actual_occ, {
+            'id': 'some-id',
+            'branch': b'some/branch'
+        })
+
+    @istest
+    def ref_to_occurrence_2(self):
+        # when
+        actual_occ = converters.ref_to_occurrence({
+            'id': 'some-id',
+            'branch': b'some/branch'
+        })
+
+        # then
+        self.assertEquals(actual_occ, {
+            'id': 'some-id',
+            'branch': b'some/branch'
+        })

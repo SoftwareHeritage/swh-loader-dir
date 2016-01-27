@@ -1,4 +1,3 @@
-
 # Copyright (C) 2015  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
@@ -155,7 +154,7 @@ def annotated_tag_to_release(release, log=None):
     return {
         'target': release['target'],
         'target_type': release['target_type'],
-        'name': release['name'],
+        'name': release['name'].encode('utf-8'),
         'message': release['comment'].encode('utf-8'),
         'date': {
             'timestamp': release['date'],
@@ -167,3 +166,15 @@ def annotated_tag_to_release(release, log=None):
         },
         'synthetic': True,
     }
+
+
+def ref_to_occurrence(ref):
+    """Format a reference as an occurrence"""
+    occ = ref.copy()
+    if 'branch' in ref:
+        branch = ref['branch']
+        if isinstance(branch, str):
+            occ['branch'] = branch.encode('utf-8')
+        else:
+            occ['branch'] = branch
+    return occ

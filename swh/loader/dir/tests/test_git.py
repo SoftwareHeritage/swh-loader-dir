@@ -112,7 +112,7 @@ blah
         revision_hash = bytes.fromhex('24d012aaec0bc5a4d2f62c56399053'
                                       'd6cc72a241')
         release = {
-            'name': '0.0.1',
+            'name': b'0.0.1',
             'author': {
                 'name': b'Antoine R. Dumont (@ardumont)',
                 'email': b'antoine.romain.dumont@gmail.com',
