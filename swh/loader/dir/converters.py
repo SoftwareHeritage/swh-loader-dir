@@ -1,4 +1,3 @@
-
 # Copyright (C) 2015  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
@@ -8,10 +7,14 @@
 
 import datetime
 import os
+import sys
 
 from swh.model.hashutil import hash_to_hex
 
 from swh.loader.dir import git
+
+
+sys_encoding = sys.getfilesystemencoding()
 
 
 def to_datetime(ts):
@@ -133,14 +136,14 @@ def commit_to_revision(commit, objects, log=None):
         },
         'type': commit['type'],
         'directory': upper_directory['sha1_git'],
-        'message': commit['message'].encode('utf-8'),
+        'message': commit['message'].encode(sys_encoding),
         'author': {
-            'name': commit['author_name'].encode('utf-8'),
-            'email': commit['author_email'].encode('utf-8'),
+            'name': commit['author_name'].encode(sys_encoding),
+            'email': commit['author_email'].encode(sys_encoding),
         },
         'committer': {
-            'name': commit['committer_name'].encode('utf-8'),
-            'email': commit['committer_email'].encode('utf-8'),
+            'name': commit['committer_name'].encode(sys_encoding),
+            'email': commit['committer_email'].encode(sys_encoding),
         },
         'synthetic': True,
         'metadata': commit['metadata'],
@@ -155,15 +158,27 @@ def annotated_tag_to_release(release, log=None):
     return {
         'target': release['target'],
         'target_type': release['target_type'],
-        'name': release['name'],
-        'message': release['comment'].encode('utf-8'),
+        'name': release['name'].encode(sys_encoding),
+        'message': release['comment'].encode(sys_encoding),
         'date': {
             'timestamp': release['date'],
             'offset': format_to_minutes(release['offset']),
         },
         'author': {
-            'name': release['author_name'].encode('utf-8'),
-            'email': release['author_email'].encode('utf-8'),
+            'name': release['author_name'].encode(sys_encoding),
+            'email': release['author_email'].encode(sys_encoding),
         },
         'synthetic': True,
     }
+
+
+def ref_to_occurrence(ref):
+    """Format a reference as an occurrence"""
+    occ = ref.copy()
+    if 'branch' in ref:
+        branch = ref['branch']
+        if isinstance(branch, str):
+            occ['branch'] = branch.encode(sys_encoding)
+        else:
+            occ['branch'] = branch
+    return occ
