@@ -1,3 +1,10 @@
+swh-loader-dir (0.0.16-1~swh1) unstable-swh; urgency=medium
+
+  * Release swh-loader-dir v0.0.16
+  * refactoring of swh.core into swh.scheduler
+
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Fri, 19 Feb 2016 19:00:16 +0100
+
 swh-loader-dir (0.0.15-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.15
