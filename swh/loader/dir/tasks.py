@@ -3,7 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from swh.core.scheduling import Task
+from swh.scheduler.task import Task
 
 from swh.loader.dir.loader import DirLoaderWithHistory
 
