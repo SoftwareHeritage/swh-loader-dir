@@ -429,8 +429,7 @@ class DirLoader(config.SWHConfig):
             - occurrences: List of occurrences as dictionary.
               Information needed, keys are:
               - branch: occurrence's branch name
-              - authority_id: authority id (e.g. 1 for swh)
-              - validity: validity date (e.g. 2015-01-01 00:00:00+00)
+              - date: validity date (e.g. 2015-01-01 00:00:00+00)
 
         Returns:
             Dictionary with the following keys:
@@ -442,7 +441,8 @@ class DirLoader(config.SWHConfig):
         def _occurrence_from(origin_id, revision_hash, occurrence):
             occ = dict(occurrence)
             occ.update({
-                'revision': revision_hash,
+                'target': revision_hash,
+                'target_type': 'revision',
                 'origin': origin_id,
             })
             return occ
@@ -530,8 +530,7 @@ class DirLoaderWithHistory(DirLoader):
             - occurrences: List of occurrence dictionary.
               Information needed, keys are:
               - branch: occurrence's branch name
-              - authority_id: authority id (e.g. 1 for swh)
-              - validity: validity date (e.g. 2015-01-01 00:00:00+00)
+              - date: validity date (e.g. 2015-01-01 00:00:00+00)
 
         """
         origin['id'] = self.storage.origin_add_one(origin)
