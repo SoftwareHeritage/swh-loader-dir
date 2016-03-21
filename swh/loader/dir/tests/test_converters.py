@@ -11,7 +11,7 @@ import unittest
 from nose.tools import istest
 
 from swh.loader.dir import converters
-from swh.loader.dir import git
+from swh.model import git
 
 
 def tmpfile_with_content(fromdir, contentfile):

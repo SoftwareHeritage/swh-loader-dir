@@ -10,7 +10,7 @@ import os
 
 from swh.model.hashutil import hash_to_hex
 
-from swh.loader.dir import git
+from swh.model import git
 
 
 def to_datetime(ts):
