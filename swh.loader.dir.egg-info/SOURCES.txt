@@ -30,6 +30,4 @@ swh/loader/dir/git.py
 swh/loader/dir/loader.py
 swh/loader/dir/tasks.py
 swh/loader/dir/tests/test_converters.py
-swh/loader/dir/tests/test_git.py
-swh/loader/dir/tests/test_git_slow.py
 swh/loader/dir/tests/test_loader.py
