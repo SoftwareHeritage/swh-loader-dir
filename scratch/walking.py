@@ -14,7 +14,7 @@ import tempfile
 
 from swh.model.hashutil import hash_to_hex
 
-from swh.loader.dir.git import git
+from swh.model import git
 
 
 def write_file(root, file, content):
