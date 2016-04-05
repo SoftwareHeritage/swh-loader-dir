@@ -18,7 +18,8 @@ class DirLoader(loader.SWHLoader):
     This will load the content of the directory.
 
     """
-    def __init__(self, config,
+    def __init__(self,
+                 config,
                  origin_id,
                  revision_type='dir',
                  logging_class='swh.loader.dir.DirLoader'):

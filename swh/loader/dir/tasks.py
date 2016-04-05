@@ -25,7 +25,7 @@ DEFAULT_CONFIG = {
     'revision_packet_size': ('int', 100000),
     'release_packet_size': ('int', 100000),
     'occurrence_packet_size': ('int', 100000),
-    }
+}
 
 
 class LoadDirRepository(tasks.LoaderCoreTask):
