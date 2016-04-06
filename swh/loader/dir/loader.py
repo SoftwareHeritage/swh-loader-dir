@@ -7,7 +7,7 @@ import os
 import sys
 import uuid
 
-from swh.loader.core import loader, converters
+from swh.loader.vcs import loader, converters
 from swh.model import git
 from swh.model.git import GitType
 

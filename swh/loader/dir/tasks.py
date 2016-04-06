@@ -5,7 +5,7 @@
 
 from swh.core.config import load_named_config
 from swh.loader.dir.loader import DirLoader
-from swh.loader.core import tasks
+from swh.loader.vcs import tasks
 from swh.storage import get_storage
 
 
