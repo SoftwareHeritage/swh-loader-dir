@@ -21,9 +21,8 @@ class DirLoader(loader.SWHLoader):
     def __init__(self,
                  config,
                  origin_id,
-                 revision_type='dir',
                  logging_class='swh.loader.dir.DirLoader'):
-        super().__init__(config, origin_id, revision_type, logging_class)
+        super().__init__(config, origin_id, logging_class)
 
     def list_repo_objs(self, dir_path, revision, release):
         """List all objects from dir_path.
