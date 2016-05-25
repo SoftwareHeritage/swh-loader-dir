@@ -1,3 +1,10 @@
+swh-loader-dir (0.0.18-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.18
+  * Update loader initialization according to core loader
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 25 May 2016 12:20:57 +0200
+
 swh-loader-dir (0.0.17-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.17
