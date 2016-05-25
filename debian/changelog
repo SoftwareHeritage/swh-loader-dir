@@ -1,8 +1,9 @@
-swh-loader-dir (0.0.17-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-dir (0.0.18-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * v0.0.18
+  * Update loader initialization according to core loader
 
- -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 21 Mar 2016 15:41:39 +0100
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 25 May 2016 12:20:57 +0200
 
 swh-loader-dir (0.0.17-1~swh1) unstable-swh; urgency=medium
 
