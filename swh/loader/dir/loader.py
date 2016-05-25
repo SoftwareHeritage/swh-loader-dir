@@ -18,11 +18,13 @@ class DirLoader(loader.SWHLoader):
     This will load the content of the directory.
 
     """
+    CONFIG_BASE_FILENAME = 'loader/dir.ini'
+
     def __init__(self,
-                 config,
                  origin_id,
-                 logging_class='swh.loader.dir.DirLoader'):
-        super().__init__(config, origin_id, logging_class)
+                 logging_class='swh.loader.dir.DirLoader',
+                 config=None):
+        super().__init__(origin_id, logging_class, config=config)
 
     def list_repo_objs(self, dir_path, revision, release):
         """List all objects from dir_path.
