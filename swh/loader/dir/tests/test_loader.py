@@ -48,6 +48,20 @@ class TestLoader(unittest.TestCase):
         self.info = {
             'storage_class': 'remote_storage',
             'storage_args': ['http://localhost:5000/'],
+            'content_size_limit': 104857600,
+            'log_db': 'dbname=softwareheritage-log',
+            'directory_packet_size': 25000,
+            'content_packet_size': 10000,
+            'send_contents': True,
+            'send_directories': True,
+            'content_packet_size_bytes': 1073741824,
+            'occurrence_packet_size': 100000,
+            'send_revisions': True,
+            'revision_packet_size': 100000,
+            'content_packet_block_size_bytes': 104857600,
+            'send_occurrences': True,
+            'release_packet_size': 100000,
+            'send_releases': True
         }
 
         self.origin = {
@@ -84,7 +98,7 @@ class TestLoader(unittest.TestCase):
             'comment': 'synthetic release',
         }
 
-        self.dirloader = DirLoader(self.info)
+        self.dirloader = DirLoader(origin_id=1, config=self.info)
 
     @istest
     def load_without_storage(self):
