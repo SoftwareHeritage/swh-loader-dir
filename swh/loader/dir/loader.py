@@ -7,9 +7,11 @@ import os
 import sys
 import uuid
 
-from swh.loader.core import loader, converters
+from swh.loader.core import loader
 from swh.model import git
 from swh.model.git import GitType
+
+from . import converters
 
 
 class DirLoader(loader.SWHLoader):
