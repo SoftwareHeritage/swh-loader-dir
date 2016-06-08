@@ -39,21 +39,6 @@ class DirLoader(loader.SWHLoader):
             - CONTENT
             - DIRECTORY
         """
-        def get_objects_per_object_type(objects_per_path):
-            m = {
-                GitType.BLOB: [],
-                GitType.TREE: [],
-                GitType.COMM: [],
-                GitType.RELE: []
-            }
-            for tree_path in objects_per_path:
-                objs = objects_per_path[tree_path]
-                for obj in objs:
-                    m[obj['type']].append(obj)
-
-            return m
-
-        def _revision_from(tree_hash, revision, objects):
         def _revision_from(tree_hash, revision):
             full_rev = dict(revision)
             full_rev['directory'] = tree_hash
@@ -78,15 +63,19 @@ class DirLoader(loader.SWHLoader):
             'swh_id': log_id,
         })
 
-        objects_per_path = git.walk_and_compute_sha1_from_directory(dir_path)
+        objects_per_path = git.walk_and_compute_sha1_from_directory_2(dir_path)
 
-        objects = get_objects_per_object_type(objects_per_path)
+        tree_hash = objects_per_path[dir_path]['checksums']['sha1_git']
+        full_rev = _revision_from(tree_hash, revision)
 
-        tree_hash = objects_per_path[git.ROOT_TREE_KEY][0]['sha1_git']
-
-        full_rev = _revision_from(tree_hash, revision, objects_per_path)
-
-        objects[GitType.COMM] = [full_rev]
+        objects = {
+            GitType.BLOB: list(  # FIXME: bad, only to satisfy log below!
+                git.objects_per_type(GitType.BLOB, objects_per_path)),
+            GitType.TREE: list(  # FIXME: bad, only to satisfy log!
+                git.objects_per_type(GitType.TREE, objects_per_path)),
+            GitType.COMM: [full_rev],
+            GitType.RELE: []
+        }
 
         if release and 'name' in release:
             full_rel = _release_from(full_rev['id'], release)
@@ -187,7 +176,6 @@ class DirLoader(loader.SWHLoader):
         full_rev = objects[GitType.COMM][0]  # only 1 revision
 
         # Update objects with release and occurrences
-        objects[GitType.RELE] = [full_rev]
         objects[GitType.REFS] = _occurrences_from(origin['id'],
                                                   full_rev['id'],
                                                   occurrences)
