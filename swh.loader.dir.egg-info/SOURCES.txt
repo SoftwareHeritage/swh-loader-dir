@@ -25,6 +25,8 @@ swh.loader.dir.egg-info/dependency_links.txt
 swh.loader.dir.egg-info/requires.txt
 swh.loader.dir.egg-info/top_level.txt
 swh/loader/dir/__init__.py
+swh/loader/dir/converters.py
 swh/loader/dir/loader.py
 swh/loader/dir/tasks.py
+swh/loader/dir/tests/test_converters.py
 swh/loader/dir/tests/test_loader.py
