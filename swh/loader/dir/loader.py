@@ -54,9 +54,10 @@ class DirLoader(loader.SWHLoader):
             return m
 
         def _revision_from(tree_hash, revision, objects):
+        def _revision_from(tree_hash, revision):
             full_rev = dict(revision)
             full_rev['directory'] = tree_hash
-            full_rev = converters.commit_to_revision(full_rev, objects)
+            full_rev = converters.commit_to_revision(full_rev)
             full_rev['id'] = git.compute_revision_sha1_git(full_rev)
             return full_rev
 
@@ -108,7 +109,7 @@ class DirLoader(loader.SWHLoader):
                           'swh_id': log_id,
                       })
 
-        return objects, objects_per_path
+        return objects
 
     def process(self, dir_path, origin, revision, release, occurrences):
         """Load a directory in backend.
@@ -181,8 +182,7 @@ class DirLoader(loader.SWHLoader):
             dir_path = dir_path.encode(sys.getfilesystemencoding())
 
         # to load the repository, walk all objects, compute their hash
-        objects, objects_per_path = self.list_repo_objs(dir_path, revision,
-                                                        release)
+        objects = self.list_repo_objs(dir_path, revision, release)
 
         full_rev = objects[GitType.COMM][0]  # only 1 revision
 
@@ -192,7 +192,7 @@ class DirLoader(loader.SWHLoader):
                                                   full_rev['id'],
                                                   occurrences)
 
-        self.load(objects, objects_per_path)
+        self.load(objects)
         self.flush()
 
         return {'status': True, 'objects': objects}
