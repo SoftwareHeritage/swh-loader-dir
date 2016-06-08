@@ -1,7 +1,7 @@
 retrying
 swh.core>=0.0.14
-swh.loader.core>=0.0.5
-swh.model>=0.0.4
+swh.loader.core>=0.0.8
+swh.model>=0.0.10
 swh.scheduler
 swh.storage>=0.0.31
 vcversioner
