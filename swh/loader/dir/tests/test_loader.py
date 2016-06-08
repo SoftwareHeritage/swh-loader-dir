@@ -76,14 +76,24 @@ class TestLoader(unittest.TestCase):
         }
 
         self.revision = {
-            'author_name': 'swh author',
-            'author_email': 'swh@inria.fr',
-            'author_date': '1444054085',
-            'author_offset': '+0200',
-            'committer_name': 'swh committer',
-            'committer_email': 'swh@inria.fr',
-            'committer_date': '1444054085',
-            'committer_offset': '+0200',
+            'author': {
+                'name': 'swh author',
+                'email': 'swh@inria.fr',
+                'fullname': 'swh'
+            },
+            'date': {
+                'timestamp': 1444054085,
+                'offset': 0
+            },
+            'committer': {
+                'name': 'swh committer',
+                'email': 'swh@inria.fr',
+                'fullname': 'swh'
+            },
+            'committer_date': {
+                'timestamp': '1444054085',
+                'offset': 0,
+            },
             'type': 'tar',
             'message': 'synthetic revision',
             'metadata': {'foo': 'bar'},
@@ -91,11 +101,16 @@ class TestLoader(unittest.TestCase):
 
         self.release = {
             'name': 'v0.0.1',
-            'date': '1444054085',
-            'offset': '+0200',
-            'author_name': 'swh author',
-            'author_email': 'swh@inria.fr',
-            'comment': 'synthetic release',
+            'date': {
+                'timestamp': 1444054085,
+                'offset': 0,
+            },
+            'author': {
+                'name': 'swh author',
+                'fullname': 'swh',
+                'email': 'swh@inria.fr',
+            },
+            'message': 'synthetic release',
         }
 
         self.dirloader = DirLoader(origin_id=1, config=self.info)
@@ -103,7 +118,7 @@ class TestLoader(unittest.TestCase):
     @istest
     def load_without_storage(self):
         # when
-        objects, objects_per_path = self.dirloader.list_repo_objs(
+        objects = self.dirloader.list_repo_objs(
             self.root_path,
             self.revision,
             self.release)
@@ -117,8 +132,6 @@ class TestLoader(unittest.TestCase):
                           "5 directories: 4 subdirs + 1 empty + 1 main dir")
         self.assertEquals(len(objects[GitType.COMM]), 1, "synthetic revision")
         self.assertEquals(len(objects[GitType.RELE]), 1, "synthetic release")
-
-        self.assertEquals(len(objects_per_path), 6, "5 folders + <root>")
 
         # print('objects: %s\n objects-per-path: %s\n' %
         #       (objects.keys(),

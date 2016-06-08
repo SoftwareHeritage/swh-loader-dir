@@ -7,9 +7,11 @@ import os
 import sys
 import uuid
 
-from swh.loader.core import loader, converters
+from swh.loader.core import loader
 from swh.model import git
 from swh.model.git import GitType
+
+from . import converters
 
 
 class DirLoader(loader.SWHLoader):
@@ -39,24 +41,10 @@ class DirLoader(loader.SWHLoader):
             - CONTENT
             - DIRECTORY
         """
-        def get_objects_per_object_type(objects_per_path):
-            m = {
-                GitType.BLOB: [],
-                GitType.TREE: [],
-                GitType.COMM: [],
-                GitType.RELE: []
-            }
-            for tree_path in objects_per_path:
-                objs = objects_per_path[tree_path]
-                for obj in objs:
-                    m[obj['type']].append(obj)
-
-            return m
-
-        def _revision_from(tree_hash, revision, objects):
+        def _revision_from(tree_hash, revision):
             full_rev = dict(revision)
             full_rev['directory'] = tree_hash
-            full_rev = converters.commit_to_revision(full_rev, objects)
+            full_rev = converters.commit_to_revision(full_rev)
             full_rev['id'] = git.compute_revision_sha1_git(full_rev)
             return full_rev
 
@@ -77,15 +65,19 @@ class DirLoader(loader.SWHLoader):
             'swh_id': log_id,
         })
 
-        objects_per_path = git.walk_and_compute_sha1_from_directory(dir_path)
+        objects_per_path = git.walk_and_compute_sha1_from_directory_2(dir_path)
 
-        objects = get_objects_per_object_type(objects_per_path)
+        tree_hash = objects_per_path[dir_path]['checksums']['sha1_git']
+        full_rev = _revision_from(tree_hash, revision)
 
-        tree_hash = objects_per_path[git.ROOT_TREE_KEY][0]['sha1_git']
-
-        full_rev = _revision_from(tree_hash, revision, objects_per_path)
-
-        objects[GitType.COMM] = [full_rev]
+        objects = {
+            GitType.BLOB: list(  # FIXME: bad, only to satisfy log below!
+                git.objects_per_type(GitType.BLOB, objects_per_path)),
+            GitType.TREE: list(  # FIXME: bad, only to satisfy log!
+                git.objects_per_type(GitType.TREE, objects_per_path)),
+            GitType.COMM: [full_rev],
+            GitType.RELE: []
+        }
 
         if release and 'name' in release:
             full_rel = _release_from(full_rev['id'], release)
@@ -108,7 +100,7 @@ class DirLoader(loader.SWHLoader):
                           'swh_id': log_id,
                       })
 
-        return objects, objects_per_path
+        return objects
 
     def process(self, dir_path, origin, revision, release, occurrences):
         """Load a directory in backend.
@@ -181,18 +173,16 @@ class DirLoader(loader.SWHLoader):
             dir_path = dir_path.encode(sys.getfilesystemencoding())
 
         # to load the repository, walk all objects, compute their hash
-        objects, objects_per_path = self.list_repo_objs(dir_path, revision,
-                                                        release)
+        objects = self.list_repo_objs(dir_path, revision, release)
 
         full_rev = objects[GitType.COMM][0]  # only 1 revision
 
         # Update objects with release and occurrences
-        objects[GitType.RELE] = [full_rev]
         objects[GitType.REFS] = _occurrences_from(origin['id'],
                                                   full_rev['id'],
                                                   occurrences)
 
-        self.load(objects, objects_per_path)
+        self.load(objects)
         self.flush()
 
         return {'status': True, 'objects': objects}

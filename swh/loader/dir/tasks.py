@@ -20,7 +20,7 @@ class LoadDirRepository(tasks.LoaderCoreTask):
             cf. swh.loader.dir.loader.run docstring
 
         """
-        storage = DirLoader().storage
+        storage = DirLoader(origin_id=None).storage
 
         origin['id'] = storage.origin_add_one(origin)
 
