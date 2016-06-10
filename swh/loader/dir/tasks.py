@@ -11,6 +11,7 @@ class LoadDirRepository(tasks.LoaderCoreTask):
     """Import a directory to Software Heritage
 
     """
+    CONFIG_BASE_FILENAME = 'loader/dir.ini'
     task_queue = 'swh_loader_dir'
 
     def run(self, dir_path, origin, revision, release, occurrences):
@@ -20,11 +21,9 @@ class LoadDirRepository(tasks.LoaderCoreTask):
             cf. swh.loader.dir.loader.run docstring
 
         """
-        storage = DirLoader(origin_id=None).storage
+        origin['id'] = self.storage.origin_add_one(origin)
 
-        origin['id'] = storage.origin_add_one(origin)
-
-        fetch_history_id = self.open_fetch_history(storage, origin['id'])
+        fetch_history_id = self.open_fetch_history(origin['id'])
 
         result = DirLoader(origin['id']).process(dir_path,
                                                  origin,
@@ -32,4 +31,4 @@ class LoadDirRepository(tasks.LoaderCoreTask):
                                                  release,
                                                  occurrences)
 
-        self.close_fetch_history(storage, fetch_history_id, result)
+        self.close_fetch_history(fetch_history_id, result)
