@@ -1,3 +1,10 @@
+swh-loader-dir (0.0.20-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.20
+  * Simplify task initialization
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 10 Jun 2016 15:14:07 +0200
+
 swh-loader-dir (0.0.19-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.19
