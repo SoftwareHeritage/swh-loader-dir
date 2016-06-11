@@ -65,15 +65,15 @@ class DirLoader(loader.SWHLoader):
             'swh_id': log_id,
         })
 
-        objects_per_path = git.walk_and_compute_sha1_from_directory_2(dir_path)
+        objects_per_path = git.compute_hashes_from_directory(dir_path)
 
         tree_hash = objects_per_path[dir_path]['checksums']['sha1_git']
         full_rev = _revision_from(tree_hash, revision)
 
         objects = {
-            GitType.BLOB: list(  # FIXME: bad, only to satisfy log below!
+            GitType.BLOB: list(
                 git.objects_per_type(GitType.BLOB, objects_per_path)),
-            GitType.TREE: list(  # FIXME: bad, only to satisfy log!
+            GitType.TREE: list(
                 git.objects_per_type(GitType.TREE, objects_per_path)),
             GitType.COMM: [full_rev],
             GitType.RELE: []
