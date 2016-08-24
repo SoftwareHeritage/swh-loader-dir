@@ -113,7 +113,7 @@ class TestLoader(unittest.TestCase):
             'message': 'synthetic release',
         }
 
-        self.dirloader = DirLoader(origin_id=1, config=self.info)
+        self.dirloader = DirLoader(config=self.info)
 
     @istest
     def load_without_storage(self):
