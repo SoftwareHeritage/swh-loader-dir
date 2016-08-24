@@ -3,6 +3,7 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+import datetime
 import os
 import sys
 import uuid
@@ -22,11 +23,9 @@ class DirLoader(loader.SWHLoader):
     """
     CONFIG_BASE_FILENAME = 'loader/dir.ini'
 
-    def __init__(self,
-                 origin_id,
-                 logging_class='swh.loader.dir.DirLoader',
+    def __init__(self, logging_class='swh.loader.dir.DirLoader',
                  config=None):
-        super().__init__(origin_id, logging_class, config=config)
+        super().__init__(logging_class=logging_class, config=config)
 
     def list_repo_objs(self, dir_path, revision, release):
         """List all objects from dir_path.
@@ -102,7 +101,7 @@ class DirLoader(loader.SWHLoader):
 
         return objects
 
-    def process(self, dir_path, origin, revision, release, occurrences):
+    def load(self, dir_path, origin, visit, revision, release, occurrences):
         """Load a directory in backend.
 
         Args:
@@ -141,19 +140,21 @@ class DirLoader(loader.SWHLoader):
             - objects: the actual objects sent to swh storage
 
         """
-        def _occurrence_from(origin_id, revision_hash, occurrence):
+        def _occurrence_from(origin_id, visit, revision_hash, occurrence):
             occ = dict(occurrence)
             occ.update({
                 'target': revision_hash,
                 'target_type': 'revision',
                 'origin': origin_id,
+                'visit': visit
             })
             return occ
 
-        def _occurrences_from(origin_id, revision_hash, occurrences):
+        def _occurrences_from(origin_id, visit, revision_hash, occurrences):
             occs = []
             for occurrence in occurrences:
                 occs.append(_occurrence_from(origin_id,
+                                             visit,
                                              revision_hash,
                                              occurrence))
 
@@ -178,11 +179,42 @@ class DirLoader(loader.SWHLoader):
         full_rev = objects[GitType.COMM][0]  # only 1 revision
 
         # Update objects with release and occurrences
-        objects[GitType.REFS] = _occurrences_from(origin['id'],
-                                                  full_rev['id'],
-                                                  occurrences)
+        objects[GitType.REFS] = _occurrences_from(
+            origin['id'], visit, full_rev['id'], occurrences)
 
-        self.load(objects)
+        # load contents
+        self.maybe_load_contents(objects[GitType.BLOB])
+        self.maybe_load_directories(objects[GitType.TREE])
+        self.maybe_load_revisions(objects[GitType.COMM])
+        self.maybe_load_releases(objects[GitType.RELE])
+        self.maybe_load_occurrences(objects[GitType.REFS])
+
         self.flush()
 
         return {'status': True, 'objects': objects}
+
+    def prepare_and_load(self, dir_path, origin, revision, release,
+                         occurrences):
+        """First prepare the origin, origin_visit.
+        Then load the data in storage.
+        At last, close the origin_visit.
+
+        """
+        self.origin_id = self.storage.origin_add_one(origin)
+        origin['id'] = self.origin_id
+
+        fetch_history_id = self.open_fetch_history()
+        date_visit = datetime.datetime.now(tz=datetime.timezone.utc)
+        origin_visit = self.storage.origin_visit_add(origin['id'], date_visit)
+        visit = origin_visit['visit']
+
+        try:
+            self.load(dir_path, origin, visit, revision, release, occurrences)
+            self.close_fetch_history_success(fetch_history_id)
+            self.storage.origin_visit_update(
+                self.origin_id, visit, status='full')
+        except:
+            self.close_fetch_history_failure(fetch_history_id)
+            self.storage.origin_visit_update(
+                self.origin_id, visit, status='partial')
+            raise

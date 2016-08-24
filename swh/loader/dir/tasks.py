@@ -4,14 +4,13 @@
 # See top-level LICENSE file for more information
 
 from swh.loader.dir.loader import DirLoader
-from swh.loader.core import tasks
+from swh.scheduler.task import Task
 
 
-class LoadDirRepository(tasks.LoaderCoreTask):
+class LoadDirRepository(Task):
     """Import a directory to Software Heritage
 
     """
-    CONFIG_BASE_FILENAME = 'loader/dir.ini'
     task_queue = 'swh_loader_dir'
 
     def run(self, dir_path, origin, revision, release, occurrences):
@@ -21,14 +20,5 @@ class LoadDirRepository(tasks.LoaderCoreTask):
             cf. swh.loader.dir.loader.run docstring
 
         """
-        origin['id'] = self.storage.origin_add_one(origin)
-
-        fetch_history_id = self.open_fetch_history(origin['id'])
-
-        result = DirLoader(origin['id']).process(dir_path,
-                                                 origin,
-                                                 revision,
-                                                 release,
-                                                 occurrences)
-
-        self.close_fetch_history(fetch_history_id, result)
+        DirLoader().prepare_and_load(
+            dir_path, origin, revision, release, occurrences)
