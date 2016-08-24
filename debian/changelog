@@ -1,3 +1,10 @@
+swh-loader-dir (0.0.22-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.22
+  * Update dir loader to register origin_visit's state
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Wed, 24 Aug 2016 14:53:25 +0200
+
 swh-loader-dir (0.0.21-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.21
