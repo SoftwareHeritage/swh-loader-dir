@@ -209,16 +209,8 @@ class DirLoader(loader.SWHLoader):
         visit = origin_visit['visit']
 
         try:
-            result = self.load(
-                dir_path, origin, visit, revision, release, occurrences)
-            result_to_store = {
-                'contents': len(result['objects'][GitType.BLOB]),
-                'directories': len(result['objects'][GitType.TREE]),
-                'revisions': len(result['objects'][GitType.COMM]),
-                'releases': len(result['objects'][GitType.RELE]),
-                'occurrences': len(result['objects'][GitType.REFS]),
-            }
-            self.close_fetch_history_success(fetch_history_id, result_to_store)
+            self.load(dir_path, origin, visit, revision, release, occurrences)
+            self.close_fetch_history_success(fetch_history_id)
             self.storage.origin_visit_update(
                 self.origin_id, visit, status='full')
         except:
