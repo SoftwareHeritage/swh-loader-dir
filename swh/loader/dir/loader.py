@@ -21,7 +21,7 @@ class DirLoader(loader.SWHLoader):
     This will load the content of the directory.
 
     """
-    CONFIG_BASE_FILENAME = 'loader/dir.ini'
+    CONFIG_BASE_FILENAME = 'loader/dir'
 
     def __init__(self, logging_class='swh.loader.dir.DirLoader',
                  config=None):
