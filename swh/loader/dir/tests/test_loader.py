@@ -46,8 +46,12 @@ class TestLoader(unittest.TestCase):
         super().setUp()
 
         self.info = {
-            'storage_class': 'remote_storage',
-            'storage_args': ['http://localhost:5000/'],
+            'storage': {
+                'cls': 'remote',
+                'args': {
+                    'url': 'http://localhost:5000/',
+                }
+            },
             'content_size_limit': 104857600,
             'log_db': 'dbname=softwareheritage-log',
             'directory_packet_size': 25000,
