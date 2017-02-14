@@ -95,7 +95,7 @@ class TestLoader(unittest.TestCase):
                 'fullname': 'swh'
             },
             'committer_date': {
-                'timestamp': '1444054085',
+                'timestamp': 1444054085,
                 'offset': 0,
             },
             'type': 'tar',
