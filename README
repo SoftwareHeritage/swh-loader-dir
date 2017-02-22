@@ -13,26 +13,29 @@ Directory loader
 
 This is the loader's (or task's) configuration file.
 
-loader/dir.ini:
+loader/dir.yml:
 
-    [main]
+    storage:
+      cls: remote
+      args:
+        url: http://localhost:5002/
 
-    # access to swh's storage
-    storage_class = remote_storage
-    storage_args = http://localhost:5000/
-
-    # parameters to condition loading into swh storage
-    send_contents = True
-    send_directories = True
-    send_revisions = True
-    send_releases = True
-    send_occurrences = True
-    content_packet_size = 10000
-    content_packet_size_bytes = 1073741824
-    directory_packet_size = 25000
-    revision_packet_size = 100000
-    release_packet_size = 100000
-    occurrence_packet_size = 100000
+    send_contents: True
+    send_directories: True
+    send_revisions: True
+    send_releases: True
+    send_occurrences: True
+    # nb of max contents to send for storage
+    content_packet_size: 100
+    # 100 Mib of content data
+    content_packet_block_size_bytes: 104857600
+    # limit for swh content storage for one blob (beyond that limit, the
+    # content's data is not sent for storage)
+    content_packet_size_bytes: 1073741824
+    directory_packet_size: 250
+    revision_packet_size: 100
+    release_packet_size: 100
+    occurrence_packet_size: 100
 
 Present in possible locations:
 - ~/.config/swh/loader/dir.ini
@@ -44,17 +47,18 @@ Present in possible locations:
 
 Load directory directly from code or toplevel:
 
-    from swh.loader.dir.tasks import LoadDirRepository
+    from swh.loader.dir.loader import DirLoader
 
     dir_path = '/path/to/directory
 
     # Fill in those
-    origin = {}
+    origin = {'url': 'some-origin', 'type': 'dir'}
+    visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
     release = None
     revision = {}
     occurrence = {}
 
-    LoadDirRepository().run(dir_path, origin, revision, release, [occurrence])
+    DirLoader().load(dir_path, origin, visit_date, revision, release, [occurrence])
 
 
 #### Celery
@@ -76,17 +80,14 @@ You can send the following message to the task queue:
     from swh.loader.dir.tasks import LoadDirRepository
 
     # Fill in those
-    origin = {}
+    origin = {'url': 'some-origin', 'type': 'dir'}
+    visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
     release = None
     revision = {}
     occurrence = {}
 
     # Send message to the task queue
-    LoadDirRepository().apply_async(('/path/to/dir,
-                                     origin,
-                                     revision,
-                                     release,
-                                     [occurrence]))
+    LoaderDirRepository().run(('/path/to/dir, origin, visit_date, revision, release, [occurrence]))
 
 
 Directory producer
