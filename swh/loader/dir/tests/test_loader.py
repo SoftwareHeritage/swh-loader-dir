@@ -49,7 +49,7 @@ class TestLoader(unittest.TestCase):
             'storage': {
                 'cls': 'remote',
                 'args': {
-                    'url': 'http://localhost:5000/',
+                    'url': 'http://localhost:5002/',
                 }
             },
             'content_size_limit': 104857600,
@@ -95,7 +95,7 @@ class TestLoader(unittest.TestCase):
                 'fullname': 'swh'
             },
             'committer_date': {
-                'timestamp': '1444054085',
+                'timestamp': 1444054085,
                 'offset': 0,
             },
             'type': 'tar',

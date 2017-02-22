@@ -1,9 +1,9 @@
-# Copyright (C) 2015-2016  The Software Heritage developers
+# Copyright (C) 2015-2017  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import datetime
+import click
 import os
 import sys
 import uuid
@@ -20,8 +20,37 @@ class DirLoader(loader.SWHLoader):
 
     This will load the content of the directory.
 
+    Args:
+        - dir_path: source of the directory to import
+        - origin: Dictionary origin
+          - id: origin's id
+          - url: url origin we fetched
+          - type: type of the origin
+        - revision: Dictionary of information needed, keys are:
+          - author_name: revision's author name
+          - author_email: revision's author email
+          - author_date: timestamp (e.g. 1444054085)
+          - author_offset: date offset e.g. -0220, +0100
+          - committer_name: revision's committer name
+          - committer_email: revision's committer email
+          - committer_date: timestamp
+          - committer_offset: date offset e.g. -0220, +0100
+          - type: type of revision dir, tar
+          - message: synthetic message for the revision
+        - release: Dictionary of information needed, keys are:
+          - name: release name
+          - date: release timestamp (e.g. 1444054085)
+          - offset: release date offset e.g. -0220, +0100
+          - author_name: release author's name
+          - author_email: release author's email
+          - comment: release's comment message
+        - occurrences: List of occurrences as dictionary.
+          Information needed, keys are:
+          - branch: occurrence's branch name
+          - date: validity date (e.g. 2015-01-01 00:00:00+00)
+
     """
-    CONFIG_BASE_FILENAME = 'loader/dir.ini'
+    CONFIG_BASE_FILENAME = 'loader/dir'
 
     def __init__(self, logging_class='swh.loader.dir.DirLoader',
                  config=None):
@@ -101,45 +130,32 @@ class DirLoader(loader.SWHLoader):
 
         return objects
 
-    def load(self, dir_path, origin, visit, revision, release, occurrences):
-        """Load a directory in backend.
+    def prepare(self, *args, **kwargs):
+        self.dir_path, self.origin, self.visit_date, self.revision, self.release, self.occs = args  # noqa
 
-        Args:
-            - dir_path: source of the directory to import
-            - origin: Dictionary origin
-              - id: origin's id
-              - url: url origin we fetched
-              - type: type of the origin
-            - revision: Dictionary of information needed, keys are:
-              - author_name: revision's author name
-              - author_email: revision's author email
-              - author_date: timestamp (e.g. 1444054085)
-              - author_offset: date offset e.g. -0220, +0100
-              - committer_name: revision's committer name
-              - committer_email: revision's committer email
-              - committer_date: timestamp
-              - committer_offset: date offset e.g. -0220, +0100
-              - type: type of revision dir, tar
-              - message: synthetic message for the revision
-            - release: Dictionary of information needed, keys are:
-              - name: release name
-              - date: release timestamp (e.g. 1444054085)
-              - offset: release date offset e.g. -0220, +0100
-              - author_name: release author's name
-              - author_email: release author's email
-              - comment: release's comment message
-            - occurrences: List of occurrences as dictionary.
-              Information needed, keys are:
-              - branch: occurrence's branch name
-              - date: validity date (e.g. 2015-01-01 00:00:00+00)
+        if not os.path.exists(self.dir_path):
+            warn_msg = 'Skipping inexistant directory %s' % self.dir_path
+            self.log.error(warn_msg,
+                           extra={
+                               'swh_type': 'dir_repo_list_refs',
+                               'swh_repo': self.dir_path,
+                               'swh_num_refs': 0,
+                           })
+            raise ValueError(warn_msg)
 
-        Returns:
-            Dictionary with the following keys:
-            - status: mandatory, the status result as a boolean
-            - stderr: optional when status is True, mandatory otherwise
-            - objects: the actual objects sent to swh storage
+        if isinstance(self.dir_path, str):
+            self.dir_path = self.dir_path.encode(sys.getfilesystemencoding())
+
+    def get_origin(self):
+        return self.origin  # set in prepare method
+
+    def cleanup(self):
+        """Nothing to clean up.
 
         """
+        pass
+
+    def fetch_data(self):
         def _occurrence_from(origin_id, visit, revision_hash, occurrence):
             occ = dict(occurrence)
             occ.update({
@@ -160,61 +176,67 @@ class DirLoader(loader.SWHLoader):
 
             return occs
 
-        if not os.path.exists(dir_path):
-            warn_msg = 'Skipping inexistant directory %s' % dir_path
-            self.log.warn(warn_msg,
-                          extra={
-                              'swh_type': 'dir_repo_list_refs',
-                              'swh_repo': dir_path,
-                              'swh_num_refs': 0,
-                          })
-            return {'status': False, 'stderr': warn_msg}
+        # to load the repository, walk all objects, compute their hashes
+        self.objects = self.list_repo_objs(
+            self.dir_path, self.revision, self.release)
 
-        if isinstance(dir_path, str):
-            dir_path = dir_path.encode(sys.getfilesystemencoding())
-
-        # to load the repository, walk all objects, compute their hash
-        objects = self.list_repo_objs(dir_path, revision, release)
-
-        full_rev = objects[GitType.COMM][0]  # only 1 revision
+        full_rev = self.objects[GitType.COMM][0]  # only 1 revision
 
         # Update objects with release and occurrences
-        objects[GitType.REFS] = _occurrences_from(
-            origin['id'], visit, full_rev['id'], occurrences)
+        self.objects[GitType.REFS] = _occurrences_from(
+            self.origin_id, self.visit, full_rev['id'], self.occs)
 
-        # load contents
+    def store_data(self):
+        objects = self.objects
         self.maybe_load_contents(objects[GitType.BLOB])
         self.maybe_load_directories(objects[GitType.TREE])
         self.maybe_load_revisions(objects[GitType.COMM])
         self.maybe_load_releases(objects[GitType.RELE])
         self.maybe_load_occurrences(objects[GitType.REFS])
 
-        self.flush()
 
-        return {'status': True, 'objects': objects}
+@click.command()
+@click.option('--dir-path', required=1, help='Directory path to load')
+@click.option('--origin-url', required=1, help='Origin url for that directory')
+@click.option('--visit-date', default=None, help='Visit date time override')
+def main(dir_path, origin_url, visit_date):
+    """Debugging purpose."""
+    d = DirLoader()
 
-    def prepare_and_load(self, dir_path, origin, revision, release,
-                         occurrences):
-        """First prepare the origin, origin_visit.
-        Then load the data in storage.
-        At last, close the origin_visit.
+    origin = {
+        'url': origin_url,
+        'type': 'dir'
+    }
 
-        """
-        self.origin_id = self.storage.origin_add_one(origin)
-        origin['id'] = self.origin_id
+    import datetime
+    commit_time = int(datetime.datetime.now(tz=datetime.timezone.utc).timestamp())  # noqa
 
-        fetch_history_id = self.open_fetch_history()
-        date_visit = datetime.datetime.now(tz=datetime.timezone.utc)
-        origin_visit = self.storage.origin_visit_add(origin['id'], date_visit)
-        visit = origin_visit['visit']
+    SWH_PERSON = {
+        'name': 'Software Heritage',
+        'fullname': 'Software Heritage',
+        'email': 'robot@softwareheritage.org'
+    }
+    REVISION_MESSAGE = 'synthetic revision message'
+    REVISION_TYPE = 'tar'
+    revision = {
+        'date': {
+            'timestamp': commit_time,
+            'offset': 0,
+        },
+        'committer_date': {
+            'timestamp': commit_time,
+            'offset': 0,
+        },
+        'author': SWH_PERSON,
+        'committer': SWH_PERSON,
+        'type': REVISION_TYPE,
+        'message': REVISION_MESSAGE,
+        'metadata': {},
+    }
+    release = None
+    occurrences = {}
+    d.load(dir_path, origin, visit_date, revision, release, occurrences)
 
-        try:
-            self.load(dir_path, origin, visit, revision, release, occurrences)
-            self.close_fetch_history_success(fetch_history_id)
-            self.storage.origin_visit_update(
-                self.origin_id, visit, status='full')
-        except:
-            self.close_fetch_history_failure(fetch_history_id)
-            self.storage.origin_visit_update(
-                self.origin_id, visit, status='partial')
-            raise
+
+if __name__ == '__main__':
+    main()

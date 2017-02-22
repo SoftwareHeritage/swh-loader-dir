@@ -5,6 +5,7 @@ MANIFEST.in
 Makefile
 Makefile.local
 README
+requirements-swh.txt
 requirements.txt
 setup.py
 version.txt
