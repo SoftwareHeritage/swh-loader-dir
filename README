@@ -13,26 +13,29 @@ Directory loader
 
 This is the loader's (or task's) configuration file.
 
-loader/dir.ini:
+loader/dir.yml:
 
-    [main]
+    storage:
+      cls: remote
+      args:
+        url: http://localhost:5002/
 
-    # access to swh's storage
-    storage_class = remote_storage
-    storage_args = http://localhost:5002/
-
-    # parameters to condition loading into swh storage
-    send_contents = True
-    send_directories = True
-    send_revisions = True
-    send_releases = True
-    send_occurrences = True
-    content_packet_size = 10000
-    content_packet_size_bytes = 1073741824
-    directory_packet_size = 25000
-    revision_packet_size = 100000
-    release_packet_size = 100000
-    occurrence_packet_size = 100000
+    send_contents: True
+    send_directories: True
+    send_revisions: True
+    send_releases: True
+    send_occurrences: True
+    # nb of max contents to send for storage
+    content_packet_size: 100
+    # 100 Mib of content data
+    content_packet_block_size_bytes: 104857600
+    # limit for swh content storage for one blob (beyond that limit, the
+    # content's data is not sent for storage)
+    content_packet_size_bytes: 1073741824
+    directory_packet_size: 250
+    revision_packet_size: 100
+    release_packet_size: 100
+    occurrence_packet_size: 100
 
 Present in possible locations:
 - ~/.config/swh/loader/dir.ini
@@ -54,7 +57,7 @@ Load directory directly from code or toplevel:
     revision = {}
     occurrence = {}
 
-    LoadDirRepository().run(dir_path, origin, revision, release, [occurrence])
+    LoaderDir().load(dir_path, origin, revision, release, [occurrence])
 
 
 #### Celery
@@ -82,11 +85,11 @@ You can send the following message to the task queue:
     occurrence = {}
 
     # Send message to the task queue
-    LoadDirRepository().apply_async(('/path/to/dir,
-                                     origin,
-                                     revision,
-                                     release,
-                                     [occurrence]))
+    LoaderDir().load(('/path/to/dir,
+                     origin,
+                     revision,
+                     release,
+                     [occurrence]))
 
 
 Directory producer
