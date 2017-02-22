@@ -16,7 +16,7 @@ config = {
     'dir_path': '/home/tony/work/inria/repo/linux-tryouts',
 
     'storage_class': 'remote_storage',
-    'storage_args': ['http://localhost:5000/'],
+    'storage_args': ['http://localhost:5002/'],
 }
 
 
