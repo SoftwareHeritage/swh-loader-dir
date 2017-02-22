@@ -131,12 +131,7 @@ class DirLoader(loader.SWHLoader):
         return objects
 
     def prepare(self, *args, **kwargs):
-        self.dir_path, self.origin, visit_date, self.revision, self.release, self.occs = args  # noqa
-
-        if visit_date:
-            self.fetch_date = visit_date
-        else:
-            self.fetch_date = None
+        self.dir_path, self.origin, self.visit_date, self.revision, self.release, self.occs = args  # noqa
 
         if not os.path.exists(self.dir_path):
             warn_msg = 'Skipping inexistant directory %s' % self.dir_path
