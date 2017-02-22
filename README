@@ -19,7 +19,7 @@ loader/dir.ini:
 
     # access to swh's storage
     storage_class = remote_storage
-    storage_args = http://localhost:5000/
+    storage_args = http://localhost:5002/
 
     # parameters to condition loading into swh storage
     send_contents = True
