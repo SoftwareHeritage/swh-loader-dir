@@ -47,17 +47,18 @@ Present in possible locations:
 
 Load directory directly from code or toplevel:
 
-    from swh.loader.dir.tasks import LoadDirRepository
+    from swh.loader.dir.loader import DirLoader
 
     dir_path = '/path/to/directory
 
     # Fill in those
-    origin = {}
+    origin = {'url': 'some-origin', 'type': 'dir'}
+    visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
     release = None
     revision = {}
     occurrence = {}
 
-    LoaderDir().load(dir_path, origin, revision, release, [occurrence])
+    DirLoader().load(dir_path, origin, visit_date, revision, release, [occurrence])
 
 
 #### Celery
@@ -79,17 +80,14 @@ You can send the following message to the task queue:
     from swh.loader.dir.tasks import LoadDirRepository
 
     # Fill in those
-    origin = {}
+    origin = {'url': 'some-origin', 'type': 'dir'}
+    visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
     release = None
     revision = {}
     occurrence = {}
 
     # Send message to the task queue
-    LoaderDir().load(('/path/to/dir,
-                     origin,
-                     revision,
-                     release,
-                     [occurrence]))
+    LoaderDirRepository().run(('/path/to/dir, origin, visit_date, revision, release, [occurrence]))
 
 
 Directory producer
