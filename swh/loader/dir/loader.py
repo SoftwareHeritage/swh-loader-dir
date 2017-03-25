@@ -209,14 +209,16 @@ def main(dir_path, origin_url, visit_date):
     }
 
     import datetime
-    commit_time = int(datetime.datetime.now(tz=datetime.timezone.utc).timestamp())  # noqa
+    commit_time = int(datetime.datetime.now(
+        tz=datetime.timezone.utc).timestamp()
+    )
 
     SWH_PERSON = {
         'name': 'Software Heritage',
         'fullname': 'Software Heritage',
         'email': 'robot@softwareheritage.org'
     }
-    REVISION_MESSAGE = 'synthetic revision message'
+    REVISION_MESSAGE = 'swh-loader-dir: synthetic revision message'
     REVISION_TYPE = 'tar'
     revision = {
         'date': {
@@ -232,10 +234,13 @@ def main(dir_path, origin_url, visit_date):
         'type': REVISION_TYPE,
         'message': REVISION_MESSAGE,
         'metadata': {},
+        'synthetic': True,
     }
     release = None
-    occurrences = {}
-    d.load(dir_path, origin, visit_date, revision, release, occurrences)
+    occurrence = {
+        'branch': os.path.basename(dir_path),
+    }
+    d.load(dir_path, origin, visit_date, revision, release, [occurrence])
 
 
 if __name__ == '__main__':
