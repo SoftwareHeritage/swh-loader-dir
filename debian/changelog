@@ -1,3 +1,10 @@
+swh-loader-dir (0.0.25-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.25
+  * Add the blake2s256 hash computation
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Sat, 25 Mar 2017 18:24:13 +0100
+
 swh-loader-dir (0.0.24-1~swh1) unstable-swh; urgency=medium
 
   * v0.0.24
