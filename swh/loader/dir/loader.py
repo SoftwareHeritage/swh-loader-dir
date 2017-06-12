@@ -213,13 +213,13 @@ def main(dir_path, origin_url, visit_date):
         tz=datetime.timezone.utc).timestamp()
     )
 
-    SWH_PERSON = {
+    swh_person = {
         'name': 'Software Heritage',
         'fullname': 'Software Heritage',
         'email': 'robot@softwareheritage.org'
     }
-    REVISION_MESSAGE = 'swh-loader-dir: synthetic revision message'
-    REVISION_TYPE = 'tar'
+    revision_message = 'swh-loader-dir: synthetic revision message'
+    revision_type = 'tar'
     revision = {
         'date': {
             'timestamp': commit_time,
@@ -229,10 +229,10 @@ def main(dir_path, origin_url, visit_date):
             'timestamp': commit_time,
             'offset': 0,
         },
-        'author': SWH_PERSON,
-        'committer': SWH_PERSON,
-        'type': REVISION_TYPE,
-        'message': REVISION_MESSAGE,
+        'author': swh_person,
+        'committer': swh_person,
+        'type': revision_type,
+        'message': revision_message,
         'metadata': {},
         'synthetic': True,
     }
