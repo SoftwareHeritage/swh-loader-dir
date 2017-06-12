@@ -13,8 +13,8 @@ class LoadDirRepository(Task):
     """
     task_queue = 'swh_loader_dir'
 
-    def run(self, dir_path, origin, visit_date, revision, release,
-            occurrences):
+    def run_task(self, dir_path, origin, visit_date, revision, release,
+                 occurrences):
         """Import a directory dir_path with origin at visit_date time.
         Providing the revision, release, and occurrences.
 
