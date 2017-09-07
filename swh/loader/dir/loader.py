@@ -66,7 +66,7 @@ class DirLoader(loader.SWHLoader):
         """List all objects from dir_path.
 
         Args:
-            dir_path (path): the directory to list
+            dir_path: the directory to list
             revision: revision dictionary representation
             release: release dictionary representation
 
