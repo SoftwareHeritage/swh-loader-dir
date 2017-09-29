@@ -11,8 +11,7 @@ import unittest
 
 from nose.tools import istest
 
-from swh.loader.dir.loader import DirLoader
-from swh.model.git import GitType
+from swh.loader.dir.loader import DirLoader, BLOB, TREE, COMM, RELE
 
 
 class InitTestLoader(unittest.TestCase):
@@ -29,7 +28,7 @@ class InitTestLoader(unittest.TestCase):
                                              b'dir-folders',
                                              b'sample-folder.tgz')
 
-        cls.root_path = os.path.join(cls.tmp_root_path, b'sample-folder')
+        cls.root_path = os.path.join(cls.tmp_root_path)
 
         # uncompress the sample folder
         subprocess.check_output(
@@ -133,12 +132,12 @@ class DirLoaderListRepoObject(InitTestLoader):
         # then
         self.assertEquals(len(objects), 4,
                           "4 objects types, blob, tree, revision, release")
-        self.assertEquals(len(objects[GitType.BLOB]), 8,
+        self.assertEquals(len(objects[BLOB]), 8,
                           "8 contents: 3 files + 5 links")
-        self.assertEquals(len(objects[GitType.TREE]), 5,
+        self.assertEquals(len(objects[TREE]), 5,
                           "5 directories: 4 subdirs + 1 empty")
-        self.assertEquals(len(objects[GitType.COMM]), 1, "synthetic revision")
-        self.assertEquals(len(objects[GitType.RELE]), 1, "synthetic release")
+        self.assertEquals(len(objects[COMM]), 1, "synthetic revision")
+        self.assertEquals(len(objects[RELE]), 1, "synthetic release")
 
         # print('objects: %s\n objects-per-path: %s\n' %
         #       (objects.keys(),

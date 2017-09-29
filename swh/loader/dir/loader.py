@@ -10,9 +10,17 @@ import uuid
 
 from swh.loader.core import loader
 from swh.model import git
-from swh.model.git import GitType
 
 from . import converters
+
+
+BLOB = b'blob'
+TREE = b'tree'
+EXEC = b'exec'
+LINK = b'link'
+COMM = b'commit'
+RELE = b'release'
+REFS = b'ref'
 
 
 class DirLoader(loader.SWHLoader):
@@ -97,42 +105,66 @@ class DirLoader(loader.SWHLoader):
 
         self.log.info("Started listing %s" % dir_path, extra={
             'swh_type': 'dir_list_objs_start',
-            'swh_repo': sdir_path,
+            'o': sdir_path,
             'swh_id': log_id,
         })
 
-        objects_per_path = git.compute_hashes_from_directory(dir_path)
+        from swh.model.from_disk import Directory
+        directory = Directory.from_disk(path=dir_path)
 
-        tree_hash = objects_per_path[dir_path]['checksums']['sha1_git']
+        def all_entries_from(directory):
+            """Retrieve all entries from the top.
+
+            """
+            from swh.model.from_disk import Content, Directory
+            files = []
+            dirs = []
+            for name, child in directory.items():
+                if isinstance(child, Content):
+                    files.append(directory.child_to_directory_entry(
+                        name, child))
+                    continue
+                elif isinstance(child, Directory):
+                    dirs.append(directory.child_to_directory_entry(
+                        name, child))
+                    subfiles, subdirs = all_entries_from(child)
+                    files.extend(subfiles)
+                    dirs.extend(subdirs)
+                else:
+                    raise ValueError('Unknown child')
+
+            return files, dirs
+
+        files, dirs = all_entries_from(directory)
+
+        tree_hash = directory.hash
         full_rev = _revision_from(tree_hash, revision)
 
         objects = {
-            GitType.BLOB: list(
-                git.objects_per_type(GitType.BLOB, objects_per_path)),
-            GitType.TREE: list(
-                git.objects_per_type(GitType.TREE, objects_per_path)),
-            GitType.COMM: [full_rev],
-            GitType.RELE: []
+            BLOB: files,
+            TREE: dirs,
+            COMM: [full_rev],
+            RELE: []
         }
 
         if release and 'name' in release:
             full_rel = _release_from(full_rev['id'], release)
-            objects[GitType.RELE] = [full_rel]
+            objects[RELE] = [full_rel]
 
         self.log.info("Done listing the objects in %s: %d contents, "
                       "%d directories, %d revisions, %d releases" % (
                           sdir_path,
-                          len(objects[GitType.BLOB]),
-                          len(objects[GitType.TREE]),
-                          len(objects[GitType.COMM]),
-                          len(objects[GitType.RELE])
+                          len(objects[BLOB]),
+                          len(objects[TREE]),
+                          len(objects[COMM]),
+                          len(objects[RELE])
                       ), extra={
                           'swh_type': 'dir_list_objs_end',
                           'swh_repo': sdir_path,
-                          'swh_num_blobs': len(objects[GitType.BLOB]),
-                          'swh_num_trees': len(objects[GitType.TREE]),
-                          'swh_num_commits': len(objects[GitType.COMM]),
-                          'swh_num_releases': len(objects[GitType.RELE]),
+                          'swh_num_blobs': len(objects[BLOB]),
+                          'swh_num_trees': len(objects[TREE]),
+                          'swh_num_commits': len(objects[COMM]),
+                          'swh_num_releases': len(objects[RELE]),
                           'swh_id': log_id,
                       })
 
@@ -188,19 +220,19 @@ class DirLoader(loader.SWHLoader):
         self.objects = self.list_repo_objs(
             self.dir_path, self.revision, self.release)
 
-        full_rev = self.objects[GitType.COMM][0]  # only 1 revision
+        full_rev = self.objects[COMM][0]  # only 1 revision
 
         # Update objects with release and occurrences
-        self.objects[GitType.REFS] = _occurrences_from(
+        self.objects[REFS] = _occurrences_from(
             self.origin_id, self.visit, full_rev['id'], self.occs)
 
     def store_data(self):
         objects = self.objects
-        self.maybe_load_contents(objects[GitType.BLOB])
-        self.maybe_load_directories(objects[GitType.TREE])
-        self.maybe_load_revisions(objects[GitType.COMM])
-        self.maybe_load_releases(objects[GitType.RELE])
-        self.maybe_load_occurrences(objects[GitType.REFS])
+        self.maybe_load_contents(objects[BLOB])
+        self.maybe_load_directories(objects[TREE])
+        self.maybe_load_revisions(objects[COMM])
+        self.maybe_load_releases(objects[RELE])
+        self.maybe_load_occurrences(objects[REFS])
 
 
 @click.command()
