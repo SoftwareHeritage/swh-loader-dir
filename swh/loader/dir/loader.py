@@ -21,33 +21,39 @@ class DirLoader(loader.SWHLoader):
     This will load the content of the directory.
 
     Args:
-        - dir_path: source of the directory to import
-        - origin: Dictionary origin
-          - id: origin's id
-          - url: url origin we fetched
-          - type: type of the origin
-        - revision: Dictionary of information needed, keys are:
-          - author_name: revision's author name
-          - author_email: revision's author email
-          - author_date: timestamp (e.g. 1444054085)
-          - author_offset: date offset e.g. -0220, +0100
-          - committer_name: revision's committer name
-          - committer_email: revision's committer email
-          - committer_date: timestamp
-          - committer_offset: date offset e.g. -0220, +0100
-          - type: type of revision dir, tar
-          - message: synthetic message for the revision
-        - release: Dictionary of information needed, keys are:
-          - name: release name
-          - date: release timestamp (e.g. 1444054085)
-          - offset: release date offset e.g. -0220, +0100
-          - author_name: release author's name
-          - author_email: release author's email
-          - comment: release's comment message
-        - occurrences: List of occurrences as dictionary.
-          Information needed, keys are:
-          - branch: occurrence's branch name
-          - date: validity date (e.g. 2015-01-01 00:00:00+00)
+        dir_path: source of the directory to import
+        origin (dict): dictionary with the following keys:
+
+            - id: origin's id
+            - url: url origin we fetched
+            - type: type of the origin
+
+        revision (dict): dictionary with the following keys:
+
+            - author_name: revision's author name
+            - author_email: revision's author email
+            - author_date: timestamp (e.g. 1444054085)
+            - author_offset: date offset e.g. -0220, +0100
+            - committer_name: revision's committer name
+            - committer_email: revision's committer email
+            - committer_date: timestamp
+            - committer_offset: date offset e.g. -0220, +0100
+            - type: type of revision dir, tar
+            - message: synthetic message for the revision
+
+        release (dict): dictionary with the following keys:
+
+            - name: release name
+            - date: release timestamp (e.g. 1444054085)
+            - offset: release date offset e.g. -0220, +0100
+            - author_name: release author's name
+            - author_email: release author's email
+            - comment: release's comment message
+
+        occurrences (dict): dictionary with the following keys:
+
+            - branch: occurrence's branch name
+            - date: validity date (e.g. 2015-01-01 00:00:00+00)
 
     """
     CONFIG_BASE_FILENAME = 'loader/dir'
@@ -60,14 +66,16 @@ class DirLoader(loader.SWHLoader):
         """List all objects from dir_path.
 
         Args:
-            - dir_path (path): the directory to list
-            - revision: revision dictionary representation
-            - release: release dictionary representation
+            dir_path: the directory to list
+            revision: revision dictionary representation
+            release: release dictionary representation
 
         Returns:
-            a dict containing lists of `Oid`s with keys for each object type:
+            list: lists of oid-s with keys for each object type:
+
             - CONTENT
             - DIRECTORY
+
         """
         def _revision_from(tree_hash, revision):
             full_rev = dict(revision)
