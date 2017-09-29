@@ -4,7 +4,7 @@ LICENSE
 MANIFEST.in
 Makefile
 Makefile.local
-README
+README.md
 requirements-swh.txt
 requirements.txt
 setup.py
@@ -17,6 +17,12 @@ debian/control
 debian/copyright
 debian/rules
 debian/source/format
+docs/.gitignore
+docs/Makefile
+docs/conf.py
+docs/index.rst
+docs/_static/.placeholder
+docs/_templates/.placeholder
 resources/dir.ini
 resources/loader/dir.ini
 swh.loader.dir.egg-info/PKG-INFO
