@@ -1,3 +1,12 @@
+swh-loader-dir (0.0.27-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.27
+  * Update dependency to swh.loader.core
+  * Improve documentation and make it browsable
+  * Add test around directory loading (without storage)
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Fri, 29 Sep 2017 13:13:33 +0200
+
 swh-loader-dir (0.0.26-1~swh1) unstable-swh; urgency=medium
 
   * Release swh.loader.dir 0.0.26
