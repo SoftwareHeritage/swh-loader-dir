@@ -242,7 +242,7 @@ def main(dir_path, origin_url, visit_date):
         'branch': os.path.basename(dir_path),
     }
     d.load(dir_path=dir_path, origin=origin, visit_date=visit_date,
-           revision=revision, release=release, occurrence=[occurrence])
+           revision=revision, release=release, occurrences=[occurrence])
 
 
 if __name__ == '__main__':
