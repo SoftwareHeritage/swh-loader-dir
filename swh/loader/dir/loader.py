@@ -5,12 +5,12 @@
 
 import click
 import os
-import sys
 import uuid
 
 from swh.loader.core import loader
-from swh.model import git
-from swh.model.git import GitType
+from swh.model.identifiers import (release_identifier, revision_identifier,
+                                   identifier_to_bytes)
+from swh.model.from_disk import Directory
 
 from . import converters
 
@@ -81,7 +81,7 @@ class DirLoader(loader.SWHLoader):
             full_rev = dict(revision)
             full_rev['directory'] = tree_hash
             full_rev = converters.commit_to_revision(full_rev)
-            full_rev['id'] = git.compute_revision_sha1_git(full_rev)
+            full_rev['id'] = identifier_to_bytes(revision_identifier(full_rev))
             return full_rev
 
         def _release_from(revision_hash, release):
@@ -89,7 +89,7 @@ class DirLoader(loader.SWHLoader):
             full_rel['target'] = revision_hash
             full_rel['target_type'] = 'revision'
             full_rel = converters.annotated_tag_to_release(full_rel)
-            full_rel['id'] = git.compute_release_sha1_git(full_rel)
+            full_rel['id'] = identifier_to_bytes(release_identifier(full_rel))
             return full_rel
 
         log_id = str(uuid.uuid4())
@@ -97,42 +97,38 @@ class DirLoader(loader.SWHLoader):
 
         self.log.info("Started listing %s" % dir_path, extra={
             'swh_type': 'dir_list_objs_start',
-            'swh_repo': sdir_path,
+            'o': sdir_path,
             'swh_id': log_id,
         })
 
-        objects_per_path = git.compute_hashes_from_directory(dir_path)
+        directory = Directory.from_disk(path=dir_path)
 
-        tree_hash = objects_per_path[dir_path]['checksums']['sha1_git']
+        objects = directory.collect()
+
+        tree_hash = directory.hash
         full_rev = _revision_from(tree_hash, revision)
 
-        objects = {
-            GitType.BLOB: list(
-                git.objects_per_type(GitType.BLOB, objects_per_path)),
-            GitType.TREE: list(
-                git.objects_per_type(GitType.TREE, objects_per_path)),
-            GitType.COMM: [full_rev],
-            GitType.RELE: []
-        }
+        objects['revision'] = {full_rev['id']: full_rev}
+        objects['release'] = {}
 
         if release and 'name' in release:
             full_rel = _release_from(full_rev['id'], release)
-            objects[GitType.RELE] = [full_rel]
+            objects['release'][full_rel['id']] = release
 
         self.log.info("Done listing the objects in %s: %d contents, "
                       "%d directories, %d revisions, %d releases" % (
                           sdir_path,
-                          len(objects[GitType.BLOB]),
-                          len(objects[GitType.TREE]),
-                          len(objects[GitType.COMM]),
-                          len(objects[GitType.RELE])
+                          len(objects['content']),
+                          len(objects['directory']),
+                          len(objects['revision']),
+                          len(objects['release'])
                       ), extra={
                           'swh_type': 'dir_list_objs_end',
                           'swh_repo': sdir_path,
-                          'swh_num_blobs': len(objects[GitType.BLOB]),
-                          'swh_num_trees': len(objects[GitType.TREE]),
-                          'swh_num_commits': len(objects[GitType.COMM]),
-                          'swh_num_releases': len(objects[GitType.RELE]),
+                          'swh_num_blobs': len(objects['content']),
+                          'swh_num_trees': len(objects['directory']),
+                          'swh_num_commits': len(objects['revision']),
+                          'swh_num_releases': len(objects['release']),
                           'swh_id': log_id,
                       })
 
@@ -152,7 +148,7 @@ class DirLoader(loader.SWHLoader):
             raise ValueError(warn_msg)
 
         if isinstance(self.dir_path, str):
-            self.dir_path = self.dir_path.encode(sys.getfilesystemencoding())
+            self.dir_path = os.fsencode(self.dir_path)
 
     def get_origin(self):
         return self.origin  # set in prepare method
@@ -175,12 +171,12 @@ class DirLoader(loader.SWHLoader):
             return occ
 
         def _occurrences_from(origin_id, visit, revision_hash, occurrences):
-            occs = []
-            for occurrence in occurrences:
-                occs.append(_occurrence_from(origin_id,
-                                             visit,
-                                             revision_hash,
-                                             occurrence))
+            occs = {}
+            for i, occurrence in enumerate(occurrences):
+                occs[i] = _occurrence_from(origin_id,
+                                           visit,
+                                           revision_hash,
+                                           occurrence)
 
             return occs
 
@@ -188,19 +184,19 @@ class DirLoader(loader.SWHLoader):
         self.objects = self.list_repo_objs(
             self.dir_path, self.revision, self.release)
 
-        full_rev = self.objects[GitType.COMM][0]  # only 1 revision
+        [rev_id] = self.objects['revision'].keys()
 
         # Update objects with release and occurrences
-        self.objects[GitType.REFS] = _occurrences_from(
-            self.origin_id, self.visit, full_rev['id'], self.occs)
+        self.objects['occurrence'] = _occurrences_from(
+            self.origin_id, self.visit, rev_id, self.occs)
 
     def store_data(self):
         objects = self.objects
-        self.maybe_load_contents(objects[GitType.BLOB])
-        self.maybe_load_directories(objects[GitType.TREE])
-        self.maybe_load_revisions(objects[GitType.COMM])
-        self.maybe_load_releases(objects[GitType.RELE])
-        self.maybe_load_occurrences(objects[GitType.REFS])
+        self.maybe_load_contents(objects['content'].values())
+        self.maybe_load_directories(objects['directory'].values())
+        self.maybe_load_revisions(objects['revision'].values())
+        self.maybe_load_releases(objects['release'].values())
+        self.maybe_load_occurrences(objects['occurrence'].values())
 
 
 @click.command()

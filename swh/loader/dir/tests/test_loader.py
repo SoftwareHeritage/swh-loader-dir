@@ -12,7 +12,6 @@ import unittest
 from nose.tools import istest
 
 from swh.loader.dir.loader import DirLoader
-from swh.model.git import GitType
 
 
 class InitTestLoader(unittest.TestCase):
@@ -29,7 +28,7 @@ class InitTestLoader(unittest.TestCase):
                                              b'dir-folders',
                                              b'sample-folder.tgz')
 
-        cls.root_path = os.path.join(cls.tmp_root_path, b'sample-folder')
+        cls.root_path = os.path.join(cls.tmp_root_path)
 
         # uncompress the sample folder
         subprocess.check_output(
@@ -133,16 +132,12 @@ class DirLoaderListRepoObject(InitTestLoader):
         # then
         self.assertEquals(len(objects), 4,
                           "4 objects types, blob, tree, revision, release")
-        self.assertEquals(len(objects[GitType.BLOB]), 8,
+        self.assertEquals(len(objects['content']), 8,
                           "8 contents: 3 files + 5 links")
-        self.assertEquals(len(objects[GitType.TREE]), 5,
-                          "5 directories: 4 subdirs + 1 empty")
-        self.assertEquals(len(objects[GitType.COMM]), 1, "synthetic revision")
-        self.assertEquals(len(objects[GitType.RELE]), 1, "synthetic release")
-
-        # print('objects: %s\n objects-per-path: %s\n' %
-        #       (objects.keys(),
-        #        objects_per_path.keys()))
+        self.assertEquals(len(objects['directory']), 6,
+                          "6 directories: 5 subdirs + 1 empty")
+        self.assertEquals(len(objects['revision']), 1, "synthetic revision")
+        self.assertEquals(len(objects['release']), 1, "synthetic release")
 
 
 class LoaderNoStorageForTest:
@@ -273,7 +268,7 @@ class SWHDirLoaderITTest(InitTestLoader):
             'email': 'robot@softwareheritage.org'
         }
 
-        revision_message = 'swh-loader-tar: synthetic revision message'
+        revision_message = 'swh-loader-dir: synthetic revision message'
         revision_type = 'tar'
         revision = {
             'date': {
@@ -302,7 +297,7 @@ class SWHDirLoaderITTest(InitTestLoader):
 
         # then
         self.assertEquals(len(self.loader.all_contents), 8)
-        self.assertEquals(len(self.loader.all_directories), 5)
+        self.assertEquals(len(self.loader.all_directories), 6)
         self.assertEquals(len(self.loader.all_revisions), 1)
 
         actual_revision = self.loader.all_revisions[0]
@@ -313,7 +308,7 @@ class SWHDirLoaderITTest(InitTestLoader):
         self.assertEquals(actual_revision['type'],
                           'tar')
         self.assertEquals(actual_revision['message'],
-                          b'swh-loader-tar: synthetic revision message')
+                          b'swh-loader-dir: synthetic revision message')
 
         self.assertEquals(len(self.loader.all_releases), 0)
         self.assertEquals(len(self.loader.all_occurrences), 1)
