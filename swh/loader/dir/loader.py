@@ -129,7 +129,7 @@ class DirLoader(loader.SWHLoader):
         self.visit_date = visit_date
         self.revision = revision
         self.release = release
-        self.occurrences = occurrences
+        self.stub_occurrences = occurrences
 
         if not os.path.exists(self.dir_path):
             warn_msg = 'Skipping inexistant directory %s' % self.dir_path
@@ -183,7 +183,7 @@ class DirLoader(loader.SWHLoader):
 
         # Update objects with release and occurrences
         self.objects['occurrence'] = _occurrences_from(
-            self.origin_id, self.visit, rev_id, self.occurrences)
+            self.origin_id, self.visit, rev_id, self.stub_occurrences)
 
     def store_data(self):
         objects = self.objects
