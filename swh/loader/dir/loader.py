@@ -99,6 +99,8 @@ class DirLoader(loader.SWHLoader):
             dir_path: root of the directory to import
             origin (dict): an origin dictionary as returned by
               :func:`swh.storage.storage.Storage.origin_get_one`
+            visit_date (str): the date the origin was visited (as an
+              isoformatted string)
             revision (dict): a revision as passed to
               :func:`swh.storage.storage.Storage.revision_add`, excluding the
               `id` and `directory` keys (computed from the directory)
@@ -106,8 +108,9 @@ class DirLoader(loader.SWHLoader):
               :func:`swh.storage.storage.Storage.release_add`, excluding the
               `id`, `target` and `target_type` keys (computed from the
               revision)'
-            occurrences (list of dicts): each dict contains the
-
+            occurrences (list of dicts): the occurrences to create in the
+              generated origin visit. Each dict contains a 'branch' key with
+              the branch name as value.
         """
         # Yes, this is entirely redundant, but it allows us to document the
         # arguments and the entry point.
