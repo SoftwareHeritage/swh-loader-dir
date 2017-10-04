@@ -62,7 +62,7 @@ class DirLoader(loader.SWHLoader):
                  config=None):
         super().__init__(logging_class=logging_class, config=config)
 
-    def list_repo_objs(self, dir_path, revision, release):
+    def list_repo_objs(self, *, dir_path, revision, release):
         """List all objects from dir_path.
 
         Args:
@@ -132,8 +132,14 @@ class DirLoader(loader.SWHLoader):
 
         return objects
 
-    def prepare(self, *args, **kwargs):
-        self.dir_path, self.origin, self.visit_date, self.revision, self.release, self.occs = args  # noqa
+    def prepare(self, *, dir_path, origin, visit_date, revision, release,
+                occurrences):
+        self.dir_path = dir_path
+        self.origin = origin
+        self.visit_date = visit_date
+        self.revision = revision
+        self.release = release
+        self.occurrences = occurrences
 
         if not os.path.exists(self.dir_path):
             warn_msg = 'Skipping inexistant directory %s' % self.dir_path
@@ -180,13 +186,14 @@ class DirLoader(loader.SWHLoader):
 
         # to load the repository, walk all objects, compute their hashes
         self.objects = self.list_repo_objs(
-            self.dir_path, self.revision, self.release)
+            dir_path=self.dir_path, revision=self.revision,
+            release=self.release)
 
         [rev_id] = self.objects['revision'].keys()
 
         # Update objects with release and occurrences
         self.objects['occurrence'] = _occurrences_from(
-            self.origin_id, self.visit, rev_id, self.occs)
+            self.origin_id, self.visit, rev_id, self.occurences)
 
     def store_data(self):
         objects = self.objects
@@ -242,7 +249,8 @@ def main(dir_path, origin_url, visit_date):
     occurrence = {
         'branch': os.path.basename(dir_path),
     }
-    d.load(dir_path, origin, visit_date, revision, release, [occurrence])
+    d.load(dir_path=dir_path, origin=origin, visit_date=visit_date,
+           revision=revision, release=release, occurrence=[occurrence])
 
 
 if __name__ == '__main__':
