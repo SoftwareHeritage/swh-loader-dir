@@ -21,40 +21,16 @@ class DirLoader(loader.SWHLoader):
     This will load the content of the directory.
 
     Args:
-        dir_path: source of the directory to import
-        origin (dict): dictionary with the following keys:
-
-            - id: origin's id
-            - url: url origin we fetched
-            - type: type of the origin
-
-        revision (dict): dictionary with the following keys:
-
-            - author_name: revision's author name
-            - author_email: revision's author email
-            - author_date: timestamp (e.g. 1444054085)
-            - author_offset: date offset e.g. -0220, +0100
-            - committer_name: revision's committer name
-            - committer_email: revision's committer email
-            - committer_date: timestamp
-            - committer_offset: date offset e.g. -0220, +0100
-            - type: type of revision dir, tar
-            - message: synthetic message for the revision
-
-        release (dict): dictionary with the following keys:
-
-            - name: release name
-            - date: release timestamp (e.g. 1444054085)
-            - offset: release date offset e.g. -0220, +0100
-            - author_name: release author's name
-            - author_email: release author's email
-            - comment: release's comment message
-
-        occurrences (dict): dictionary with the following keys:
-
-            - branch: occurrence's branch name
-            - date: validity date (e.g. 2015-01-01 00:00:00+00)
-
+        dir_path: root of the directory to import
+        origin (dict): an origin dictionary as passed to
+          :func:`swh.storage.storage.Storage.origin_add`
+        revision (dict): a revision as passed to
+          :func:`swh.storage.storage.Storage.revision_add`, excluding the `id`
+          and `directory` keys (computed from the directory)
+        release (dict): a release as passed to
+          :func:`swh.storage.storage.Storage.release_add`, excluding the `id`,
+          `target` and `target_type` keys (computed from the directory)'
+        occurrences (list of dicts): each dict
     """
     CONFIG_BASE_FILENAME = 'loader/dir'
 
