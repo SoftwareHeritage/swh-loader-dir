@@ -16,22 +16,7 @@ from . import converters
 
 
 class DirLoader(loader.SWHLoader):
-    """A bulk loader for a directory.
-
-    This will load the content of the directory.
-
-    Args:
-        dir_path: root of the directory to import
-        origin (dict): an origin dictionary as passed to
-          :func:`swh.storage.storage.Storage.origin_add`
-        revision (dict): a revision as passed to
-          :func:`swh.storage.storage.Storage.revision_add`, excluding the `id`
-          and `directory` keys (computed from the directory)
-        release (dict): a release as passed to
-          :func:`swh.storage.storage.Storage.release_add`, excluding the `id`,
-          `target` and `target_type` keys (computed from the directory)'
-        occurrences (list of dicts): each dict
-    """
+    """A bulk loader for a directory."""
     CONFIG_BASE_FILENAME = 'loader/dir'
 
     def __init__(self, logging_class='swh.loader.dir.DirLoader',
@@ -47,11 +32,9 @@ class DirLoader(loader.SWHLoader):
             release: release dictionary representation
 
         Returns:
-            list: lists of oid-s with keys for each object type:
-
-            - CONTENT
-            - DIRECTORY
-
+            dict: a mapping from object types ('content', 'directory',
+            'revision', 'release') with a dictionary mapping each object's id
+            to the object
         """
         def _revision_from(tree_hash, revision):
             full_rev = dict(revision)
@@ -108,8 +91,36 @@ class DirLoader(loader.SWHLoader):
 
         return objects
 
+    def load(self, *, dir_path, origin, visit_date, revision, release,
+             occurrences):
+        """Load the content of the directory to the archive.
+
+        Args:
+            dir_path: root of the directory to import
+            origin (dict): an origin dictionary as returned by
+              :func:`swh.storage.storage.Storage.origin_get_one`
+            revision (dict): a revision as passed to
+              :func:`swh.storage.storage.Storage.revision_add`, excluding the
+              `id` and `directory` keys (computed from the directory)
+            release (dict): a release as passed to
+              :func:`swh.storage.storage.Storage.release_add`, excluding the
+              `id`, `target` and `target_type` keys (computed from the
+              revision)'
+            occurrences (list of dicts): each dict contains the
+
+        """
+        # Yes, this is entirely redundant, but it allows us to document the
+        # arguments and the entry point.
+        super().load(dir_path=dir_path, origin=origin, visit_date=visit_date,
+                     revision=revision, release=release,
+                     occurrences=occurrences)
+
     def prepare(self, *, dir_path, origin, visit_date, revision, release,
                 occurrences):
+        """Prepare the loader for loading of the directory.
+
+        Args: identical to :func:`load`.
+        """
         self.dir_path = dir_path
         self.origin = origin
         self.visit_date = visit_date
@@ -146,7 +157,7 @@ class DirLoader(loader.SWHLoader):
                 'target': revision_hash,
                 'target_type': 'revision',
                 'origin': origin_id,
-                'visit': visit
+                'visit': visit,
             })
             return occ
 
@@ -169,7 +180,7 @@ class DirLoader(loader.SWHLoader):
 
         # Update objects with release and occurrences
         self.objects['occurrence'] = _occurrences_from(
-            self.origin_id, self.visit, rev_id, self.occurences)
+            self.origin_id, self.visit, rev_id, self.occurrences)
 
     def store_data(self):
         objects = self.objects

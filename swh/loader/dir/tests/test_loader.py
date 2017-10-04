@@ -125,9 +125,9 @@ class DirLoaderListRepoObject(InitTestLoader):
     def load_without_storage(self):
         # when
         objects = self.dirloader.list_repo_objs(
-            self.root_path,
-            self.revision,
-            self.release)
+            dir_path=self.root_path,
+            revision=self.revision,
+            release=self.release)
 
         # then
         self.assertEquals(len(objects), 4,
@@ -292,8 +292,10 @@ class SWHDirLoaderITTest(InitTestLoader):
         }
 
         # when
-        self.loader.load(self.root_path, origin, visit_date, revision, None,
-                         [occurrence])
+        self.loader.load(
+            dir_path=self.root_path, origin=origin, visit_date=visit_date,
+            revision=revision, release=None, occurrences=[occurrence],
+        )
 
         # then
         self.assertEquals(len(self.loader.all_contents), 8)
