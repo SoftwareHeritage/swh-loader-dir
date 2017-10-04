@@ -95,11 +95,14 @@ class DirLoader(loader.SWHLoader):
         log_id = str(uuid.uuid4())
         sdir_path = dir_path.decode('utf-8')
 
-        self.log.info("Started listing %s" % dir_path, extra={
-            'swh_type': 'dir_list_objs_start',
-            'o': sdir_path,
+        log_data = {
+            'swh_type': 'dir_list_objs_end',
+            'swh_repo': sdir_path,
             'swh_id': log_id,
-        })
+        }
+
+        self.log.debug("Started listing {swh_repo}".format(**log_data),
+                       extra=log_data)
 
         directory = Directory.from_disk(path=dir_path)
 
@@ -115,22 +118,17 @@ class DirLoader(loader.SWHLoader):
             full_rel = _release_from(full_rev['id'], release)
             objects['release'][full_rel['id']] = release
 
-        self.log.info("Done listing the objects in %s: %d contents, "
-                      "%d directories, %d revisions, %d releases" % (
-                          sdir_path,
-                          len(objects['content']),
-                          len(objects['directory']),
-                          len(objects['revision']),
-                          len(objects['release'])
-                      ), extra={
-                          'swh_type': 'dir_list_objs_end',
-                          'swh_repo': sdir_path,
-                          'swh_num_blobs': len(objects['content']),
-                          'swh_num_trees': len(objects['directory']),
-                          'swh_num_commits': len(objects['revision']),
-                          'swh_num_releases': len(objects['release']),
-                          'swh_id': log_id,
-                      })
+        log_data.update({
+            'swh_num_%s' % key: len(values)
+            for key, values in objects.items()
+        })
+
+        self.log.debug(("Done listing the objects in {swh_repo}: "
+                        "{swh_num_content} contents, "
+                        "{swh_num_directory} directories, "
+                        "{swh_num_revision} revisions, "
+                        "{swh_num_release} releases").format(**log_data),
+                       extra=log_data)
 
         return objects
 
