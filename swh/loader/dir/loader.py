@@ -63,7 +63,7 @@ class DirLoader(loader.SWHLoader):
         self.log.debug("Started listing {swh_repo}".format(**log_data),
                        extra=log_data)
 
-        directory = Directory.from_disk(path=dir_path)
+        directory = Directory.from_disk(path=dir_path, save_path=True)
 
         objects = directory.collect()
 
@@ -162,6 +162,8 @@ class DirLoader(loader.SWHLoader):
                 'origin': origin_id,
                 'visit': visit,
             })
+            if isinstance(occ['branch'], str):
+                occ['branch'] = occ['branch'].encode('utf-8')
             return occ
 
         def _occurrences_from(origin_id, visit, revision_hash, occurrences):
