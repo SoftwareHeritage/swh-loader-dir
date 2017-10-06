@@ -10,10 +10,12 @@ import tempfile
 import unittest
 
 from nose.tools import istest
+from nose.plugins.attrib import attr
 
 from swh.loader.dir.loader import DirLoader
 
 
+@attr('fs')
 class InitTestLoader(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
