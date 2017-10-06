@@ -1,0 +1,35 @@
+# file to be used with bin/swh-check-missing-objects.py
+
+dir_path: /home/tony/work/inria/repo/linux-tryouts
+
+# synthetic origin
+origin_url: file:///dev/null
+origin_type: dir
+
+# occurrence
+occurrence_branch: master
+occurrence_date: 2015-10-01 00:00:00+00
+
+# occurrence
+occurrence2_branch: dev
+occurrence2_date: 2015-11-01 00:00:00+00
+
+# synthetic revision
+revision_author_name: swh author
+revision_author_email: swh@inria.fr
+revision_author_date: 1444054085
+revision_author_offset: +0200
+revision_committer_name: swh committer
+revision_committer_email: swh@inria.fr
+revision_committer_date: 1444054085
+revision_committer_offset: +0200
+revision_type: tar
+revision_message: synthetic revision message
+
+# synthetic release
+release_name: v0.0.1
+release_date: 1444054085
+release_offset: +0200
+release_author_name: swh author
+release_author_email: swh@inria.fr
+release_comment: synthetic release
