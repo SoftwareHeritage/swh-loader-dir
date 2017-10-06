@@ -23,8 +23,8 @@ docs/conf.py
 docs/index.rst
 docs/_static/.placeholder
 docs/_templates/.placeholder
-resources/dir.ini
-resources/loader/dir.ini
+resources/dir.yml
+resources/loader/dir.yml
 swh.loader.dir.egg-info/PKG-INFO
 swh.loader.dir.egg-info/SOURCES.txt
 swh.loader.dir.egg-info/dependency_links.txt

@@ -5,64 +5,25 @@
 
 import click
 import os
-import sys
 import uuid
 
 from swh.loader.core import loader
-from swh.model import git
-from swh.model.git import GitType
+from swh.model.identifiers import (release_identifier, revision_identifier,
+                                   identifier_to_bytes)
+from swh.model.from_disk import Directory
 
 from . import converters
 
 
 class DirLoader(loader.SWHLoader):
-    """A bulk loader for a directory.
-
-    This will load the content of the directory.
-
-    Args:
-        dir_path: source of the directory to import
-        origin (dict): dictionary with the following keys:
-
-            - id: origin's id
-            - url: url origin we fetched
-            - type: type of the origin
-
-        revision (dict): dictionary with the following keys:
-
-            - author_name: revision's author name
-            - author_email: revision's author email
-            - author_date: timestamp (e.g. 1444054085)
-            - author_offset: date offset e.g. -0220, +0100
-            - committer_name: revision's committer name
-            - committer_email: revision's committer email
-            - committer_date: timestamp
-            - committer_offset: date offset e.g. -0220, +0100
-            - type: type of revision dir, tar
-            - message: synthetic message for the revision
-
-        release (dict): dictionary with the following keys:
-
-            - name: release name
-            - date: release timestamp (e.g. 1444054085)
-            - offset: release date offset e.g. -0220, +0100
-            - author_name: release author's name
-            - author_email: release author's email
-            - comment: release's comment message
-
-        occurrences (dict): dictionary with the following keys:
-
-            - branch: occurrence's branch name
-            - date: validity date (e.g. 2015-01-01 00:00:00+00)
-
-    """
+    """A bulk loader for a directory."""
     CONFIG_BASE_FILENAME = 'loader/dir'
 
     def __init__(self, logging_class='swh.loader.dir.DirLoader',
                  config=None):
         super().__init__(logging_class=logging_class, config=config)
 
-    def list_repo_objs(self, dir_path, revision, release):
+    def list_repo_objs(self, *, dir_path, revision, release):
         """List all objects from dir_path.
 
         Args:
@@ -71,17 +32,15 @@ class DirLoader(loader.SWHLoader):
             release: release dictionary representation
 
         Returns:
-            list: lists of oid-s with keys for each object type:
-
-            - CONTENT
-            - DIRECTORY
-
+            dict: a mapping from object types ('content', 'directory',
+            'revision', 'release') with a dictionary mapping each object's id
+            to the object
         """
         def _revision_from(tree_hash, revision):
             full_rev = dict(revision)
             full_rev['directory'] = tree_hash
             full_rev = converters.commit_to_revision(full_rev)
-            full_rev['id'] = git.compute_revision_sha1_git(full_rev)
+            full_rev['id'] = identifier_to_bytes(revision_identifier(full_rev))
             return full_rev
 
         def _release_from(revision_hash, release):
@@ -89,57 +48,88 @@ class DirLoader(loader.SWHLoader):
             full_rel['target'] = revision_hash
             full_rel['target_type'] = 'revision'
             full_rel = converters.annotated_tag_to_release(full_rel)
-            full_rel['id'] = git.compute_release_sha1_git(full_rel)
+            full_rel['id'] = identifier_to_bytes(release_identifier(full_rel))
             return full_rel
 
         log_id = str(uuid.uuid4())
         sdir_path = dir_path.decode('utf-8')
 
-        self.log.info("Started listing %s" % dir_path, extra={
-            'swh_type': 'dir_list_objs_start',
+        log_data = {
+            'swh_type': 'dir_list_objs_end',
             'swh_repo': sdir_path,
             'swh_id': log_id,
-        })
+        }
 
-        objects_per_path = git.compute_hashes_from_directory(dir_path)
+        self.log.debug("Started listing {swh_repo}".format(**log_data),
+                       extra=log_data)
 
-        tree_hash = objects_per_path[dir_path]['checksums']['sha1_git']
+        directory = Directory.from_disk(path=dir_path, save_path=True)
+
+        objects = directory.collect()
+
+        tree_hash = directory.hash
         full_rev = _revision_from(tree_hash, revision)
 
-        objects = {
-            GitType.BLOB: list(
-                git.objects_per_type(GitType.BLOB, objects_per_path)),
-            GitType.TREE: list(
-                git.objects_per_type(GitType.TREE, objects_per_path)),
-            GitType.COMM: [full_rev],
-            GitType.RELE: []
-        }
+        objects['revision'] = {full_rev['id']: full_rev}
+        objects['release'] = {}
 
         if release and 'name' in release:
             full_rel = _release_from(full_rev['id'], release)
-            objects[GitType.RELE] = [full_rel]
+            objects['release'][full_rel['id']] = release
 
-        self.log.info("Done listing the objects in %s: %d contents, "
-                      "%d directories, %d revisions, %d releases" % (
-                          sdir_path,
-                          len(objects[GitType.BLOB]),
-                          len(objects[GitType.TREE]),
-                          len(objects[GitType.COMM]),
-                          len(objects[GitType.RELE])
-                      ), extra={
-                          'swh_type': 'dir_list_objs_end',
-                          'swh_repo': sdir_path,
-                          'swh_num_blobs': len(objects[GitType.BLOB]),
-                          'swh_num_trees': len(objects[GitType.TREE]),
-                          'swh_num_commits': len(objects[GitType.COMM]),
-                          'swh_num_releases': len(objects[GitType.RELE]),
-                          'swh_id': log_id,
-                      })
+        log_data.update({
+            'swh_num_%s' % key: len(values)
+            for key, values in objects.items()
+        })
+
+        self.log.debug(("Done listing the objects in {swh_repo}: "
+                        "{swh_num_content} contents, "
+                        "{swh_num_directory} directories, "
+                        "{swh_num_revision} revisions, "
+                        "{swh_num_release} releases").format(**log_data),
+                       extra=log_data)
 
         return objects
 
-    def prepare(self, *args, **kwargs):
-        self.dir_path, self.origin, self.visit_date, self.revision, self.release, self.occs = args  # noqa
+    def load(self, *, dir_path, origin, visit_date, revision, release,
+             occurrences):
+        """Load the content of the directory to the archive.
+
+        Args:
+            dir_path: root of the directory to import
+            origin (dict): an origin dictionary as returned by
+              :func:`swh.storage.storage.Storage.origin_get_one`
+            visit_date (str): the date the origin was visited (as an
+              isoformatted string)
+            revision (dict): a revision as passed to
+              :func:`swh.storage.storage.Storage.revision_add`, excluding the
+              `id` and `directory` keys (computed from the directory)
+            release (dict): a release as passed to
+              :func:`swh.storage.storage.Storage.release_add`, excluding the
+              `id`, `target` and `target_type` keys (computed from the
+              revision)'
+            occurrences (list of dicts): the occurrences to create in the
+              generated origin visit. Each dict contains a 'branch' key with
+              the branch name as value.
+        """
+        # Yes, this is entirely redundant, but it allows us to document the
+        # arguments and the entry point.
+        super().load(dir_path=dir_path, origin=origin, visit_date=visit_date,
+                     revision=revision, release=release,
+                     occurrences=occurrences)
+
+    def prepare(self, *, dir_path, origin, visit_date, revision, release,
+                occurrences):
+        """Prepare the loader for loading of the directory.
+
+        Args: identical to :func:`load`.
+        """
+        self.dir_path = dir_path
+        self.origin = origin
+        self.visit_date = visit_date
+        self.revision = revision
+        self.release = release
+        self.stub_occurrences = occurrences
 
         if not os.path.exists(self.dir_path):
             warn_msg = 'Skipping inexistant directory %s' % self.dir_path
@@ -152,7 +142,7 @@ class DirLoader(loader.SWHLoader):
             raise ValueError(warn_msg)
 
         if isinstance(self.dir_path, str):
-            self.dir_path = self.dir_path.encode(sys.getfilesystemencoding())
+            self.dir_path = os.fsencode(self.dir_path)
 
     def get_origin(self):
         return self.origin  # set in prepare method
@@ -170,37 +160,40 @@ class DirLoader(loader.SWHLoader):
                 'target': revision_hash,
                 'target_type': 'revision',
                 'origin': origin_id,
-                'visit': visit
+                'visit': visit,
             })
+            if isinstance(occ['branch'], str):
+                occ['branch'] = occ['branch'].encode('utf-8')
             return occ
 
         def _occurrences_from(origin_id, visit, revision_hash, occurrences):
-            occs = []
-            for occurrence in occurrences:
-                occs.append(_occurrence_from(origin_id,
-                                             visit,
-                                             revision_hash,
-                                             occurrence))
+            occs = {}
+            for i, occurrence in enumerate(occurrences):
+                occs[i] = _occurrence_from(origin_id,
+                                           visit,
+                                           revision_hash,
+                                           occurrence)
 
             return occs
 
         # to load the repository, walk all objects, compute their hashes
         self.objects = self.list_repo_objs(
-            self.dir_path, self.revision, self.release)
+            dir_path=self.dir_path, revision=self.revision,
+            release=self.release)
 
-        full_rev = self.objects[GitType.COMM][0]  # only 1 revision
+        [rev_id] = self.objects['revision'].keys()
 
         # Update objects with release and occurrences
-        self.objects[GitType.REFS] = _occurrences_from(
-            self.origin_id, self.visit, full_rev['id'], self.occs)
+        self.objects['occurrence'] = _occurrences_from(
+            self.origin_id, self.visit, rev_id, self.stub_occurrences)
 
     def store_data(self):
         objects = self.objects
-        self.maybe_load_contents(objects[GitType.BLOB])
-        self.maybe_load_directories(objects[GitType.TREE])
-        self.maybe_load_revisions(objects[GitType.COMM])
-        self.maybe_load_releases(objects[GitType.RELE])
-        self.maybe_load_occurrences(objects[GitType.REFS])
+        self.maybe_load_contents(objects['content'].values())
+        self.maybe_load_directories(objects['directory'].values())
+        self.maybe_load_revisions(objects['revision'].values())
+        self.maybe_load_releases(objects['release'].values())
+        self.maybe_load_occurrences(objects['occurrence'].values())
 
 
 @click.command()
@@ -248,7 +241,8 @@ def main(dir_path, origin_url, visit_date):
     occurrence = {
         'branch': os.path.basename(dir_path),
     }
-    d.load(dir_path, origin, visit_date, revision, release, [occurrence])
+    d.load(dir_path=dir_path, origin=origin, visit_date=visit_date,
+           revision=revision, release=release, occurrences=[occurrence])
 
 
 if __name__ == '__main__':
