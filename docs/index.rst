@@ -1,3 +1,5 @@
+.. _swh-loader-dir:
+
 Software Heritage - Development Documentation
 =============================================
 
