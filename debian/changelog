@@ -1,3 +1,10 @@
+swh-loader-dir (0.0.30-1~swh1) unstable-swh; urgency=medium
+
+  * v0.0.30
+  * swh.loader.dir: Transit existing revision information if provided
+
+ -- Antoine R. Dumont (@ardumont) <antoine.romain.dumont@gmail.com>  Mon, 04 Dec 2017 18:51:16 +0100
+
 swh-loader-dir (0.0.29-1~swh1) unstable-swh; urgency=medium
 
   * Release swh.loader.dir version 0.0.29
