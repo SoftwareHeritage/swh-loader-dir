@@ -9,7 +9,7 @@ import uuid
 
 from swh.loader.core import loader
 from swh.model.identifiers import (release_identifier, revision_identifier,
-                                   identifier_to_bytes)
+                                   snapshot_identifier, identifier_to_bytes)
 from swh.model.from_disk import Directory
 
 from . import converters
@@ -92,7 +92,7 @@ class DirLoader(loader.SWHLoader):
         return objects
 
     def load(self, *, dir_path, origin, visit_date, revision, release,
-             occurrences):
+             branch_name=None):
         """Load the content of the directory to the archive.
 
         Args:
@@ -108,28 +108,30 @@ class DirLoader(loader.SWHLoader):
               :func:`swh.storage.storage.Storage.release_add`, excluding the
               `id`, `target` and `target_type` keys (computed from the
               revision)'
-            occurrences (list of dicts): the occurrences to create in the
-              generated origin visit. Each dict contains a 'branch' key with
-              the branch name as value.
+            branch_name (str): the optional branch_name to use for snapshot
+
         """
         # Yes, this is entirely redundant, but it allows us to document the
         # arguments and the entry point.
         return super().load(dir_path=dir_path, origin=origin,
                             visit_date=visit_date, revision=revision,
-                            release=release, occurrences=occurrences)
+                            release=release, branch_name=branch_name)
 
     def prepare(self, *, dir_path, origin, visit_date, revision, release,
-                occurrences):
-        """Prepare the loader for loading of the directory.
+                branch_name=None):
+        """Prepare the loader for directory loading.
 
         Args: identical to :func:`load`.
+
         """
         self.dir_path = dir_path
         self.origin = origin
         self.visit_date = visit_date
         self.revision = revision
         self.release = release
-        self.stub_occurrences = occurrences
+
+        branch = branch_name if branch_name else os.path.basename(dir_path)
+        self.branch_name = branch
 
         if not os.path.exists(self.dir_path):
             warn_msg = 'Skipping inexistant directory %s' % self.dir_path
@@ -154,27 +156,24 @@ class DirLoader(loader.SWHLoader):
         pass
 
     def fetch_data(self):
-        def _occurrence_from(origin_id, visit, revision_hash, occurrence):
-            occ = dict(occurrence)
-            occ.update({
-                'target': revision_hash,
-                'target_type': 'revision',
-                'origin': origin_id,
-                'visit': visit,
-            })
-            if isinstance(occ['branch'], str):
-                occ['branch'] = occ['branch'].encode('utf-8')
-            return occ
+        def _snapshot_from(origin_id, visit, revision_hash, branch):
+            if isinstance(branch, str):
+                branch = branch.encode('utf-8')
 
-        def _occurrences_from(origin_id, visit, revision_hash, occurrences):
-            occs = {}
-            for i, occurrence in enumerate(occurrences):
-                occs[i] = _occurrence_from(origin_id,
-                                           visit,
-                                           revision_hash,
-                                           occurrence)
-
-            return occs
+            snapshot = {
+                'id': None,
+                'branches': {
+                    branch: {
+                        'target': revision_hash,
+                        'target_type': 'revision',
+                        'origin': origin_id,
+                        'visit': visit,
+                    }
+                }
+            }
+            snap_id = identifier_to_bytes(snapshot_identifier(snapshot))
+            snapshot['id'] = snap_id
+            return snapshot
 
         # to load the repository, walk all objects, compute their hashes
         self.objects = self.list_repo_objs(
@@ -183,9 +182,11 @@ class DirLoader(loader.SWHLoader):
 
         [rev_id] = self.objects['revision'].keys()
 
+        snapshot = _snapshot_from(
+            self.origin_id, self.visit, rev_id, self.branch_name)
+
         # Update objects with release and occurrences
-        self.objects['occurrence'] = _occurrences_from(
-            self.origin_id, self.visit, rev_id, self.stub_occurrences)
+        self.objects['snapshot'] = snapshot
 
     def store_data(self):
         objects = self.objects
@@ -193,7 +194,7 @@ class DirLoader(loader.SWHLoader):
         self.maybe_load_directories(objects['directory'].values())
         self.maybe_load_revisions(objects['revision'].values())
         self.maybe_load_releases(objects['release'].values())
-        self.maybe_load_occurrences(objects['occurrence'].values())
+        self.maybe_load_snapshot(objects['snapshot'])
 
 
 @click.command()
@@ -238,11 +239,9 @@ def main(dir_path, origin_url, visit_date):
         'synthetic': True,
     }
     release = None
-    occurrence = {
-        'branch': os.path.basename(dir_path),
-    }
-    d.load(dir_path=dir_path, origin=origin, visit_date=visit_date,
-           revision=revision, release=release, occurrences=[occurrence])
+    d.load(dir_path=dir_path, origin=origin,
+           visit_date=visit_date, revision=revision,
+           release=release)
 
 
 if __name__ == '__main__':

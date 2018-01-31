@@ -1,4 +1,4 @@
-# Copyright (C) 2015  The Software Heritage developers
+# Copyright (C) 2015-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -63,11 +63,10 @@ class DirLoaderListRepoObject(InitTestLoader):
             'send_contents': True,
             'send_directories': True,
             'content_packet_size_bytes': 1073741824,
-            'occurrence_packet_size': 100000,
             'send_revisions': True,
             'revision_packet_size': 100000,
             'content_packet_block_size_bytes': 104857600,
-            'send_occurrences': True,
+            'send_snaphot': True,
             'release_packet_size': 100000,
             'send_releases': True
         }
@@ -75,12 +74,6 @@ class DirLoaderListRepoObject(InitTestLoader):
         self.origin = {
             'url': 'file:///dev/null',
             'type': 'dir',
-        }
-
-        self.occurrence = {
-            'branch': 'master',
-            'authority_id': 1,
-            'validity': '2015-01-01 00:00:00+00',
         }
 
         self.revision = {
@@ -156,7 +149,7 @@ class LoaderNoStorageForTest:
         self.all_directories = []
         self.all_revisions = []
         self.all_releases = []
-        self.all_occurrences = []
+        self.all_snapshots = []
 
     def send_origin(self, origin):
         self.origin = origin
@@ -185,8 +178,8 @@ class LoaderNoStorageForTest:
     def maybe_load_releases(self, releases):
         self.all_releases.extend(releases)
 
-    def maybe_load_occurrences(self, all_occurrences):
-        self.all_occurrences.extend(all_occurrences)
+    def maybe_load_snapshot(self, snapshot):
+        self.all_snapshots.append(snapshot)
 
     def open_fetch_history(self):
         return 1
@@ -210,14 +203,13 @@ TEST_CONFIG = {
     'send_directories': False,
     'send_revisions': False,
     'send_releases': False,
-    'send_occurrences': False,
+    'send_snapshot': False,
     'content_packet_size': 100,
     'content_packet_block_size_bytes': 104857600,
     'content_packet_size_bytes': 1073741824,
     'directory_packet_size': 250,
     'revision_packet_size': 100,
     'release_packet_size': 100,
-    'occurrence_packet_size': 100,
 }
 
 
@@ -289,15 +281,12 @@ class SWHDirLoaderITTest(InitTestLoader):
             'synthetic': True,
         }
 
-        occurrence = {
-            'branch': os.path.basename(self.root_path),
-        }
+        branch = os.path.basename(self.root_path)
 
         # when
         self.loader.load(
             dir_path=self.root_path, origin=origin, visit_date=visit_date,
-            revision=revision, release=None, occurrences=[occurrence],
-        )
+            revision=revision, release=None, branch_name=branch)
 
         # then
         self.assertEquals(len(self.loader.all_contents), 8)
@@ -315,4 +304,4 @@ class SWHDirLoaderITTest(InitTestLoader):
                           b'swh-loader-dir: synthetic revision message')
 
         self.assertEquals(len(self.loader.all_releases), 0)
-        self.assertEquals(len(self.loader.all_occurrences), 1)
+        self.assertEquals(len(self.loader.all_snapshots), 1)

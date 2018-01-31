@@ -14,7 +14,7 @@ class LoadDirRepository(Task):
     task_queue = 'swh_loader_dir'
 
     def run_task(self, *, dir_path, origin, visit_date, revision, release,
-                 occurrences):
+                 branch_name=None):
         """Import a directory dir_path with origin at visit_date time.
         Providing the revision, release, and occurrences.
 
@@ -23,4 +23,4 @@ class LoadDirRepository(Task):
         loader.log = self.log
         return loader.load(dir_path=dir_path, origin=origin,
                            visit_date=visit_date, revision=revision,
-                           release=release, occurrences=occurrences)
+                           release=release, branch_name=branch_name)
