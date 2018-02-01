@@ -74,7 +74,10 @@ class DirLoaderListRepoObject(InitTestLoader):
         self.origin = {
             'url': 'file:///dev/null',
             'type': 'dir',
+            'id': 10,
         }
+
+        self.visit = {'id': 1}
 
         self.revision = {
             'author': {
@@ -118,21 +121,26 @@ class DirLoaderListRepoObject(InitTestLoader):
 
     @istest
     def load_without_storage(self):
+        """List directory objects without loading should be ok"""
         # when
-        objects = self.dirloader.list_repo_objs(
+        objects = self.dirloader.list_objs(
             dir_path=self.root_path,
+            origin=self.origin,
+            visit=self.visit,
             revision=self.revision,
-            release=self.release)
+            release=self.release,
+            branch_name=b'master')
 
         # then
-        self.assertEquals(len(objects), 4,
-                          "4 objects types, blob, tree, revision, release")
+        self.assertEquals(len(objects), 5,
+                          "5 obj types: con, dir, rev, rel, snap")
         self.assertEquals(len(objects['content']), 8,
                           "8 contents: 3 files + 5 links")
         self.assertEquals(len(objects['directory']), 6,
                           "6 directories: 5 subdirs + 1 empty")
         self.assertEquals(len(objects['revision']), 1, "synthetic revision")
         self.assertEquals(len(objects['release']), 1, "synthetic release")
+        self.assertEquals(len(objects['snapshot']), 1, "snapshot")
 
 
 class LoaderNoStorageForTest:
@@ -152,15 +160,17 @@ class LoaderNoStorageForTest:
         self.all_snapshots = []
 
     def send_origin(self, origin):
+        origin['id'] = 1
         self.origin = origin
+        return self.origin
 
     def send_origin_visit(self, origin_id, ts):
-        self.origin_visit = {
+        origin_visit = {
             'origin': origin_id,
             'ts': ts,
             'visit': 1,
         }
-        return self.origin_visit
+        return origin_visit
 
     def update_origin_visit(self, origin_id, visit, status):
         self.status = status
