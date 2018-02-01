@@ -32,7 +32,7 @@ def release_from(revision_hash, release):
     return full_rel
 
 
-def snapshot_from(origin_id, visit, revision_hash, branch):
+def snapshot_from(revision_hash, branch):
     """Build a snapshot from an origin, a visit, a revision, and a branch.
 
     """
@@ -45,8 +45,6 @@ def snapshot_from(origin_id, visit, revision_hash, branch):
             branch: {
                 'target': revision_hash,
                 'target_type': 'revision',
-                'origin': origin_id,
-                'visit': visit,
             }
         }
     }
@@ -64,13 +62,11 @@ class DirLoader(loader.SWHLoader):
         super().__init__(logging_class=logging_class, config=config)
 
     def list_objs(self, *,
-                  dir_path, origin, visit, revision, release, branch_name):
+                  dir_path, revision, release, branch_name):
         """List all objects from dir_path.
 
         Args:
             dir_path (str): the directory to list
-            origin (dict): origin information
-            visit (dict): visit information
             revision (dict): revision dictionary representation
             release (dict): release dictionary representation
             branch_name (str): branch name
@@ -107,9 +103,7 @@ class DirLoader(loader.SWHLoader):
             full_rel = release_from(rev_id, release)
             objects['release'][full_rel['id']] = full_rel
 
-        snapshot = snapshot_from(
-            origin['id'], visit['id'], rev_id, branch_name)
-
+        snapshot = snapshot_from(rev_id, branch_name)
         objects['snapshot'] = {
             snapshot['id']: snapshot
         }
@@ -199,11 +193,7 @@ class DirLoader(loader.SWHLoader):
         Sets self.objects reference with results.
 
         """
-        visit = {'id': self.visit}
-        self.origin['id'] = self.origin_id
         self.objects = self.list_objs(dir_path=self.dir_path,
-                                      origin=self.origin,
-                                      visit=visit,
                                       revision=self.revision,
                                       release=self.release,
                                       branch_name=self.branch_name)

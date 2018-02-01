@@ -74,10 +74,7 @@ class DirLoaderListRepoObject(InitTestLoader):
         self.origin = {
             'url': 'file:///dev/null',
             'type': 'dir',
-            'id': 10,
         }
-
-        self.visit = {'id': 1}
 
         self.revision = {
             'author': {
@@ -125,8 +122,6 @@ class DirLoaderListRepoObject(InitTestLoader):
         # when
         objects = self.dirloader.list_objs(
             dir_path=self.root_path,
-            origin=self.origin,
-            visit=self.visit,
             revision=self.revision,
             release=self.release,
             branch_name=b'master')
