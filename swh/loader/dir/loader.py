@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2017  The Software Heritage developers
+# Copyright (C) 2015-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -9,10 +9,48 @@ import uuid
 
 from swh.loader.core import loader
 from swh.model.identifiers import (release_identifier, revision_identifier,
-                                   identifier_to_bytes)
+                                   snapshot_identifier, identifier_to_bytes)
 from swh.model.from_disk import Directory
 
 from . import converters
+
+
+def revision_from(directory_hash, revision):
+    full_rev = dict(revision)
+    full_rev['directory'] = directory_hash
+    full_rev = converters.commit_to_revision(full_rev)
+    full_rev['id'] = identifier_to_bytes(revision_identifier(full_rev))
+    return full_rev
+
+
+def release_from(revision_hash, release):
+    full_rel = dict(release)
+    full_rel['target'] = revision_hash
+    full_rel['target_type'] = 'revision'
+    full_rel = converters.annotated_tag_to_release(full_rel)
+    full_rel['id'] = identifier_to_bytes(release_identifier(full_rel))
+    return full_rel
+
+
+def snapshot_from(revision_hash, branch):
+    """Build a snapshot from an origin, a visit, a revision, and a branch.
+
+    """
+    if isinstance(branch, str):
+        branch = branch.encode('utf-8')
+
+    snapshot = {
+        'id': None,
+        'branches': {
+            branch: {
+                'target': revision_hash,
+                'target_type': 'revision',
+            }
+        }
+    }
+    snap_id = identifier_to_bytes(snapshot_identifier(snapshot))
+    snapshot['id'] = snap_id
+    return snapshot
 
 
 class DirLoader(loader.SWHLoader):
@@ -23,34 +61,22 @@ class DirLoader(loader.SWHLoader):
                  config=None):
         super().__init__(logging_class=logging_class, config=config)
 
-    def list_repo_objs(self, *, dir_path, revision, release):
+    def list_objs(self, *,
+                  dir_path, revision, release, branch_name):
         """List all objects from dir_path.
 
         Args:
-            dir_path: the directory to list
-            revision: revision dictionary representation
-            release: release dictionary representation
+            dir_path (str): the directory to list
+            revision (dict): revision dictionary representation
+            release (dict): release dictionary representation
+            branch_name (str): branch name
 
         Returns:
             dict: a mapping from object types ('content', 'directory',
-            'revision', 'release') with a dictionary mapping each object's id
-            to the object
+            'revision', 'release', 'snapshot') with a dictionary
+            mapping each object's id to the object
+
         """
-        def _revision_from(tree_hash, revision):
-            full_rev = dict(revision)
-            full_rev['directory'] = tree_hash
-            full_rev = converters.commit_to_revision(full_rev)
-            full_rev['id'] = identifier_to_bytes(revision_identifier(full_rev))
-            return full_rev
-
-        def _release_from(revision_hash, release):
-            full_rel = dict(release)
-            full_rel['target'] = revision_hash
-            full_rel['target_type'] = 'revision'
-            full_rel = converters.annotated_tag_to_release(full_rel)
-            full_rel['id'] = identifier_to_bytes(release_identifier(full_rel))
-            return full_rel
-
         log_id = str(uuid.uuid4())
         sdir_path = dir_path.decode('utf-8')
 
@@ -64,18 +90,23 @@ class DirLoader(loader.SWHLoader):
                        extra=log_data)
 
         directory = Directory.from_disk(path=dir_path, save_path=True)
-
         objects = directory.collect()
 
-        tree_hash = directory.hash
-        full_rev = _revision_from(tree_hash, revision)
+        full_rev = revision_from(directory.hash, revision)
+        rev_id = full_rev['id']
+        objects['revision'] = {
+            rev_id: full_rev
+        }
 
-        objects['revision'] = {full_rev['id']: full_rev}
         objects['release'] = {}
-
         if release and 'name' in release:
-            full_rel = _release_from(full_rev['id'], release)
-            objects['release'][full_rel['id']] = release
+            full_rel = release_from(rev_id, release)
+            objects['release'][full_rel['id']] = full_rel
+
+        snapshot = snapshot_from(rev_id, branch_name)
+        objects['snapshot'] = {
+            snapshot['id']: snapshot
+        }
 
         log_data.update({
             'swh_num_%s' % key: len(values)
@@ -86,13 +117,14 @@ class DirLoader(loader.SWHLoader):
                         "{swh_num_content} contents, "
                         "{swh_num_directory} directories, "
                         "{swh_num_revision} revisions, "
-                        "{swh_num_release} releases").format(**log_data),
+                        "{swh_num_release} releases, "
+                        "{swh_num_snapshot} snapshot").format(**log_data),
                        extra=log_data)
 
         return objects
 
     def load(self, *, dir_path, origin, visit_date, revision, release,
-             occurrences):
+             branch_name=None):
         """Load the content of the directory to the archive.
 
         Args:
@@ -108,31 +140,33 @@ class DirLoader(loader.SWHLoader):
               :func:`swh.storage.storage.Storage.release_add`, excluding the
               `id`, `target` and `target_type` keys (computed from the
               revision)'
-            occurrences (list of dicts): the occurrences to create in the
-              generated origin visit. Each dict contains a 'branch' key with
-              the branch name as value.
+            branch_name (str): the optional branch_name to use for snapshot
+
         """
         # Yes, this is entirely redundant, but it allows us to document the
         # arguments and the entry point.
-        super().load(dir_path=dir_path, origin=origin, visit_date=visit_date,
-                     revision=revision, release=release,
-                     occurrences=occurrences)
+        return super().load(dir_path=dir_path, origin=origin,
+                            visit_date=visit_date, revision=revision,
+                            release=release, branch_name=branch_name)
 
     def prepare(self, *, dir_path, origin, visit_date, revision, release,
-                occurrences):
-        """Prepare the loader for loading of the directory.
+                branch_name=None):
+        """Prepare the loader for directory loading.
 
         Args: identical to :func:`load`.
+
         """
         self.dir_path = dir_path
         self.origin = origin
         self.visit_date = visit_date
         self.revision = revision
         self.release = release
-        self.stub_occurrences = occurrences
+
+        branch = branch_name if branch_name else os.path.basename(dir_path)
+        self.branch_name = branch
 
         if not os.path.exists(self.dir_path):
-            warn_msg = 'Skipping inexistant directory %s' % self.dir_path
+            warn_msg = 'Skipping inexistent directory %s' % self.dir_path
             self.log.error(warn_msg,
                            extra={
                                'swh_type': 'dir_repo_list_refs',
@@ -154,38 +188,15 @@ class DirLoader(loader.SWHLoader):
         pass
 
     def fetch_data(self):
-        def _occurrence_from(origin_id, visit, revision_hash, occurrence):
-            occ = dict(occurrence)
-            occ.update({
-                'target': revision_hash,
-                'target_type': 'revision',
-                'origin': origin_id,
-                'visit': visit,
-            })
-            if isinstance(occ['branch'], str):
-                occ['branch'] = occ['branch'].encode('utf-8')
-            return occ
+        """Walk the directory, load all objects with their hashes.
 
-        def _occurrences_from(origin_id, visit, revision_hash, occurrences):
-            occs = {}
-            for i, occurrence in enumerate(occurrences):
-                occs[i] = _occurrence_from(origin_id,
-                                           visit,
-                                           revision_hash,
-                                           occurrence)
+        Sets self.objects reference with results.
 
-            return occs
-
-        # to load the repository, walk all objects, compute their hashes
-        self.objects = self.list_repo_objs(
-            dir_path=self.dir_path, revision=self.revision,
-            release=self.release)
-
-        [rev_id] = self.objects['revision'].keys()
-
-        # Update objects with release and occurrences
-        self.objects['occurrence'] = _occurrences_from(
-            self.origin_id, self.visit, rev_id, self.stub_occurrences)
+        """
+        self.objects = self.list_objs(dir_path=self.dir_path,
+                                      revision=self.revision,
+                                      release=self.release,
+                                      branch_name=self.branch_name)
 
     def store_data(self):
         objects = self.objects
@@ -193,7 +204,8 @@ class DirLoader(loader.SWHLoader):
         self.maybe_load_directories(objects['directory'].values())
         self.maybe_load_revisions(objects['revision'].values())
         self.maybe_load_releases(objects['release'].values())
-        self.maybe_load_occurrences(objects['occurrence'].values())
+        snapshot = list(objects['snapshot'].values())[0]
+        self.maybe_load_snapshot(snapshot)
 
 
 @click.command()
@@ -238,11 +250,9 @@ def main(dir_path, origin_url, visit_date):
         'synthetic': True,
     }
     release = None
-    occurrence = {
-        'branch': os.path.basename(dir_path),
-    }
-    d.load(dir_path=dir_path, origin=origin, visit_date=visit_date,
-           revision=revision, release=release, occurrences=[occurrence])
+    d.load(dir_path=dir_path, origin=origin,
+           visit_date=visit_date, revision=revision,
+           release=release)
 
 
 if __name__ == '__main__':
