@@ -1,4 +1,4 @@
-# Copyright (C) 2015  The Software Heritage developers
+# Copyright (C) 2015-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -63,11 +63,10 @@ class DirLoaderListRepoObject(InitTestLoader):
             'send_contents': True,
             'send_directories': True,
             'content_packet_size_bytes': 1073741824,
-            'occurrence_packet_size': 100000,
             'send_revisions': True,
             'revision_packet_size': 100000,
             'content_packet_block_size_bytes': 104857600,
-            'send_occurrences': True,
+            'send_snaphot': True,
             'release_packet_size': 100000,
             'send_releases': True
         }
@@ -75,12 +74,6 @@ class DirLoaderListRepoObject(InitTestLoader):
         self.origin = {
             'url': 'file:///dev/null',
             'type': 'dir',
-        }
-
-        self.occurrence = {
-            'branch': 'master',
-            'authority_id': 1,
-            'validity': '2015-01-01 00:00:00+00',
         }
 
         self.revision = {
@@ -125,21 +118,24 @@ class DirLoaderListRepoObject(InitTestLoader):
 
     @istest
     def load_without_storage(self):
+        """List directory objects without loading should be ok"""
         # when
-        objects = self.dirloader.list_repo_objs(
+        objects = self.dirloader.list_objs(
             dir_path=self.root_path,
             revision=self.revision,
-            release=self.release)
+            release=self.release,
+            branch_name=b'master')
 
         # then
-        self.assertEquals(len(objects), 4,
-                          "4 objects types, blob, tree, revision, release")
+        self.assertEquals(len(objects), 5,
+                          "5 obj types: con, dir, rev, rel, snap")
         self.assertEquals(len(objects['content']), 8,
                           "8 contents: 3 files + 5 links")
         self.assertEquals(len(objects['directory']), 6,
                           "6 directories: 5 subdirs + 1 empty")
         self.assertEquals(len(objects['revision']), 1, "synthetic revision")
         self.assertEquals(len(objects['release']), 1, "synthetic release")
+        self.assertEquals(len(objects['snapshot']), 1, "snapshot")
 
 
 class LoaderNoStorageForTest:
@@ -156,18 +152,20 @@ class LoaderNoStorageForTest:
         self.all_directories = []
         self.all_revisions = []
         self.all_releases = []
-        self.all_occurrences = []
+        self.all_snapshots = []
 
     def send_origin(self, origin):
+        origin['id'] = 1
         self.origin = origin
+        return self.origin
 
     def send_origin_visit(self, origin_id, ts):
-        self.origin_visit = {
+        origin_visit = {
             'origin': origin_id,
             'ts': ts,
             'visit': 1,
         }
-        return self.origin_visit
+        return origin_visit
 
     def update_origin_visit(self, origin_id, visit, status):
         self.status = status
@@ -185,8 +183,8 @@ class LoaderNoStorageForTest:
     def maybe_load_releases(self, releases):
         self.all_releases.extend(releases)
 
-    def maybe_load_occurrences(self, all_occurrences):
-        self.all_occurrences.extend(all_occurrences)
+    def maybe_load_snapshot(self, snapshot):
+        self.all_snapshots.append(snapshot)
 
     def open_fetch_history(self):
         return 1
@@ -210,14 +208,13 @@ TEST_CONFIG = {
     'send_directories': False,
     'send_revisions': False,
     'send_releases': False,
-    'send_occurrences': False,
+    'send_snapshot': False,
     'content_packet_size': 100,
     'content_packet_block_size_bytes': 104857600,
     'content_packet_size_bytes': 1073741824,
     'directory_packet_size': 250,
     'revision_packet_size': 100,
     'release_packet_size': 100,
-    'occurrence_packet_size': 100,
 }
 
 
@@ -289,15 +286,12 @@ class SWHDirLoaderITTest(InitTestLoader):
             'synthetic': True,
         }
 
-        occurrence = {
-            'branch': os.path.basename(self.root_path),
-        }
+        branch = os.path.basename(self.root_path)
 
         # when
         self.loader.load(
             dir_path=self.root_path, origin=origin, visit_date=visit_date,
-            revision=revision, release=None, occurrences=[occurrence],
-        )
+            revision=revision, release=None, branch_name=branch)
 
         # then
         self.assertEquals(len(self.loader.all_contents), 8)
@@ -315,4 +309,4 @@ class SWHDirLoaderITTest(InitTestLoader):
                           b'swh-loader-dir: synthetic revision message')
 
         self.assertEquals(len(self.loader.all_releases), 0)
-        self.assertEquals(len(self.loader.all_occurrences), 1)
+        self.assertEquals(len(self.loader.all_snapshots), 1)
