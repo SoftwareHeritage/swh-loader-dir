@@ -149,6 +149,10 @@ class DirLoader(loader.SWHLoader):
                             visit_date=visit_date, revision=revision,
                             release=release, branch_name=branch_name)
 
+    def prepare_origin(self, *args, **kwargs):
+        self.origin = kwargs['origin']
+        return super().prepare_origin(*args, **kwargs)
+
     def prepare(self, *, dir_path, origin, visit_date, revision, release,
                 branch_name=None):
         """Prepare the loader for directory loading.
@@ -157,7 +161,6 @@ class DirLoader(loader.SWHLoader):
 
         """
         self.dir_path = dir_path
-        self.origin = origin
         self.visit_date = visit_date
         self.revision = revision
         self.release = release
@@ -177,9 +180,6 @@ class DirLoader(loader.SWHLoader):
 
         if isinstance(self.dir_path, str):
             self.dir_path = os.fsencode(self.dir_path)
-
-    def get_origin(self):
-        return self.origin  # set in prepare method
 
     def cleanup(self):
         """Nothing to clean up.
