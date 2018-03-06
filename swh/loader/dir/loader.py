@@ -3,7 +3,6 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-import click
 import os
 import uuid
 
@@ -208,52 +207,43 @@ class DirLoader(loader.SWHLoader):
         self.maybe_load_snapshot(snapshot)
 
 
-@click.command()
-@click.option('--dir-path', required=1, help='Directory path to load')
-@click.option('--origin-url', required=1, help='Origin url for that directory')
-@click.option('--visit-date', default=None, help='Visit date time override')
-def main(dir_path, origin_url, visit_date):
-    """Debugging purpose."""
-    d = DirLoader()
-
-    origin = {
-        'url': origin_url,
-        'type': 'dir'
-    }
-
-    import datetime
-    commit_time = int(datetime.datetime.now(
-        tz=datetime.timezone.utc).timestamp()
+if __name__ == '__main__':
+    import click
+    import logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(process)d %(message)s'
     )
 
-    swh_person = {
-        'name': 'Software Heritage',
-        'fullname': 'Software Heritage',
-        'email': 'robot@softwareheritage.org'
-    }
-    revision_message = 'swh-loader-dir: synthetic revision message'
-    revision_type = 'tar'
-    revision = {
-        'date': {
-            'timestamp': commit_time,
-            'offset': 0,
-        },
-        'committer_date': {
-            'timestamp': commit_time,
-            'offset': 0,
-        },
-        'author': swh_person,
-        'committer': swh_person,
-        'type': revision_type,
-        'message': revision_message,
-        'metadata': {},
-        'synthetic': True,
-    }
-    release = None
-    d.load(dir_path=dir_path, origin=origin,
-           visit_date=visit_date, revision=revision,
-           release=release)
+    @click.command()
+    @click.option('--dir-path', required=1, help='Directory path to load')
+    @click.option('--origin-url', required=1,
+                  help='Origin url for that directory')
+    @click.option('--visit-date', default=None,
+                  help='Visit date time override')
+    def main(dir_path, origin_url, visit_date):
+        """Loading directory tryout"""
+        import datetime
+        origin = {'url': origin_url, 'type': 'dir'}
+        commit_time = int(datetime.datetime.now(
+            tz=datetime.timezone.utc).timestamp())
+        swh_person = {
+            'name': 'Software Heritage',
+            'fullname': 'Software Heritage',
+            'email': 'robot@softwareheritage.org'
+        }
+        revision = {
+            'date': {'timestamp': commit_time, 'offset': 0},
+            'committer_date': {'timestamp': commit_time, 'offset': 0},
+            'author': swh_person,
+            'committer': swh_person,
+            'type': 'tar',
+            'message': 'swh-loader-dir: synthetic revision message',
+            'metadata': {},
+            'synthetic': True,
+        }
+        DirLoader().load(dir_path=dir_path, origin=origin,
+                         visit_date=visit_date, revision=revision,
+                         release=None)
 
-
-if __name__ == '__main__':
     main()
