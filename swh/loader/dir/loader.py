@@ -148,9 +148,9 @@ class DirLoader(loader.SWHLoader):
                             visit_date=visit_date, revision=revision,
                             release=release, branch_name=branch_name)
 
-    def prepare_origin(self, *args, **kwargs):
-        self.origin = kwargs['origin']
-        return super().prepare_origin(*args, **kwargs)
+    def prepare_origin_visit(self, *, origin, visit_date, **kwargs):
+        self.origin = origin
+        self.visit_date = visit_date
 
     def prepare(self, *, dir_path, origin, visit_date, revision, release,
                 branch_name=None):
@@ -160,7 +160,6 @@ class DirLoader(loader.SWHLoader):
 
         """
         self.dir_path = dir_path
-        self.visit_date = visit_date
         self.revision = revision
         self.release = release
 
