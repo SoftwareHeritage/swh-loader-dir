@@ -148,11 +148,11 @@ class DirLoader(loader.SWHLoader):
                             visit_date=visit_date, revision=revision,
                             release=release, branch_name=branch_name)
 
-    def prepare_origin_visit(self, *, origin, visit_date, **kwargs):
+    def prepare_origin_visit(self, *, origin, visit_date=None, **kwargs):
         self.origin = origin
         self.visit_date = visit_date
 
-    def prepare(self, *, dir_path, origin, visit_date, revision, release,
+    def prepare(self, *, dir_path, origin, revision, release, visit_date=None,
                 branch_name=None):
         """Prepare the loader for directory loading.
 
