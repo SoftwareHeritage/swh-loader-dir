@@ -3,7 +3,7 @@
 import os
 import subprocess
 
-from swh.model.hashutil import hash_path, hash_to_bytes
+from swh.model.hashutil import MultiHash, hash_to_bytes
 
 BATCH_SIZE = 10000
 
@@ -48,8 +48,8 @@ def hashfile(filepath):
     """Hash a file according to what expects storage's api.
 
     """
-    hashes = hash_path(filepath)
-    hashes.update({'length': os.path.getsize(filepath)})
+    hashes = MultiHash.from_path(filepath).digest()
+    hashes['length'] = os.path.getsize(filepath)
     return hashes
 
 
