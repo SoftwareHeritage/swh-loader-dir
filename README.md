@@ -19,23 +19,6 @@ storage:
   cls: remote
   args:
     url: http://localhost:5002/
-
-send_contents: True
-send_directories: True
-send_revisions: True
-send_releases: True
-send_occurrences: True
-# nb of max contents to send for storage
-content_packet_size: 100
-# 100 Mib of content data
-content_packet_block_size_bytes: 104857600
-# limit for swh content storage for one blob (beyond that limit, the
-# content's data is not sent for storage)
-content_packet_size_bytes: 1073741824
-directory_packet_size: 250
-revision_packet_size: 100
-release_packet_size: 100
-occurrence_packet_size: 100
 ```
 
 ## Run
@@ -50,18 +33,27 @@ To run the loader, you can use either:
 Load directory directly from code or toplevel:
 
 ``` Python
-from swh.loader.dir.loader import DirLoader
-
-dir_path = '/path/to/directory
+dir_path = '/home/storage/dir/'
 
 # Fill in those
 origin = {'url': 'some-origin', 'type': 'dir'}
 visit_date = 'Tue, 3 May 2017 17:16:32 +0200'
-release = None
-revision = {}
-occurrence = {}
+revision = {
+    'author': {'name': 'some', 'fullname': 'one', 'email': 'something'},
+    'committer': {'name': 'some', 'fullname': 'one', 'email': 'something'},
+    'message': '1.0 Released',
+    'date': None,
+    'committer_date': None,
+    'type': 'tar',
+    'metadata': {}
+}
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
-DirLoader().load(dir_path, origin, visit_date, revision, release, [occurrence])
+from swh.loader.dir.tasks import LoadDirRepository
+l = LoadDirRepository()
+l.run_task(dir_path=dir_path, origin=origin, visit_date=visit_date,
+           revision=revision, release=None, branch_name='master')
 ```
 
 ### Celery
