@@ -4,48 +4,36 @@
 # See top-level LICENSE file for more information
 
 import os
-import shutil
-import subprocess
-import tempfile
-import unittest
 
 from nose.tools import istest
 from nose.plugins.attrib import attr
 
 from swh.loader.dir.loader import DirLoader
+from swh.loader.core.tests import LoaderNoStorage, BaseLoaderTest
 
 
 @attr('fs')
-class InitTestLoader(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-
-        cls.tmp_root_path = tempfile.mkdtemp().encode('utf-8')
-
-        start_path = os.path.dirname(__file__).encode('utf-8')
-        sample_folder_archive = os.path.join(start_path,
-                                             b'../../../../..',
-                                             b'swh-storage-testdata',
-                                             b'dir-folders',
-                                             b'sample-folder.tgz')
-
-        cls.root_path = os.path.join(cls.tmp_root_path)
-
-        # uncompress the sample folder
-        subprocess.check_output(
-            ['tar', 'xvf', sample_folder_archive, '-C', cls.tmp_root_path],
-        )
-
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-
-        shutil.rmtree(cls.tmp_root_path)
+class BaseDirLoaderTest(BaseLoaderTest):
+    def setUp(self, archive_name='sample-folder.tgz'):
+        super().setUp(archive_name=archive_name,
+                      prefix_tmp_folder_name='swh.loader.dir.',
+                      start_path=os.path.dirname(__file__))
 
 
-class DirLoaderListRepoObject(InitTestLoader):
+class DirLoaderNoStorage(LoaderNoStorage, DirLoader):
+    """A DirLoader with no persistence.
 
+    Context:
+        Load a tarball with a persistent-less tarball loader
+
+    """
+    def __init__(self, config={}):
+        super().__init__(config=config)
+        self.origin_id = 1
+        self.visit = 1
+
+
+class DirLoaderListRepoObject(BaseDirLoaderTest):
     def setUp(self):
         super().setUp()
 
@@ -114,14 +102,17 @@ class DirLoaderListRepoObject(InitTestLoader):
             'message': 'synthetic release',
         }
 
-        self.dirloader = DirLoader(config=self.info)
+        self.dirloader = DirLoaderNoStorage(config=self.info)
 
     @istest
     def load_without_storage(self):
         """List directory objects without loading should be ok"""
         # when
+        dir_path = self.destination_path
+        if isinstance(dir_path, str):
+            dir_path = dir_path.encode('utf-8')
         objects = self.dirloader.list_objs(
-            dir_path=self.root_path,
+            dir_path=dir_path,
             revision=self.revision,
             release=self.release,
             branch_name=b'master')
@@ -136,64 +127,6 @@ class DirLoaderListRepoObject(InitTestLoader):
         self.assertEquals(len(objects['revision']), 1, "synthetic revision")
         self.assertEquals(len(objects['release']), 1, "synthetic release")
         self.assertEquals(len(objects['snapshot']), 1, "snapshot")
-
-
-class LoaderNoStorageForTest:
-    """Mixin class to inhibit the persistence and keep in memory the data
-    sent for storage.
-
-    cf. SWHDirLoaderNoStorage
-
-    """
-    def __init__(self):
-        super().__init__()
-        # Init the state
-        self.all_contents = []
-        self.all_directories = []
-        self.all_revisions = []
-        self.all_releases = []
-        self.all_snapshots = []
-
-    def send_origin(self, origin):
-        origin['id'] = 1
-        self.origin = origin
-        return self.origin
-
-    def send_origin_visit(self, origin_id, ts):
-        origin_visit = {
-            'origin': origin_id,
-            'ts': ts,
-            'visit': 1,
-        }
-        return origin_visit
-
-    def update_origin_visit(self, origin_id, visit, status):
-        self.status = status
-        self.origin_visit = visit
-
-    def maybe_load_contents(self, all_contents):
-        self.all_contents.extend(all_contents)
-
-    def maybe_load_directories(self, all_directories):
-        self.all_directories.extend(all_directories)
-
-    def maybe_load_revisions(self, all_revisions):
-        self.all_revisions.extend(all_revisions)
-
-    def maybe_load_releases(self, releases):
-        self.all_releases.extend(releases)
-
-    def maybe_load_snapshot(self, snapshot):
-        self.all_snapshots.append(snapshot)
-
-    def open_fetch_history(self):
-        return 1
-
-    def close_fetch_history_success(self, fetch_history_id):
-        pass
-
-    def close_fetch_history_failure(self, fetch_history_id):
-        pass
 
 
 TEST_CONFIG = {
@@ -227,21 +160,10 @@ def parse_config_file(base_filename=None, config_filename=None,
 DirLoader.parse_config_file = parse_config_file
 
 
-class SWHDirLoaderNoStorage(LoaderNoStorageForTest, DirLoader):
-    """A DirLoader with no persistence.
-
-    Context:
-        Load a tarball with a persistent-less tarball loader
-
-    """
-    pass
-
-
-class SWHDirLoaderITTest(InitTestLoader):
+class SWHDirLoaderITTest(BaseDirLoaderTest):
     def setUp(self):
         super().setUp()
-
-        self.loader = SWHDirLoaderNoStorage()
+        self.loader = DirLoaderNoStorage()
 
     @istest
     def load(self):
@@ -286,12 +208,13 @@ class SWHDirLoaderITTest(InitTestLoader):
             'synthetic': True,
         }
 
-        branch = os.path.basename(self.root_path)
+        branch = os.path.basename(self.destination_path)
 
         # when
         self.loader.load(
-            dir_path=self.root_path, origin=origin, visit_date=visit_date,
-            revision=revision, release=None, branch_name=branch)
+            dir_path=self.destination_path, origin=origin,
+            visit_date=visit_date, revision=revision,
+            release=None, branch_name=branch)
 
         # then
         self.assertEquals(len(self.loader.all_contents), 8)
