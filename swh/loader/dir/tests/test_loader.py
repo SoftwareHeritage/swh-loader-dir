@@ -217,11 +217,11 @@ class SWHDirLoaderITTest(BaseDirLoaderTest):
             release=None, branch_name=branch)
 
         # then
-        self.assertEquals(len(self.loader.all_contents), 8)
-        self.assertEquals(len(self.loader.all_directories), 6)
-        self.assertEquals(len(self.loader.all_revisions), 1)
+        self.assertCountContents(8)
+        self.assertCountDirectories(6)
+        self.assertCountRevisions(1)
 
-        actual_revision = self.loader.all_revisions[0]
+        actual_revision = self.state('revision')[0]
         self.assertEquals(actual_revision['synthetic'],
                           True)
         self.assertEquals(actual_revision['parents'],
@@ -231,5 +231,5 @@ class SWHDirLoaderITTest(BaseDirLoaderTest):
         self.assertEquals(actual_revision['message'],
                           b'swh-loader-dir: synthetic revision message')
 
-        self.assertEquals(len(self.loader.all_releases), 0)
-        self.assertEquals(len(self.loader.all_snapshots), 1)
+        self.assertCountReleases(0)
+        self.assertCountSnapshots(1)
