@@ -7,10 +7,8 @@ import shutil
 import tempfile
 import unittest
 
-from nose.tools import istest
-
-from swh.model import hashutil
 from swh.loader.dir import converters
+from swh.model import hashutil
 
 
 def tmpfile_with_content(fromdir, contentfile):
@@ -40,16 +38,14 @@ class TestConverters(unittest.TestCase):
         shutil.rmtree(cls.tmpdir)
         super().tearDownClass()
 
-    @istest
-    def format_to_minutes(self):
+    def test_format_to_minutes(self):
         self.assertEquals(converters.format_to_minutes('+0100'), 60)
         self.assertEquals(converters.format_to_minutes('-0200'), -120)
         self.assertEquals(converters.format_to_minutes('+1250'), 12*60+50)
         self.assertEquals(converters.format_to_minutes('+0000'), 0)
         self.assertEquals(converters.format_to_minutes('-0000'), 0)
 
-    @istest
-    def annotated_tag_to_release(self):
+    def test_annotated_tag_to_release(self):
         # given
         release = {
             'name': 'v0.0.1',
@@ -74,8 +70,7 @@ class TestConverters(unittest.TestCase):
         # then
         self.assertDictEqual(actual_release, expected_release)
 
-    @istest
-    def commit_to_revision(self):
+    def test_commit_to_revision(self):
         # given
         commit = {
             'sha1_git': 'commit-git-sha1',
@@ -117,8 +112,7 @@ class TestConverters(unittest.TestCase):
         # then
         self.assertEquals(actual_revision, expected_revision)
 
-    @istest
-    def commit_to_revision_with_parents(self):
+    def test_commit_to_revision_with_parents(self):
         """Commit with existing parents should not lose information
 
         """

@@ -5,11 +5,10 @@
 
 import os
 
-from nose.tools import istest
 from nose.plugins.attrib import attr
 
+from swh.loader.core.tests import BaseLoaderTest, LoaderNoStorage
 from swh.loader.dir.loader import DirLoader
-from swh.loader.core.tests import LoaderNoStorage, BaseLoaderTest
 
 
 @attr('fs')
@@ -104,8 +103,7 @@ class DirLoaderListRepoObject(BaseDirLoaderTest):
 
         self.dirloader = DirLoaderNoStorage(config=self.info)
 
-    @istest
-    def load_without_storage(self):
+    def test_load_without_storage(self):
         """List directory objects without loading should be ok"""
         # when
         dir_path = self.destination_path
@@ -165,8 +163,7 @@ class SWHDirLoaderITTest(BaseDirLoaderTest):
         super().setUp()
         self.loader = DirLoaderNoStorage()
 
-    @istest
-    def load(self):
+    def test_load(self):
         """Process a new tarball should be ok
 
         """
