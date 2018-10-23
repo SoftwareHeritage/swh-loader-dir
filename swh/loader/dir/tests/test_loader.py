@@ -4,14 +4,13 @@
 # See top-level LICENSE file for more information
 
 import os
-
-from nose.plugins.attrib import attr
+import pytest
 
 from swh.loader.core.tests import BaseLoaderTest, LoaderNoStorage
 from swh.loader.dir.loader import DirLoader
 
 
-@attr('fs')
+@pytest.mark.fs
 class BaseDirLoaderTest(BaseLoaderTest):
     def setUp(self, archive_name='sample-folder.tgz'):
         super().setUp(archive_name=archive_name,
