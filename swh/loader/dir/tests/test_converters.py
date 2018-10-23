@@ -39,11 +39,11 @@ class TestConverters(unittest.TestCase):
         super().tearDownClass()
 
     def test_format_to_minutes(self):
-        self.assertEquals(converters.format_to_minutes('+0100'), 60)
-        self.assertEquals(converters.format_to_minutes('-0200'), -120)
-        self.assertEquals(converters.format_to_minutes('+1250'), 12*60+50)
-        self.assertEquals(converters.format_to_minutes('+0000'), 0)
-        self.assertEquals(converters.format_to_minutes('-0000'), 0)
+        self.assertEqual(converters.format_to_minutes('+0100'), 60)
+        self.assertEqual(converters.format_to_minutes('-0200'), -120)
+        self.assertEqual(converters.format_to_minutes('+1250'), 12*60+50)
+        self.assertEqual(converters.format_to_minutes('+0000'), 0)
+        self.assertEqual(converters.format_to_minutes('-0000'), 0)
 
     def test_annotated_tag_to_release(self):
         # given
@@ -110,7 +110,7 @@ class TestConverters(unittest.TestCase):
         actual_revision = converters.commit_to_revision(commit)
 
         # then
-        self.assertEquals(actual_revision, expected_revision)
+        self.assertEqual(actual_revision, expected_revision)
 
     def test_commit_to_revision_with_parents(self):
         """Commit with existing parents should not lose information
@@ -158,4 +158,4 @@ class TestConverters(unittest.TestCase):
         actual_revision = converters.commit_to_revision(commit)
 
         # then
-        self.assertEquals(actual_revision, expected_revision)
+        self.assertEqual(actual_revision, expected_revision)

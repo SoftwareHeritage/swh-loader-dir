@@ -116,15 +116,15 @@ class DirLoaderListRepoObject(BaseDirLoaderTest):
             branch_name=b'master')
 
         # then
-        self.assertEquals(len(objects), 5,
-                          "5 obj types: con, dir, rev, rel, snap")
-        self.assertEquals(len(objects['content']), 8,
-                          "8 contents: 3 files + 5 links")
-        self.assertEquals(len(objects['directory']), 6,
-                          "6 directories: 5 subdirs + 1 empty")
-        self.assertEquals(len(objects['revision']), 1, "synthetic revision")
-        self.assertEquals(len(objects['release']), 1, "synthetic release")
-        self.assertEquals(len(objects['snapshot']), 1, "snapshot")
+        self.assertEqual(len(objects), 5,
+                         "5 obj types: con, dir, rev, rel, snap")
+        self.assertEqual(len(objects['content']), 8,
+                         "8 contents: 3 files + 5 links")
+        self.assertEqual(len(objects['directory']), 6,
+                         "6 directories: 5 subdirs + 1 empty")
+        self.assertEqual(len(objects['revision']), 1, "synthetic revision")
+        self.assertEqual(len(objects['release']), 1, "synthetic release")
+        self.assertEqual(len(objects['snapshot']), 1, "snapshot")
 
 
 TEST_CONFIG = {
@@ -219,14 +219,11 @@ class SWHDirLoaderITTest(BaseDirLoaderTest):
         self.assertCountRevisions(1)
 
         actual_revision = self.state('revision')[0]
-        self.assertEquals(actual_revision['synthetic'],
-                          True)
-        self.assertEquals(actual_revision['parents'],
-                          [])
-        self.assertEquals(actual_revision['type'],
-                          'tar')
-        self.assertEquals(actual_revision['message'],
-                          b'swh-loader-dir: synthetic revision message')
+        self.assertEqual(actual_revision['synthetic'], True)
+        self.assertEqual(actual_revision['parents'], [])
+        self.assertEqual(actual_revision['type'], 'tar')
+        self.assertEqual(actual_revision['message'],
+                         b'swh-loader-dir: synthetic revision message')
 
         self.assertCountReleases(0)
         self.assertCountSnapshots(1)
