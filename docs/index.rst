@@ -13,9 +13,10 @@ Loader for source directories (e.g., expanded tarballs).
    README.md
 
 
-Indices and tables
-==================
+Reference Documentation
+-----------------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :maxdepth: 2
+
+   /apidoc/swh.loader.dir
