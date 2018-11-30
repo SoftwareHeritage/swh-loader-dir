@@ -10,7 +10,7 @@ Loader for source directories (e.g., expanded tarballs).
    :maxdepth: 2
    :caption: Contents:
 
-   README.md
+   README
 
 
 Reference Documentation
