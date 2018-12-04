@@ -52,7 +52,7 @@ class DirLoaderListRepoObject(BaseDirLoaderTest):
             'send_revisions': True,
             'revision_packet_size': 100000,
             'content_packet_block_size_bytes': 104857600,
-            'send_snaphot': True,
+            'send_snapshot': True,
             'release_packet_size': 100000,
             'send_releases': True
         }
