@@ -123,37 +123,6 @@ class DirLoaderListRepoObject(BaseDirLoaderTest):
         self.assertEqual(len(objects['snapshot']), 1, "snapshot")
 
 
-TEST_CONFIG = {
-    'extraction_dir': '/tmp/tests/loader-tar/',  # where to extract the tarball
-    'storage': {  # we instantiate it but we don't use it in test context
-        'cls': 'remote',
-        'args': {
-            'url': 'http://127.0.0.1:9999',  # somewhere that does not exist
-        }
-    },
-    'send_contents': False,
-    'send_directories': False,
-    'send_revisions': False,
-    'send_releases': False,
-    'send_snapshot': False,
-    'content_packet_size': 100,
-    'content_packet_block_size_bytes': 104857600,
-    'content_packet_size_bytes': 1073741824,
-    'directory_packet_size': 250,
-    'revision_packet_size': 100,
-    'release_packet_size': 100,
-}
-
-
-def parse_config_file(base_filename=None, config_filename=None,
-                      additional_configs=None, global_config=True):
-    return TEST_CONFIG
-
-
-# Inhibit side-effect loading configuration from disk
-DirLoader.parse_config_file = parse_config_file
-
-
 class SWHDirLoaderITTest(BaseDirLoaderTest):
     def setUp(self):
         super().setUp()
