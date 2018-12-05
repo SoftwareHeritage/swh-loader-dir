@@ -52,7 +52,7 @@ def snapshot_from(revision_hash, branch):
     return snapshot
 
 
-class DirLoader(loader.SWHLoader):
+class DirLoader(loader.BufferedLoader):
     """A bulk loader for a directory."""
     CONFIG_BASE_FILENAME = 'loader/dir'
 
