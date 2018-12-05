@@ -6,8 +6,10 @@
 import os
 import pytest
 
-from swh.loader.core.tests import BaseLoaderTest, LoaderNoStorage
+from swh.loader.core.tests import BaseLoaderTest
 from swh.loader.dir.loader import DirLoader
+
+from swh.model import hashutil
 
 
 @pytest.mark.fs
@@ -18,28 +20,18 @@ class BaseDirLoaderTest(BaseLoaderTest):
                       start_path=os.path.dirname(__file__))
 
 
-class DirLoaderNoStorage(LoaderNoStorage, DirLoader):
+class DirLoaderNoStorage(DirLoader):
     """A DirLoader with no persistence.
 
     Context:
         Load a tarball with a persistent-less tarball loader
 
     """
-    def __init__(self, config={}):
-        super().__init__(config=config)
-        self.origin_id = 1
-        self.visit = 1
-
-
-class DirLoaderListRepoObject(BaseDirLoaderTest):
-    def setUp(self):
-        super().setUp()
-
-        self.info = {
+    def parse_config_file(self, *args, **kwargs):
+        return {
             'storage': {
-                'cls': 'remote',
+                'cls': 'memory',
                 'args': {
-                    'url': 'http://localhost:5002/',
                 }
             },
             'content_size_limit': 104857600,
@@ -56,6 +48,11 @@ class DirLoaderListRepoObject(BaseDirLoaderTest):
             'release_packet_size': 100000,
             'send_releases': True
         }
+
+
+class DirLoaderListRepoObject(BaseDirLoaderTest):
+    def setUp(self):
+        super().setUp()
 
         self.origin = {
             'url': 'file:///dev/null',
@@ -100,7 +97,7 @@ class DirLoaderListRepoObject(BaseDirLoaderTest):
             'message': 'synthetic release',
         }
 
-        self.dirloader = DirLoaderNoStorage(config=self.info)
+        self.dirloader = DirLoaderNoStorage()
 
     def test_load_without_storage(self):
         """List directory objects without loading should be ok"""
@@ -161,6 +158,7 @@ class SWHDirLoaderITTest(BaseDirLoaderTest):
     def setUp(self):
         super().setUp()
         self.loader = DirLoaderNoStorage()
+        self.storage = self.loader.storage
 
     def test_load(self):
         """Process a new tarball should be ok
@@ -175,9 +173,10 @@ class SWHDirLoaderITTest(BaseDirLoaderTest):
         visit_date = 'Tue, 3 May 2016 17:16:32 +0200'
 
         import datetime
-        commit_time = int(datetime.datetime.now(
-            tz=datetime.timezone.utc).timestamp()
-        )
+        commit_time = int(datetime.datetime(
+            2018, 12, 5, 13, 35, 23, 0,
+            tzinfo=datetime.timezone(datetime.timedelta(hours=1))
+        ).timestamp())
 
         swh_person = {
             'name': 'Software Heritage',
@@ -217,7 +216,9 @@ class SWHDirLoaderITTest(BaseDirLoaderTest):
         self.assertCountDirectories(6)
         self.assertCountRevisions(1)
 
-        actual_revision = self.state('revision')[0]
+        rev_id = hashutil.hash_to_bytes(
+            'e974eda2328f6e97bc185307c692a115fe3a7eae')
+        actual_revision = next(self.storage.revision_get([rev_id]))
         self.assertEqual(actual_revision['synthetic'], True)
         self.assertEqual(actual_revision['parents'], [])
         self.assertEqual(actual_revision['type'], 'tar')
