@@ -52,7 +52,7 @@ def snapshot_from(revision_hash, branch):
     return snapshot
 
 
-class DirLoader(loader.SWHLoader):
+class DirLoader(loader.BufferedLoader):
     """A bulk loader for a directory."""
     CONFIG_BASE_FILENAME = 'loader/dir'
 
@@ -90,6 +90,10 @@ class DirLoader(loader.SWHLoader):
 
         directory = Directory.from_disk(path=dir_path, save_path=True)
         objects = directory.collect()
+        if 'content' not in objects:
+            objects['content'] = {}
+        if 'directory' not in objects:
+            objects['directory'] = {}
 
         full_rev = revision_from(directory.hash, revision)
         rev_id = full_rev['id']

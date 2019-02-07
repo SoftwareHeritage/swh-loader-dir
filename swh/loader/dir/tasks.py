@@ -3,24 +3,20 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from celery import current_app as app
+
 from swh.loader.dir.loader import DirLoader
-from swh.scheduler.task import Task
 
 
-class LoadDirRepository(Task):
+@app.task(name=__name__ + '.LoadDirRepository')
+def load_directory(dir_path, origin, visit_date, revision, release,
+                   branch_name=None):
     """Import a directory to Software Heritage
 
+    Import a directory dir_path with origin at visit_date time.
+    Providing the revision, release, and occurrences.
+
     """
-    task_queue = 'swh_loader_dir'
-
-    def run_task(self, *, dir_path, origin, visit_date, revision, release,
-                 branch_name=None):
-        """Import a directory dir_path with origin at visit_date time.
-        Providing the revision, release, and occurrences.
-
-        """
-        loader = DirLoader()
-        loader.log = self.log
-        return loader.load(dir_path=dir_path, origin=origin,
-                           visit_date=visit_date, revision=revision,
-                           release=release, branch_name=branch_name)
+    return DirLoader().load(dir_path=dir_path, origin=origin,
+                            visit_date=visit_date, revision=revision,
+                            release=release, branch_name=branch_name)
