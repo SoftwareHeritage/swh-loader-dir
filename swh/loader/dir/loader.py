@@ -56,6 +56,8 @@ class DirLoader(loader.BufferedLoader):
     """A bulk loader for a directory."""
     CONFIG_BASE_FILENAME = 'loader/dir'
 
+    visit_type = 'dir'
+
     def __init__(self, logging_class='swh.loader.dir.DirLoader',
                  config=None):
         super().__init__(logging_class=logging_class, config=config)
