@@ -221,8 +221,8 @@ if __name__ == '__main__':
     )
 
     @click.command()
-    @click.option('--dir-path', required=1, help='Directory path to load')
-    @click.option('--origin-url', required=1,
+    @click.option('--dir-path', required=True, help='Directory path to load')
+    @click.option('--origin-url', required=True,
                   help='Origin url for that directory')
     @click.option('--visit-date', default=None,
                   help='Visit date time override')
