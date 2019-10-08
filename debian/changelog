@@ -1,8 +1,15 @@
-swh-loader-dir (0.0.34-1~swh3~bpo9+1) stretch-swh; urgency=medium
+swh-loader-dir (0.0.35-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-swh
+  * New upstream release 0.0.35     - (tagged by Stefano Zacchiroli
+    <zack@upsilon.cc> on 2019-10-08 16:55:20 +0200)
+  * Upstream changes:     - v0.0.35     - * typing: minimal changes to
+    make a no-op mypy run pass     - * click "required" param wants
+    bool, not int     - * Add missing visit_type attribute.     - * add
+    code of conduct document     - * requirements: swh.core is not a
+    (direct) requirement     - * Update coverage gitignore     - *
+    Remove debian packaging from master branch
 
- -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Thu, 14 Feb 2019 16:50:33 +0000
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 08 Oct 2019 14:59:04 +0000
 
 swh-loader-dir (0.0.34-1~swh3) unstable-swh; urgency=low
 

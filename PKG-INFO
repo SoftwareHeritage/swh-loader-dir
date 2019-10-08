@@ -1,14 +1,14 @@
 Metadata-Version: 2.1
 Name: swh.loader.dir
-Version: 0.0.34
+Version: 0.0.35
 Summary: Software Heritage Directory Loader
 Home-page: https://forge.softwareheritage.org/diffusion/DLDDIR
 Author: Software Heritage developers
 Author-email: swh-devel@inria.fr
 License: UNKNOWN
 Project-URL: Bug Reports, https://forge.softwareheritage.org/maniphest
-Project-URL: Funding, https://www.softwareheritage.org/donate
 Project-URL: Source, https://forge.softwareheritage.org/source/swh-loader-dir
+Project-URL: Funding, https://www.softwareheritage.org/donate
 Description: SWH-loader-dir
         ===================
         

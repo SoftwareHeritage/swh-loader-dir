@@ -56,6 +56,8 @@ class DirLoader(loader.BufferedLoader):
     """A bulk loader for a directory."""
     CONFIG_BASE_FILENAME = 'loader/dir'
 
+    visit_type = 'dir'
+
     def __init__(self, logging_class='swh.loader.dir.DirLoader',
                  config=None):
         super().__init__(logging_class=logging_class, config=config)
@@ -219,8 +221,8 @@ if __name__ == '__main__':
     )
 
     @click.command()
-    @click.option('--dir-path', required=1, help='Directory path to load')
-    @click.option('--origin-url', required=1,
+    @click.option('--dir-path', required=True, help='Directory path to load')
+    @click.option('--origin-url', required=True,
                   help='Origin url for that directory')
     @click.option('--visit-date', default=None,
                   help='Visit date time override')
