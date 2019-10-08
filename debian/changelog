@@ -1,8 +1,15 @@
-swh-loader-dir (0.0.34-1~swh3~bpo10+1) buster-swh; urgency=medium
+swh-loader-dir (0.0.35-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for buster-swh
+  * New upstream release 0.0.35     - (tagged by Stefano Zacchiroli
+    <zack@upsilon.cc> on 2019-10-08 16:55:20 +0200)
+  * Upstream changes:     - v0.0.35     - * typing: minimal changes to
+    make a no-op mypy run pass     - * click "required" param wants
+    bool, not int     - * Add missing visit_type attribute.     - * add
+    code of conduct document     - * requirements: swh.core is not a
+    (direct) requirement     - * Update coverage gitignore     - *
+    Remove debian packaging from master branch
 
- -- Nicolas Dandrimont <olasd@debian.org>  Thu, 11 Jul 2019 14:29:11 +0200
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Tue, 08 Oct 2019 14:59:04 +0000
 
 swh-loader-dir (0.0.34-1~swh3) unstable-swh; urgency=low
 
