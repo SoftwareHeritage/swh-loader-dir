@@ -15,6 +15,7 @@ swh/loader/__init__.py
 swh/loader/dir/__init__.py
 swh/loader/dir/converters.py
 swh/loader/dir/loader.py
+swh/loader/dir/py.typed
 swh/loader/dir/tasks.py
 swh/loader/dir/tests/__init__.py
 swh/loader/dir/tests/test_converters.py
