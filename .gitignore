@@ -7,3 +7,4 @@ analysis/
 build/
 dist/
 .tox/
+.mypy_cache/
